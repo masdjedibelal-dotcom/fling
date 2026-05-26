@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "Fling",
+    "slug": "fling",
+    "description": "Dein Abenteuer. Deine Entscheidung.",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "fling",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E0D0D"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.fling.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Fling benötigt die Kamera für Ausweis-Scan und Live-Selfie.",
+        "NSPhotoLibraryUsageDescription": "Fling benötigt Zugriff auf deine Fotos für Profilbilder.",
+        "NSLocationWhenInUseUsageDescription": "Fling zeigt dir Männer in deiner Nähe — deine genaue Adresse bleibt privat.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.fling.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0E0D0D",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Fling benötigt die Kamera für Ausweis-Scan und Live-Selfie."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Fling benötigt Zugriff auf deine Fotos für Profilbilder."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Fling zeigt dir Männer in deiner Nähe."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

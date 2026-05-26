@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 80 80">
+  <defs>
+    <mask id="f" maskUnits="userSpaceOnUse" x="0" y="0" width="80" height="80">
+      <rect width="80" height="80" fill="white"/>
+      <rect x="18" y="14" width="13" height="52" rx="1.5" fill="black"/>
+      <rect x="18" y="14" width="42" height="12" rx="1.5" fill="black"/>
+      <rect x="18" y="37" width="32" height="11" rx="1.5" fill="black"/>
+    </mask>
+  </defs>
+  <rect width="80" height="80" rx="18" fill="#D11537" mask="url(#f)"/>
+</svg>

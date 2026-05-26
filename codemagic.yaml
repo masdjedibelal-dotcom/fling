@@ -1,0 +1,97 @@
+# Fling · iOS TestFlight via Codemagic
+# Setup: https://docs.codemagic.io/yaml-quick-start/first-signed-build/
+#
+# 1. Repo mit GitHub/GitLab verbinden
+# 2. Codemagic → Teams → Integrations → App Store Connect API Key anlegen
+#    Name unten bei `integrations.app_store_connect` eintragen
+# 3. Environment variable group `fling_production` anlegen:
+#    - EXPO_PUBLIC_SUPABASE_URL
+#    - EXPO_PUBLIC_SUPABASE_ANON_KEY
+#    - EXPO_PUBLIC_PROJECT_ID
+# 4. App Store Connect → App mit Bundle ID com.fling.app anlegen
+# 5. APP_STORE_APPLE_ID unten setzen (numerische ID aus App Store Connect → App-Info)
+
+workflows:
+  ios-testflight:
+    name: Fling iOS · TestFlight
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    integrations:
+      # Name der App Store Connect Integration in Codemagic UI
+      app_store_connect: fling
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.fling.app
+      groups:
+        - fling_production
+      vars:
+        BUNDLE_ID: com.fling.app
+        XCODE_WORKSPACE: Fling.xcworkspace
+        XCODE_SCHEME: Fling
+        # App Store Connect → App-Informationen → Apple-ID (Zahl)
+        APP_STORE_APPLE_ID: 0
+      node: v20
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      - name: Typecheck
+        script: npm run lint
+
+      - name: Install dependencies
+        script: npm ci
+
+      - name: Expo prebuild (iOS native project)
+        script: npx expo prebuild --platform ios --clean
+
+      - name: Export encryption compliance
+        script: |
+          PLIST="$CM_BUILD_DIR/ios/Fling/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
+
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install
+
+      - name: Apply code signing
+        script: xcode-project use-profiles
+
+      - name: Increment build number
+        script: |
+          cd "$CM_BUILD_DIR/ios"
+          if [ "$APP_STORE_APPLE_ID" = "0" ]; then
+            echo "WARN: APP_STORE_APPLE_ID nicht gesetzt — BUILD_NUMBER aus Codemagic"
+            LATEST=0
+          else
+            LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
+          fi
+          agvtool new-version -all $(($LATEST + 1))
+
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
