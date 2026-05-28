@@ -8,7 +8,7 @@
 #    - EXPO_PUBLIC_SUPABASE_URL
 #    - EXPO_PUBLIC_SUPABASE_ANON_KEY
 #    - EXPO_PUBLIC_PROJECT_ID
-# 4. App Store Connect → App mit Bundle ID com.getfling.app anlegen
+# 4. App Store Connect → App mit Bundle ID com.flingapp.app anlegen
 # 5. APP_STORE_APPLE_ID unten setzen (numerische ID aus App Store Connect → App-Info)
 
 workflows:
@@ -24,11 +24,11 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.getfling.app
+        bundle_identifier: com.flingapp.app
       groups:
         - fling_production
       vars:
-        BUNDLE_ID: com.getfling.app
+        BUNDLE_ID: com.flingapp.app
         XCODE_WORKSPACE: Fling.xcworkspace
         XCODE_SCHEME: Fling
         # App Store Connect → App-Informationen → Apple-ID (Zahl)
@@ -64,6 +64,15 @@ workflows:
         script: |
           cd ios
           pod install
+
+      - name: Load signing certificates
+        script: keychain add-certificates
+
+      - name: Fetch or create App Store provisioning profile
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
 
       - name: Apply code signing
         script: xcode-project use-profiles
