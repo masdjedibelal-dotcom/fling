@@ -46,7 +46,7 @@ workflows:
 
     scripts:
       - name: Install dependencies
-        script: npm ci
+        script: npm ci --legacy-peer-deps
 
       - name: Typecheck
         script: npm run lint
