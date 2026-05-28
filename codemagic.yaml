@@ -45,11 +45,11 @@ workflows:
           include: true
 
     scripts:
-      - name: Typecheck
-        script: npm run lint
-
       - name: Install dependencies
         script: npm ci
+
+      - name: Typecheck
+        script: npm run lint
 
       - name: Expo prebuild (iOS native project)
         script: npx expo prebuild --platform ios --clean
