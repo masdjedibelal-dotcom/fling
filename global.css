@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --css-interop-darkMode: class dark;
+}
+
+html,
+body,
+#root {
+  background-color: #0e0d0d;
+}
