@@ -34,7 +34,8 @@ workflows:
         # App Store Connect → App-Informationen → Apple-ID (Zahl)
         APP_STORE_APPLE_ID: 0
       node: v20
-      xcode: 16.4
+      # Apple verlangt seit 2026 iOS-26-SDK (Xcode 26+) für App-Store-Uploads.
+      xcode: latest
       cocoapods: default
 
     triggering:
