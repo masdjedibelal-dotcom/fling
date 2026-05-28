@@ -8,7 +8,7 @@
 #    - EXPO_PUBLIC_SUPABASE_URL
 #    - EXPO_PUBLIC_SUPABASE_ANON_KEY
 #    - EXPO_PUBLIC_PROJECT_ID
-# 4. App Store Connect → App mit Bundle ID com.fling.app anlegen
+# 4. App Store Connect → App mit Bundle ID com.getfling.app anlegen
 # 5. APP_STORE_APPLE_ID unten setzen (numerische ID aus App Store Connect → App-Info)
 
 workflows:
@@ -24,11 +24,11 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.fling.app
+        bundle_identifier: com.getfling.app
       groups:
         - fling_production
       vars:
-        BUNDLE_ID: com.fling.app
+        BUNDLE_ID: com.getfling.app
         XCODE_WORKSPACE: Fling.xcworkspace
         XCODE_SCHEME: Fling
         # App Store Connect → App-Informationen → Apple-ID (Zahl)
