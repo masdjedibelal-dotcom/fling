@@ -10,16 +10,24 @@ export function profilePseudonym(
   return t || fallback;
 }
 
-/** Echter Name — nur Pick-Chat */
+/** Echter Name — nur Pick-Chat; sonst Pseudonym als Fallback */
 export function chatPartnerName(
   displayName: string | null | undefined,
   fallback = 'Profil',
 ): string {
-  const t = displayName?.trim();
-  return t || fallback;
+  const name = displayName?.trim();
+  return name || fallback;
 }
 
-/** Meta unter dem Namen im Pick-Chat — Beruf · Distanz/Ort · Alter */
+/** Eigenes Profil / Chat — Name, sonst Pseudonym */
+export function ownProfileName(
+  displayName: string | null | undefined,
+  pseudonym?: string | null,
+): string {
+  return displayName?.trim() || pseudonym?.trim() || 'Profil';
+}
+
+/** Meta unter dem Namen im Pick-Chat — Alter · Beruf · Distanz/Ort */
 export function formatChatPartnerMeta(
   profile: SchaufensterProfile,
   options?: { city?: string | null },
@@ -27,8 +35,9 @@ export function formatChatPartnerMeta(
   const job = profile.job?.trim() || '—';
   const age =
     profile.age != null && profile.age > 0 ? String(profile.age) : '—';
-  if (options?.city !== undefined) {
-    return `${job} · ${options.city?.trim() || '—'} · ${age}`;
-  }
-  return `${job} · ${formatDistance(profile.distance_km)} · ${age}`;
+  const place =
+    options?.city !== undefined
+      ? options.city?.trim() || '—'
+      : formatDistance(profile.distance_km);
+  return `${age} · ${job} · ${place}`;
 }

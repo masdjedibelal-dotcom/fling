@@ -327,6 +327,33 @@ export const DEMO_MALE_BASE: Partial<UserProfile> = {
 const MATCH_KEY = 'fling_demo_match';
 const MESSAGES_KEY = 'fling_demo_messages';
 const BUSY_MALES_KEY = 'fling_demo_busy_males';
+const BLOCKS_KEY = 'fling_demo_blocks';
+const REPORTS_KEY = 'fling_demo_reports';
+
+export async function getDemoBlockedIds(): Promise<Set<string>> {
+  const raw = await AsyncStorage.getItem(BLOCKS_KEY);
+  if (!raw) return new Set();
+  try {
+    return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    return new Set();
+  }
+}
+
+export async function addDemoBlock(blockedId: string) {
+  const ids = await getDemoBlockedIds();
+  ids.add(blockedId);
+  await AsyncStorage.setItem(BLOCKS_KEY, JSON.stringify([...ids]));
+}
+
+export async function addDemoReport(reportedId: string, reason: string) {
+  const raw = await AsyncStorage.getItem(REPORTS_KEY);
+  const list: { reportedId: string; reason: string; at: string }[] = raw
+    ? JSON.parse(raw)
+    : [];
+  list.push({ reportedId, reason, at: new Date().toISOString() });
+  await AsyncStorage.setItem(REPORTS_KEY, JSON.stringify(list));
+}
 
 /** Demo: Kandidaten im Radius (Filter/Sort/Limit in lib/auswahl.ts) */
 export function getDemoSchaufenster(

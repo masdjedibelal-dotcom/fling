@@ -9,13 +9,15 @@ import {
   getDemoSchaufenster,
   getDemoProfile,
   getDemoBusyMaleIds,
+  getDemoBlockedIds,
+  addDemoBlock,
+  addDemoReport,
   getDemoFemalePartnerProfile,
   getDemoMaleMatchProfile,
 } from './demo';
 import type {
   Availability,
   AvailabilityFilter,
-  Match,
   Message,
   SchaufensterProfile,
   UserProfile,
@@ -28,6 +30,8 @@ import {
   toPublicSchaufensterProfile,
   toMatchPartnerProfile,
 } from './schaufensterProfile';
+import { isDemoSchaufensterFallbackEnabled } from './demoMode';
+import type { Match } from './types';
 
 const DEFAULT_CONFIG: AppConfig = {
   match_duration_hours: MATCH_DURATION_HOURS,
@@ -57,6 +61,50 @@ export async function fetchAppConfig(): Promise<AppConfig> {
   return cfg;
 }
 
+/** Match-RPC → Chat-Felder (Name, Beruf, Alter) */
+export function normalizeMatch(raw: Match | null): Match | null {
+  if (!raw) return null;
+  return {
+    ...raw,
+    male_profile: raw.male_profile
+      ? toMatchPartnerProfile(raw.male_profile)
+      : undefined,
+    female_profile: raw.female_profile
+      ? toMatchPartnerProfile(raw.female_profile)
+      : undefined,
+    female_display_name:
+      raw.female_display_name?.trim() ||
+      raw.female_profile?.display_name?.trim() ||
+      'Profil',
+  };
+}
+
+async function mergeDemoSchaufenster(
+  profiles: SchaufensterProfile[],
+  filter: AvailabilityFilter,
+  radiusKm: number,
+): Promise<SchaufensterProfile[]> {
+  if (!isDemoSchaufensterFallbackEnabled()) return profiles;
+  const busy = await getDemoBusyMaleIds();
+  const blocked = await getDemoBlockedIds();
+  const demo = getDemoSchaufenster(filter, radiusKm)
+    .map(toPublicSchaufensterProfile)
+    .filter((m) => !busy.has(m.id) && !blocked.has(m.id));
+  const ids = new Set(profiles.map((p) => p.id));
+  return [...profiles, ...demo.filter((d) => !ids.has(d.id))];
+}
+
+async function demoSchaufensterList(
+  filter: AvailabilityFilter,
+  radiusKm: number,
+): Promise<SchaufensterProfile[]> {
+  const busy = await getDemoBusyMaleIds();
+  const blocked = await getDemoBlockedIds();
+  return getDemoSchaufenster(filter, radiusKm)
+    .map(toPublicSchaufensterProfile)
+    .filter((m) => !busy.has(m.id) && !blocked.has(m.id));
+}
+
 export async function fetchSchaufenster(
   radiusKm: number,
   filter: AvailabilityFilter,
@@ -64,10 +112,7 @@ export async function fetchSchaufenster(
   userLng?: number,
 ): Promise<SchaufensterProfile[]> {
   if (!isSupabaseConfigured) {
-    const busy = await getDemoBusyMaleIds();
-    return getDemoSchaufenster(filter, radiusKm)
-      .map(toPublicSchaufensterProfile)
-      .filter((m) => !busy.has(m.id));
+    return demoSchaufensterList(filter, radiusKm);
   }
   const { data, error } = await supabase.rpc('get_schaufenster', {
     radius_km: radiusKm,
@@ -76,12 +121,12 @@ export async function fetchSchaufenster(
     user_lng: userLng ?? null,
   });
   if (error) {
-    const busy = await getDemoBusyMaleIds();
-    return getDemoSchaufenster(filter, radiusKm)
-      .map(toPublicSchaufensterProfile)
-      .filter((m) => !busy.has(m.id));
+    return demoSchaufensterList(filter, radiusKm);
   }
-  return ((data ?? []) as SchaufensterProfile[]).map(toPublicSchaufensterProfile);
+  const mapped = ((data ?? []) as SchaufensterProfile[]).map(
+    toPublicSchaufensterProfile,
+  );
+  return mergeDemoSchaufenster(mapped, filter, radiusKm);
 }
 
 export async function fetchSchaufensterProfile(
@@ -109,7 +154,7 @@ export async function fetchPartnerProfile(
     if (viewerGender === 'male') {
       const profile = match.female_profile ?? getDemoFemalePartnerProfile();
       return {
-        profile: toPublicSchaufensterProfile(profile),
+        profile: toMatchPartnerProfile(profile),
         city: match.female_city ?? 'München',
       };
     }
@@ -117,7 +162,7 @@ export async function fetchPartnerProfile(
     const male =
       match.male_profile ?? getDemoMaleMatchProfile(match.male_id);
     if (!male) return null;
-    return { profile: toPublicSchaufensterProfile(male), city: null };
+    return { profile: toMatchPartnerProfile(male), city: null };
   }
 
   const { data, error } = await supabase.rpc('get_partner_profile', {
@@ -127,7 +172,7 @@ export async function fetchPartnerProfile(
 
   const row = data as { profile: SchaufensterProfile; city: string | null };
   return {
-    profile: toPublicSchaufensterProfile(row.profile),
+    profile: toMatchPartnerProfile(row.profile),
     city: row.city,
   };
 }
@@ -138,16 +183,14 @@ export async function fetchActiveMatch(userId: string): Promise<Match | null> {
     user_id: userId,
   });
   if (error || !data) return getDemoMatch();
-  const match = data as Match;
-  return {
-    ...match,
-    male_profile: match.male_profile
-      ? toMatchPartnerProfile(match.male_profile)
-      : undefined,
-    female_profile: match.female_profile
-      ? toMatchPartnerProfile(match.female_profile)
-      : undefined,
-  };
+  let match = normalizeMatch(data as Match);
+  if (match && !match.male_profile?.display_name) {
+    const hydrated = normalizeMatch(
+      (await supabase.rpc('get_active_match', { user_id: userId })).data as Match,
+    );
+    if (hydrated?.male_profile) match = hydrated;
+  }
+  return match;
 }
 
 function isDemoProfileId(id: string): boolean {
@@ -193,7 +236,11 @@ export async function createMatch(
     }
     return { match: null, error: error.message };
   }
-  return { match: data as Match, error: null };
+  let match = normalizeMatch(data as Match);
+  if (match && !match.male_profile?.display_name) {
+    match = (await fetchActiveMatch(femaleId)) ?? match;
+  }
+  return { match, error: null };
 }
 
 export async function cancelMatch(matchId: string): Promise<{ error: string | null }> {
@@ -294,15 +341,41 @@ export async function markMessageViewed(
 }
 
 export async function submitReport(
-  reporterId: string,
+  _reporterId: string,
   reportedId: string,
   reason: string,
 ): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured) return { error: null };
+  if (!isSupabaseConfigured) {
+    await addDemoReport(reportedId, reason);
+    return { error: null };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Bitte erneut anmelden.' };
   const { error } = await supabase.rpc('submit_report', {
     reported_id: reportedId,
     reason,
   });
+  return { error: error?.message ?? null };
+}
+
+export async function blockUser(
+  _blockerId: string,
+  blockedId: string,
+): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured) {
+    await addDemoBlock(blockedId);
+    return { error: null };
+  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Bitte erneut anmelden.' };
+  const { error } = await supabase
+    .from('blocks')
+    .insert({ blocker_id: user.id, blocked_id: blockedId });
+  if (error?.code === '23505') return { error: null };
   return { error: error?.message ?? null };
 }
 

@@ -4,9 +4,11 @@ import { fetchSchaufenster } from '@/lib/api';
 import { prepareAuswahlProfiles } from '@/lib/auswahl';
 import { AUSWAHL_MAX_RADIUS_KM } from '@/lib/constants';
 import { canUseSupabaseRealtime, teardownRealtimeChannel } from '@/lib/realtime';
+import { useAppStore } from '@/stores/appStore';
 import type { SchaufensterProfile } from '@/lib/types';
 
 export function useSchaufenster(userLat?: number, userLng?: number) {
+  const radiusKm = useAppStore((s) => s.radiusKm);
   const [profiles, setProfiles] = useState<SchaufensterProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,9 +20,9 @@ export function useSchaufenster(userLat?: number, userLng?: number) {
       userLat,
       userLng,
     );
-    setProfiles(prepareAuswahlProfiles(raw));
+    setProfiles(prepareAuswahlProfiles(raw, radiusKm));
     setLoading(false);
-  }, [userLat, userLng]);
+  }, [userLat, userLng, radiusKm]);
 
   const loadRef = useRef(load);
   loadRef.current = load;

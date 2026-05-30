@@ -95,6 +95,12 @@ export const FINE_LINE_ICONS = {
     { kind: 'path', d: 'M15.5 5 L19 8.5 L9 18.5 H5.5 V15 Z M13.5 7 L17 10.5' },
   ],
   filter: [{ kind: 'path', d: 'M4.5 7 H19.5 M7.5 12 H16.5 M10 17 H14' }],
+  list: [
+    { kind: 'path', d: 'M5 7 H19 M5 12 H19 M5 17 H19' },
+  ],
+  grid: [
+    { kind: 'path', d: 'M5 5 H10 V10 H5 Z M14 5 H19 V10 H14 Z M5 14 H10 V19 H5 Z M14 14 H19 V19 H14 Z' },
+  ],
   plus: [
     { kind: 'path', d: 'M12 5 V19 M5 12 H19' },
   ],

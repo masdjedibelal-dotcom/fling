@@ -32,7 +32,10 @@ export function useKeyboardVisible() {
 
     const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const show = Keyboard.addListener(showEvt, () => setKeyboardVisible(true));
+    const show = Keyboard.addListener(showEvt, (e) => {
+      setKeyboardVisible(true);
+      setKeyboardInsetBottom(e.endCoordinates.height);
+    });
     const hide = Keyboard.addListener(hideEvt, () => {
       setKeyboardVisible(false);
       setKeyboardInsetBottom(0);

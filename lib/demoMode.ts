@@ -13,6 +13,19 @@ import type { Gender, UserProfile } from '@/lib/types';
 /** Im Dev oder ohne Supabase: Verifikation überspringbar */
 export const isDemoMode = __DEV__ || !isSupabaseConfigured;
 
+/**
+ * Mock-Schaufenster wie im Browser, wenn Supabase leer ist oder RPC fehlschlägt.
+ * TestFlight: EXPO_PUBLIC_DEMO_MOCKS=true in Codemagic setzen — oder seed_demo_males.sql.
+ */
+export function isDemoSchaufensterFallbackEnabled(): boolean {
+  return (
+    __DEV__ ||
+    !isSupabaseConfigured ||
+    process.env.EXPO_PUBLIC_DEMO_MOCKS === 'true' ||
+    process.env.EXPO_PUBLIC_DEMO_MOCKS === '1'
+  );
+}
+
 export function getDemoUserProfile(gender: Gender): UserProfile {
   const now = new Date().toISOString();
   const base = gender === 'female' ? DEMO_FEMALE_BASE : DEMO_MALE_BASE;

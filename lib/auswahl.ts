@@ -5,9 +5,12 @@ import {
 } from './constants';
 import type { SchaufensterProfile } from './types';
 
-/** Im Radius und kürzlich aktiv (Jetzt oder zuletzt online) — keine Nutzer-Filter. */
-export function isAuswahlEligible(profile: SchaufensterProfile): boolean {
-  if (profile.distance_km > AUSWAHL_MAX_RADIUS_KM) return false;
+/** Im Radius und kürzlich aktiv (Jetzt oder zuletzt online). */
+export function isAuswahlEligible(
+  profile: SchaufensterProfile,
+  maxRadiusKm: number = AUSWAHL_MAX_RADIUS_KM,
+): boolean {
+  if (profile.distance_km > maxRadiusKm) return false;
   if (profile.availability === 'off') return false;
 
   if (profile.availability === 'now' || profile.last_seen_minutes <= 15) {
@@ -42,9 +45,9 @@ export function sortAuswahlProfiles(
 
 export function prepareAuswahlProfiles(
   raw: SchaufensterProfile[],
+  maxRadiusKm: number = AUSWAHL_MAX_RADIUS_KM,
 ): SchaufensterProfile[] {
-  return sortAuswahlProfiles(raw.filter(isAuswahlEligible)).slice(
-    0,
-    AUSWAHL_MAX_PROFILES,
-  );
+  return sortAuswahlProfiles(
+    raw.filter((p) => isAuswahlEligible(p, maxRadiusKm)),
+  ).slice(0, AUSWAHL_MAX_PROFILES);
 }
