@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { fetchSchaufenster } from '@/lib/api';
 import { prepareAuswahlProfiles } from '@/lib/auswahl';
 import { AUSWAHL_MAX_RADIUS_KM } from '@/lib/constants';
+import { canUseSupabaseRealtime, teardownRealtimeChannel } from '@/lib/realtime';
 import type { SchaufensterProfile } from '@/lib/types';
 
 export function useSchaufenster(userLat?: number, userLng?: number) {
@@ -21,24 +22,31 @@ export function useSchaufenster(userLat?: number, userLng?: number) {
     setLoading(false);
   }, [userLat, userLng]);
 
+  const loadRef = useRef(load);
+  loadRef.current = load;
+
   useEffect(() => {
     load();
   }, [load]);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!canUseSupabaseRealtime()) return;
+
     const channel = supabase
       .channel('schaufenster-matches')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'matches' },
-        () => load(),
+        () => {
+          void loadRef.current();
+        },
       )
       .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      teardownRealtimeChannel(channel);
     };
-  }, [load]);
+  }, []);
 
   const activeCount = profiles.filter((p) => p.availability === 'now').length;
 

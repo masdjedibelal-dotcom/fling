@@ -1,16 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { router } from 'expo-router';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { canUseSupabaseRealtime, teardownRealtimeChannel } from '@/lib/realtime';
 import { useAuthStore } from '@/stores/authStore';
 import type { VerificationStatus } from '@/lib/types';
 
 export function useVerificationSubscription(userId: string | null) {
-  const setProfile = useAuthStore((s) => s.setProfile);
   const setVerificationStatus = useAuthStore((s) => s.setVerificationStatus);
   const setRejectionReason = useAuthStore((s) => s.setRejectionReason);
 
+  const setVerificationStatusRef = useRef(setVerificationStatus);
+  const setRejectionReasonRef = useRef(setRejectionReason);
+  setVerificationStatusRef.current = setVerificationStatus;
+  setRejectionReasonRef.current = setRejectionReason;
+
   useEffect(() => {
-    if (!userId || !isSupabaseConfigured) return;
+    if (!canUseSupabaseRealtime(userId)) return;
 
     const channel = supabase
       .channel(`user-verification-${userId}`)
@@ -27,9 +32,9 @@ export function useVerificationSubscription(userId: string | null) {
             verification_status: VerificationStatus;
             rejection_reason: string | null;
           };
-          setVerificationStatus(row.verification_status);
+          setVerificationStatusRef.current(row.verification_status);
           if (row.rejection_reason) {
-            setRejectionReason(row.rejection_reason as never);
+            setRejectionReasonRef.current(row.rejection_reason as never);
           }
           if (row.verification_status === 'approved') {
             router.replace('/(auth)/verify/approved');
@@ -41,7 +46,7 @@ export function useVerificationSubscription(userId: string | null) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      teardownRealtimeChannel(channel);
     };
-  }, [userId, setProfile, setVerificationStatus, setRejectionReason]);
+  }, [userId]);
 }

@@ -6,9 +6,30 @@ import type {
   SchaufensterProfile,
   UserProfile,
 } from './types';
+import { toMatchPartnerProfile, toPublicSchaufensterProfile } from './schaufensterProfile';
 
-/** 5 Männer im Schaufenster (Demo) */
-export const DEMO_MALES: SchaufensterProfile[] = [
+type DemoMaleRow = Omit<SchaufensterProfile, 'pseudonym'> & {
+  display_name: string;
+  job: string;
+  age: number;
+  pseudonym?: string;
+};
+
+function demoPseudonym(displayName: string, id: string): string {
+  if (id === 'demo-m-far') return 'Paul_99';
+  if (id === 'demo-m-offline') return 'Max_off';
+  return `${displayName.replace(/\s/g, '_')}_M`;
+}
+
+function rowToDemoMale(row: DemoMaleRow): SchaufensterProfile {
+  return {
+    ...row,
+    pseudonym: row.pseudonym ?? demoPseudonym(row.display_name, row.id),
+  };
+}
+
+/** 12+ Männer im Schaufenster (Demo / Browser ohne Supabase) */
+const DEMO_MALE_ROWS: DemoMaleRow[] = [
   {
     id: 'demo-m1',
     display_name: 'Leon',
@@ -89,6 +110,104 @@ export const DEMO_MALES: SchaufensterProfile[] = [
     last_seen_minutes: 3,
   },
   {
+    id: 'demo-m6',
+    display_name: 'Lukas',
+    age: 28,
+    photos: ['https://i.pravatar.cc/600?img=15'],
+    primary_photo_idx: 0,
+    job: 'Marketing',
+    distance_km: 0.5,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Spontan, direkt, ohne Spielchen.',
+    interest_tags: ['Reisen', 'Wein'],
+    last_seen_minutes: 14,
+  },
+  {
+    id: 'demo-m7',
+    display_name: 'Ben',
+    age: 32,
+    photos: ['https://i.pravatar.cc/600?img=25'],
+    primary_photo_idx: 0,
+    job: 'Arzt',
+    distance_km: 1.8,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Nachtschicht, tagsüber frei.',
+    interest_tags: ['Sport', 'Kochen'],
+    last_seen_minutes: 2,
+  },
+  {
+    id: 'demo-m8',
+    display_name: 'Elias',
+    age: 27,
+    photos: ['https://i.pravatar.cc/600?img=47'],
+    primary_photo_idx: 0,
+    job: 'Barista',
+    distance_km: 2.1,
+    availability: 'today',
+    verified_at: new Date().toISOString(),
+    bio: 'Kaffee und gute Gespräche.',
+    interest_tags: ['Kaffee', 'Musik'],
+    last_seen_minutes: 45,
+  },
+  {
+    id: 'demo-m9',
+    display_name: 'Moritz',
+    age: 30,
+    photos: ['https://i.pravatar.cc/600?img=58'],
+    primary_photo_idx: 0,
+    job: 'Ingenieur',
+    distance_km: 3.2,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Klettern, Craft Beer, ehrlich.',
+    interest_tags: ['Sport', 'Reisen'],
+    last_seen_minutes: 6,
+  },
+  {
+    id: 'demo-m10',
+    display_name: 'David',
+    age: 29,
+    photos: ['https://i.pravatar.cc/600?img=61'],
+    primary_photo_idx: 0,
+    job: 'Journalist',
+    distance_km: 0.9,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Geschichten, Bars, Mitternacht.',
+    interest_tags: ['Kultur', 'Wein'],
+    last_seen_minutes: 1,
+  },
+  {
+    id: 'demo-m11',
+    display_name: 'Finn',
+    age: 25,
+    photos: ['https://i.pravatar.cc/600?img=67'],
+    primary_photo_idx: 0,
+    job: 'Student',
+    distance_km: 4.5,
+    availability: 'today',
+    verified_at: new Date().toISOString(),
+    bio: 'Neugierig, offen, heute Abend Zeit.',
+    interest_tags: ['Kino', 'Gaming'],
+    last_seen_minutes: 90,
+  },
+  {
+    id: 'demo-m12',
+    display_name: 'Tom',
+    age: 33,
+    photos: ['https://i.pravatar.cc/600?img=11'],
+    primary_photo_idx: 0,
+    job: 'Gründer',
+    distance_km: 2.4,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Busy days, clear nights.',
+    interest_tags: ['Tech', 'Fitness'],
+    last_seen_minutes: 4,
+  },
+  {
     id: 'demo-m-far',
     display_name: 'Paul',
     age: 30,
@@ -118,13 +237,16 @@ export const DEMO_MALES: SchaufensterProfile[] = [
   },
 ];
 
+export const DEMO_MALES: SchaufensterProfile[] = DEMO_MALE_ROWS.map(rowToDemoMale);
+
 export const DEMO_USER_ID = 'demo-female-user';
 export const DEMO_MALE_USER_ID = 'demo-male-user';
 
 /** Frauenprofil für Partner-Ansicht (Mann im Chat) */
 export function getDemoFemalePartnerProfile(): SchaufensterProfile {
-  return {
+  return rowToDemoMale({
     id: DEMO_USER_ID,
+    pseudonym: 'Anna_M',
     display_name: 'Anna',
     age: 26,
     photos: [
@@ -140,7 +262,7 @@ export function getDemoFemalePartnerProfile(): SchaufensterProfile {
     bio: 'Kaffee, gute Gespräche, spontane Pläne am Wochenende.',
     interest_tags: ['Kino', 'Wein', 'Reisen', 'Kochen'],
     last_seen_minutes: 2,
-  };
+  });
 }
 
 export const DEMO_FEMALE_BASE: Partial<UserProfile> = {
@@ -150,6 +272,7 @@ export const DEMO_FEMALE_BASE: Partial<UserProfile> = {
   verification_status: 'approved',
   account_status: 'active',
   rejection_reason: null,
+  pseudonym: 'Anna_M',
   display_name: 'Anna',
   handle: '@anna',
   photos: [
@@ -179,6 +302,7 @@ export const DEMO_MALE_BASE: Partial<UserProfile> = {
   verification_status: 'approved',
   account_status: 'active',
   rejection_reason: null,
+  pseudonym: 'Markus_M',
   display_name: 'Markus',
   handle: '@markus',
   photos: [
@@ -209,11 +333,20 @@ export function getDemoSchaufenster(
   _filter: AvailabilityFilter,
   radiusKm: number,
 ): SchaufensterProfile[] {
-  return DEMO_MALES.filter((m) => m.distance_km <= radiusKm);
+  return DEMO_MALES.filter((m) => m.distance_km <= radiusKm).map(
+    toPublicSchaufensterProfile,
+  );
+}
+
+/** Volles Profil inkl. Name/Beruf/Alter (Pick-Chat) */
+export function getDemoMaleMatchProfile(id: string): SchaufensterProfile | null {
+  const m = DEMO_MALES.find((x) => x.id === id);
+  return m ? toMatchPartnerProfile(m) : null;
 }
 
 export function getDemoProfile(id: string): SchaufensterProfile | null {
-  return DEMO_MALES.find((m) => m.id === id) ?? null;
+  const m = DEMO_MALES.find((x) => x.id === id);
+  return m ? toPublicSchaufensterProfile(m) : null;
 }
 
 export async function getDemoBusyMaleIds(): Promise<Set<string>> {
@@ -237,14 +370,16 @@ export async function getDemoMatch(): Promise<Match | null> {
     return null;
   }
   if (!match.female_profile || !match.male_profile) {
-    const male =
-      match.male_profile ??
-      DEMO_MALES.find((m) => m.id === match.male_id) ??
-      DEMO_MALES[0];
+    const maleSeed =
+      DEMO_MALES.find((m) => m.id === match.male_id) ?? DEMO_MALES[0];
+    const male = toMatchPartnerProfile(
+      match.male_profile ?? maleSeed,
+    );
     match = {
       ...match,
       male_profile: male,
-      female_profile: match.female_profile ?? getDemoFemalePartnerProfile(),
+      female_profile:
+        match.female_profile ?? toMatchPartnerProfile(getDemoFemalePartnerProfile()),
       female_city: match.female_city ?? 'München',
       female_display_name: match.female_display_name ?? 'Anna',
     };
@@ -276,20 +411,68 @@ export async function createDemoMatch(
     status: 'active',
     created_at: new Date().toISOString(),
     expires_at: expires.toISOString(),
-    male_profile: male,
-    female_profile: getDemoFemalePartnerProfile(),
+    male_profile: toMatchPartnerProfile(male),
+    female_profile: toMatchPartnerProfile(getDemoFemalePartnerProfile()),
     female_city: 'München',
     female_display_name: 'Anna',
   };
   await saveDemoMatch(match);
+  const seed = defaultDemoChatMessages(match.id);
+  await AsyncStorage.setItem(
+    MESSAGES_KEY,
+    JSON.stringify({ [match.id]: seed }),
+  );
   return match;
+}
+
+function defaultDemoChatMessages(matchId: string): Message[] {
+  const now = Date.now();
+  return [
+    {
+      id: 'demo-msg-1',
+      match_id: matchId,
+      sender_id: 'demo-m1',
+      body: 'Schön, dass du gepickt hast.',
+      created_at: new Date(now - 3_600_000).toISOString(),
+      deleted_at: null,
+      is_female: false,
+    },
+    {
+      id: 'demo-msg-2',
+      match_id: matchId,
+      sender_id: 'demo-m1',
+      body: 'Lust auf ein ruhiges Café?',
+      created_at: new Date(now - 3_500_000).toISOString(),
+      deleted_at: null,
+      is_female: false,
+    },
+    {
+      id: 'demo-msg-3',
+      match_id: matchId,
+      sender_id: 'demo-m1',
+      body: 'Wann passt’s dir?',
+      created_at: new Date(now - 120_000).toISOString(),
+      deleted_at: null,
+      is_female: false,
+    },
+    {
+      id: 'demo-msg-4',
+      match_id: matchId,
+      sender_id: DEMO_USER_ID,
+      body: 'Café an der Isar, 18 Uhr?',
+      created_at: new Date(now - 60_000).toISOString(),
+      deleted_at: null,
+      is_female: true,
+    },
+  ];
 }
 
 export async function getDemoMessages(matchId: string): Promise<Message[]> {
   const raw = await AsyncStorage.getItem(MESSAGES_KEY);
-  if (!raw) return [];
+  if (!raw) return defaultDemoChatMessages(matchId);
   const all = JSON.parse(raw) as Record<string, Message[]>;
-  return all[matchId] ?? [];
+  const list = all[matchId] ?? [];
+  return list.length > 0 ? list : defaultDemoChatMessages(matchId);
 }
 
 export async function addDemoMessage(
@@ -297,6 +480,12 @@ export async function addDemoMessage(
   senderId: string,
   body: string,
   isFemale: boolean,
+  extra?: Partial<
+    Pick<
+      Message,
+      'message_type' | 'media_url' | 'media_duration_ms' | 'view_once' | 'viewed_at'
+    >
+  >,
 ): Promise<Message> {
   const msg: Message = {
     id: `msg-${Date.now()}`,
@@ -306,12 +495,32 @@ export async function addDemoMessage(
     created_at: new Date().toISOString(),
     deleted_at: null,
     is_female: isFemale,
+    message_type: extra?.message_type ?? 'text',
+    media_url: extra?.media_url ?? null,
+    media_duration_ms: extra?.media_duration_ms ?? null,
+    view_once: extra?.view_once ?? false,
+    viewed_at: extra?.viewed_at ?? null,
   };
   const raw = await AsyncStorage.getItem(MESSAGES_KEY);
   const all: Record<string, Message[]> = raw ? JSON.parse(raw) : {};
   all[matchId] = [...(all[matchId] ?? []), msg];
   await AsyncStorage.setItem(MESSAGES_KEY, JSON.stringify(all));
   return msg;
+}
+
+export async function markDemoMessageViewed(messageId: string): Promise<void> {
+  const raw = await AsyncStorage.getItem(MESSAGES_KEY);
+  if (!raw) return;
+  const all = JSON.parse(raw) as Record<string, Message[]>;
+  let changed = false;
+  for (const matchId of Object.keys(all)) {
+    all[matchId] = all[matchId].map((m) => {
+      if (m.id !== messageId) return m;
+      changed = true;
+      return { ...m, viewed_at: new Date().toISOString() };
+    });
+  }
+  if (changed) await AsyncStorage.setItem(MESSAGES_KEY, JSON.stringify(all));
 }
 
 export const DEMO_STATS = {

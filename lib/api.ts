@@ -5,10 +5,12 @@ import {
   clearDemoMatch,
   getDemoMessages,
   addDemoMessage,
+  markDemoMessageViewed,
   getDemoSchaufenster,
   getDemoProfile,
   getDemoBusyMaleIds,
   getDemoFemalePartnerProfile,
+  getDemoMaleMatchProfile,
 } from './demo';
 import type {
   Availability,
@@ -22,6 +24,10 @@ import type {
 } from './types';
 import { DEFAULT_NOTIFICATION_PREFS } from './types';
 import { DEFAULT_RADIUS_KM, MATCH_DURATION_HOURS } from './constants';
+import {
+  toPublicSchaufensterProfile,
+  toMatchPartnerProfile,
+} from './schaufensterProfile';
 
 const DEFAULT_CONFIG: AppConfig = {
   match_duration_hours: MATCH_DURATION_HOURS,
@@ -59,7 +65,9 @@ export async function fetchSchaufenster(
 ): Promise<SchaufensterProfile[]> {
   if (!isSupabaseConfigured) {
     const busy = await getDemoBusyMaleIds();
-    return getDemoSchaufenster(filter, radiusKm).filter((m) => !busy.has(m.id));
+    return getDemoSchaufenster(filter, radiusKm)
+      .map(toPublicSchaufensterProfile)
+      .filter((m) => !busy.has(m.id));
   }
   const { data, error } = await supabase.rpc('get_schaufenster', {
     radius_km: radiusKm,
@@ -69,19 +77,11 @@ export async function fetchSchaufenster(
   });
   if (error) {
     const busy = await getDemoBusyMaleIds();
-    return getDemoSchaufenster(filter, radiusKm).filter((m) => !busy.has(m.id));
+    return getDemoSchaufenster(filter, radiusKm)
+      .map(toPublicSchaufensterProfile)
+      .filter((m) => !busy.has(m.id));
   }
-  return (data ?? []) as SchaufensterProfile[];
-}
-
-function normalizeSchaufensterProfile(
-  p: SchaufensterProfile,
-): SchaufensterProfile {
-  return {
-    ...p,
-    display_name: p.display_name ?? p.job ?? 'Profil',
-    age: p.age ?? 25,
-  };
+  return ((data ?? []) as SchaufensterProfile[]).map(toPublicSchaufensterProfile);
 }
 
 export async function fetchSchaufensterProfile(
@@ -89,11 +89,11 @@ export async function fetchSchaufensterProfile(
 ): Promise<SchaufensterProfile | null> {
   if (!isSupabaseConfigured) {
     const demo = getDemoProfile(id);
-    return demo ? normalizeSchaufensterProfile(demo) : null;
+    return demo ? toPublicSchaufensterProfile(demo) : null;
   }
   const { data } = await supabase.rpc('get_schaufenster_profile', { profile_id: id });
   const raw = (data as SchaufensterProfile) ?? getDemoProfile(id);
-  return raw ? normalizeSchaufensterProfile(raw) : null;
+  return raw ? toPublicSchaufensterProfile(raw) : null;
 }
 
 export async function fetchPartnerProfile(
@@ -109,14 +109,15 @@ export async function fetchPartnerProfile(
     if (viewerGender === 'male') {
       const profile = match.female_profile ?? getDemoFemalePartnerProfile();
       return {
-        profile: normalizeSchaufensterProfile(profile),
+        profile: toPublicSchaufensterProfile(profile),
         city: match.female_city ?? 'München',
       };
     }
 
-    const male = match.male_profile ?? getDemoProfile(match.male_id);
+    const male =
+      match.male_profile ?? getDemoMaleMatchProfile(match.male_id);
     if (!male) return null;
-    return { profile: normalizeSchaufensterProfile(male), city: null };
+    return { profile: toPublicSchaufensterProfile(male), city: null };
   }
 
   const { data, error } = await supabase.rpc('get_partner_profile', {
@@ -126,7 +127,7 @@ export async function fetchPartnerProfile(
 
   const row = data as { profile: SchaufensterProfile; city: string | null };
   return {
-    profile: normalizeSchaufensterProfile(row.profile),
+    profile: toPublicSchaufensterProfile(row.profile),
     city: row.city,
   };
 }
@@ -137,21 +138,61 @@ export async function fetchActiveMatch(userId: string): Promise<Match | null> {
     user_id: userId,
   });
   if (error || !data) return getDemoMatch();
-  return data as Match;
+  const match = data as Match;
+  return {
+    ...match,
+    male_profile: match.male_profile
+      ? toMatchPartnerProfile(match.male_profile)
+      : undefined,
+    female_profile: match.female_profile
+      ? toMatchPartnerProfile(match.female_profile)
+      : undefined,
+  };
+}
+
+function isDemoProfileId(id: string): boolean {
+  return id.startsWith('demo-');
+}
+
+function shouldUseDemoMatch(maleId: string): boolean {
+  return !isSupabaseConfigured || isDemoProfileId(maleId);
+}
+
+function shouldFallbackCreateMatchToDemo(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes('invalid api key') ||
+    m.includes('jwt') ||
+    m.includes('not authenticated') ||
+    m.includes('permission denied')
+  );
+}
+
+async function createMatchViaDemo(
+  femaleId: string,
+  maleId: string,
+): Promise<{ match: Match | null; error: string | null }> {
+  const male = getDemoProfile(maleId);
+  if (!male) return { match: null, error: 'Profil nicht gefunden' };
+  const match = await createDemoMatch(femaleId, male);
+  return { match, error: null };
 }
 
 export async function createMatch(
   femaleId: string,
   maleId: string,
 ): Promise<{ match: Match | null; error: string | null }> {
-  if (!isSupabaseConfigured) {
-    const male = getDemoProfile(maleId);
-    if (!male) return { match: null, error: 'Profil nicht gefunden' };
-    const match = await createDemoMatch(femaleId, male);
-    return { match, error: null };
+  if (shouldUseDemoMatch(maleId)) {
+    return createMatchViaDemo(femaleId, maleId);
   }
+
   const { data, error } = await supabase.rpc('create_match', { male_id: maleId });
-  if (error) return { match: null, error: error.message };
+  if (error) {
+    if (__DEV__ && shouldFallbackCreateMatchToDemo(error.message)) {
+      return createMatchViaDemo(femaleId, maleId);
+    }
+    return { match: null, error: error.message };
+  }
   return { match: data as Match, error: null };
 }
 
@@ -198,6 +239,60 @@ export async function sendMessage(
   };
 }
 
+export type SendMediaPayload = {
+  message_type: 'image' | 'voice';
+  media_url: string;
+  body?: string;
+  media_duration_ms?: number;
+  view_once?: boolean;
+};
+
+export async function sendMediaMessage(
+  matchId: string,
+  senderId: string,
+  isFemale: boolean,
+  payload: SendMediaPayload,
+): Promise<{ message: Message | null; error: string | null }> {
+  if (!isSupabaseConfigured) {
+    const message = await addDemoMessage(matchId, senderId, payload.body ?? '', isFemale, {
+      message_type: payload.message_type,
+      media_url: payload.media_url,
+      media_duration_ms: payload.media_duration_ms,
+      view_once: payload.view_once ?? payload.message_type === 'image',
+    });
+    return { message, error: null };
+  }
+  const row = {
+    match_id: matchId,
+    sender_id: senderId,
+    body: payload.body ?? '',
+    message_type: payload.message_type,
+    media_url: payload.media_url,
+    media_duration_ms: payload.media_duration_ms ?? null,
+    view_once: payload.view_once ?? payload.message_type === 'image',
+  };
+  const { data, error } = await supabase.from('messages').insert(row).select().single();
+  if (error) return { message: null, error: error.message };
+  return {
+    message: { ...(data as Message), is_female: isFemale },
+    error: null,
+  };
+}
+
+export async function markMessageViewed(
+  messageId: string,
+): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured) {
+    await markDemoMessageViewed(messageId);
+    return { error: null };
+  }
+  const { error } = await supabase
+    .from('messages')
+    .update({ viewed_at: new Date().toISOString() })
+    .eq('id', messageId);
+  return { error: error?.message ?? null };
+}
+
 export async function submitReport(
   reporterId: string,
   reportedId: string,
@@ -239,6 +334,7 @@ export async function deleteOwnAccount(): Promise<{ error: string | null }> {
 export function enrichProfile(p: Partial<UserProfile> | null): UserProfile | null {
   if (!p?.id) return null;
   return {
+    pseudonym: p.pseudonym ?? (p.gender === 'female' ? 'Anna_M' : 'Markus_M'),
     display_name: p.display_name ?? (p.gender === 'female' ? 'Anna' : 'Markus'),
     handle: p.handle ?? `@${p.gender === 'female' ? 'anna' : 'markus'}`,
     photos: p.photos ?? ['https://i.pravatar.cc/400?img=5'],

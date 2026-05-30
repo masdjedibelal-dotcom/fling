@@ -18,8 +18,21 @@ const ExpoSecureStoreAdapter = {
   removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
 
+function isValidSupabaseUrl(url: string): boolean {
+  const u = url.trim().toLowerCase();
+  if (!u || u.includes('xxx') || u.includes('your-project')) return false;
+  return /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(u);
+}
+
+function isValidSupabaseAnonKey(key: string): boolean {
+  const k = key.trim();
+  if (!k || k.length < 100 || k.includes('...')) return false;
+  if (k.endsWith('.demo')) return false;
+  return k.split('.').length === 3;
+}
+
 export const isSupabaseConfigured =
-  Boolean(supabaseUrl) && Boolean(supabaseAnonKey);
+  isValidSupabaseUrl(supabaseUrl) && isValidSupabaseAnonKey(supabaseAnonKey);
 
 export const supabase: SupabaseClient = createClient(
   isSupabaseConfigured ? supabaseUrl : DEMO_URL,

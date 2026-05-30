@@ -33,6 +33,7 @@ export interface UserProfile {
   privacy_accepted_at: string | null;
   marketing_opt_in: boolean;
   display_name: string | null;
+  pseudonym: string | null;
   handle: string | null;
   photos: string[];
   primary_photo_idx: number;
@@ -73,17 +74,19 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
 
 export interface SchaufensterProfile {
   id: string;
-  display_name: string;
-  age: number;
+  pseudonym: string;
   photos: string[];
   primary_photo_idx: number;
-  job: string;
   distance_km: number;
   availability: Availability;
   verified_at: string;
   bio: string;
   interest_tags: string[];
   last_seen_minutes: number;
+  /** Nur nach Match im Pick-Chat */
+  display_name?: string;
+  job?: string;
+  age?: number;
 }
 
 export interface Match {
@@ -99,6 +102,8 @@ export interface Match {
   female_display_name?: string;
 }
 
+export type MessageType = 'text' | 'image' | 'voice';
+
 export interface Message {
   id: string;
   match_id: string;
@@ -107,24 +112,11 @@ export interface Message {
   created_at: string;
   deleted_at: string | null;
   is_female: boolean;
-}
-
-export type SafePickStatus = 'active' | 'completed' | 'cancelled';
-export type SafePickRating = 'good' | 'bad';
-
-export interface SafePickSession {
-  id: string;
-  match_id: string;
-  user_id: string;
-  meet_at: string;
-  area_text: string;
-  context_note: string | null;
-  check_in_at: string;
-  status: SafePickStatus;
-  follow_up_rating: SafePickRating | null;
-  follow_up_note: string | null;
-  follow_up_at: string | null;
-  created_at: string;
+  message_type?: MessageType;
+  media_url?: string | null;
+  media_duration_ms?: number | null;
+  view_once?: boolean;
+  viewed_at?: string | null;
 }
 
 export interface AppConfig {

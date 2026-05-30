@@ -1,6 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { fetchMessages, sendMessage } from '@/lib/api';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import {
+  fetchMessages,
+  sendMessage,
+  sendMediaMessage,
+  markMessageViewed,
+  type SendMediaPayload,
+} from '@/lib/api';
+import { canUseSupabaseRealtime, teardownRealtimeChannel } from '@/lib/realtime';
 import type { Message } from '@/lib/types';
 
 export function useChat(matchId: string | null, senderId: string, isFemale: boolean) {
@@ -19,12 +26,16 @@ export function useChat(matchId: string | null, senderId: string, isFemale: bool
     setLoading(false);
   }, [matchId]);
 
+  const loadRef = useRef(load);
+  loadRef.current = load;
+
   useEffect(() => {
     load();
   }, [load]);
 
   useEffect(() => {
-    if (!matchId || !isSupabaseConfigured) return;
+    if (!canUseSupabaseRealtime(matchId)) return;
+
     const channel = supabase
       .channel(`messages-${matchId}`)
       .on(
@@ -35,13 +46,28 @@ export function useChat(matchId: string | null, senderId: string, isFemale: bool
           table: 'messages',
           filter: `match_id=eq.${matchId}`,
         },
-        () => load(),
+        () => {
+          void loadRef.current();
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `match_id=eq.${matchId}`,
+        },
+        () => {
+          void loadRef.current();
+        },
       )
       .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      teardownRealtimeChannel(channel);
     };
-  }, [matchId, load]);
+  }, [matchId]);
 
   const send = async (body: string) => {
     if (!matchId) return { error: 'Kein Match' };
@@ -50,8 +76,41 @@ export function useChat(matchId: string | null, senderId: string, isFemale: bool
     return { error };
   };
 
+  const sendMedia = async (payload: SendMediaPayload) => {
+    if (!matchId) return { error: 'Kein Match' };
+    const { message, error } = await sendMediaMessage(
+      matchId,
+      senderId,
+      isFemale,
+      payload,
+    );
+    if (message) setMessages((prev) => [...prev, message]);
+    return { error };
+  };
+
+  const markViewed = async (messageId: string) => {
+    const { error } = await markMessageViewed(messageId);
+    if (!error) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId ? { ...m, viewed_at: new Date().toISOString() } : m,
+        ),
+      );
+    }
+    return { error };
+  };
+
   const visible = messages.slice(-2);
   const blurred = messages.slice(0, -2);
 
-  return { messages, visible, blurred, loading, send, reload: load };
+  return {
+    messages,
+    visible,
+    blurred,
+    loading,
+    send,
+    sendMedia,
+    markViewed,
+    reload: load,
+  };
 }

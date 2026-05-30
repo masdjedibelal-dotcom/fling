@@ -31,7 +31,6 @@ export const PUSH_COPY = {
   expired: '24 Stunden vorbei.',
   man_cancelled: 'Unpick.',
   woman_cancelled: 'Chat beendet.',
-  safe_pick_checkin: 'Wie läuft’s?',
 } as const;
 
 export type PushCopyKey = keyof typeof PUSH_COPY;

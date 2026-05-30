@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { fetchActiveMatch } from '@/lib/api';
+import { canUseSupabaseRealtime, teardownRealtimeChannel } from '@/lib/realtime';
 import type { Match } from '@/lib/types';
 
 export function useMatch(userId: string | null) {
@@ -19,24 +20,31 @@ export function useMatch(userId: string | null) {
     setLoading(false);
   }, [userId]);
 
+  const loadRef = useRef(load);
+  loadRef.current = load;
+
   useEffect(() => {
     load();
   }, [load]);
 
   useEffect(() => {
-    if (!userId || !isSupabaseConfigured) return;
+    if (!canUseSupabaseRealtime(userId)) return;
+
     const channel = supabase
       .channel(`match-${userId}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'matches' },
-        () => load(),
+        () => {
+          void loadRef.current();
+        },
       )
       .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      teardownRealtimeChannel(channel);
     };
-  }, [userId, load]);
+  }, [userId]);
 
   const remainingMs = match
     ? new Date(match.expires_at).getTime() - Date.now()

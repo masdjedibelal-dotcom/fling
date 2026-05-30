@@ -7,6 +7,7 @@ export function userProfileToSchaufenster(p: UserProfile): SchaufensterProfile {
   const age = getAgeFromBirthDate(p.birth_date) ?? 25;
   return {
     id: p.id,
+    pseudonym: p.pseudonym ?? 'Profil',
     display_name: p.display_name ?? 'Profil',
     age,
     photos: p.photos?.length ? p.photos : ['https://i.pravatar.cc/600?img=5'],
@@ -25,16 +26,14 @@ export type ProfileStat = { label: string; value: string };
 
 export function statsForMaleProfile(p: SchaufensterProfile): ProfileStat[] {
   return [
-    { label: 'Beruf', value: p.job },
+    { label: 'Pseudonym', value: p.pseudonym || '—' },
     { label: 'Distanz', value: formatDistance(p.distance_km) },
-    { label: 'Alter', value: `${p.age}` },
   ];
 }
 
 export function statsForFemaleProfile(p: SchaufensterProfile, city?: string | null): ProfileStat[] {
   return [
-    { label: 'Beruf', value: p.job || '—' },
+    { label: 'Pseudonym', value: p.pseudonym || '—' },
     { label: 'Ort', value: city ?? '—' },
-    { label: 'Alter', value: `${p.age}` },
   ];
 }
