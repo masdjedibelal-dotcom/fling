@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.flingapp.app",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
         "NSCameraUsageDescription": "Fling benötigt die Kamera für Ausweis-Scan und Live-Selfie.",
         "NSPhotoLibraryUsageDescription": "Fling benötigt Zugriff auf deine Fotos für Profilbilder.",

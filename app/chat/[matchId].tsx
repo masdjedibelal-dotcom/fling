@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -99,6 +100,8 @@ export default function ChatScreen() {
   const reportedId = isFemale ? match?.male_id : match?.female_id;
 
   const keyboardOffset = insets.top + 156;
+
+  const dismissKeyboard = () => Keyboard.dismiss();
 
   const onSendText = async () => {
     if (!text.trim() || text.length > MAX_MESSAGE_LENGTH) return;
@@ -224,7 +227,7 @@ export default function ChatScreen() {
         </View>
       ) : (
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           className="flex-1"
           keyboardVerticalOffset={keyboardOffset}
         >
@@ -233,8 +236,9 @@ export default function ChatScreen() {
             className="flex-1"
             contentContainerClassName="flex-grow justify-end"
             showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
+            keyboardShouldPersistTaps="never"
+            keyboardDismissMode="on-drag"
+            onScrollBeginDrag={dismissKeyboard}
           >
             <ChatMessages
               blurred={blurred}

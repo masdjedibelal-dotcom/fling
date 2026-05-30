@@ -15,7 +15,7 @@ export default function Index() {
   const setSession = useAuthStore((s) => s.setSession);
 
   useEffect(() => {
-    if (hydrated && isDemoMode) ensureDemoSession();
+    if (hydrated) ensureDemoSession();
   }, [hydrated]);
 
   useEffect(() => {
