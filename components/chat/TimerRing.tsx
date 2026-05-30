@@ -1,11 +1,21 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import Animated, {
+  useAnimatedProps,
+  useSharedValue,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
+
 import { Image } from 'expo-image';
 
 const SIZE = 88;
 const STROKE = 3;
 const R = (SIZE - STROKE) / 2;
 const CIRC = 2 * Math.PI * R;
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export function TimerRing({
   photoUri,
@@ -16,7 +26,18 @@ export function TimerRing({
   progress: number;
   color: string;
 }) {
-  const offset = CIRC * (1 - progress);
+  const offsetSv = useSharedValue(CIRC * (1 - progress));
+
+  useEffect(() => {
+    offsetSv.value = withTiming(CIRC * (1 - progress), {
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [progress, offsetSv]);
+
+  const circleProps = useAnimatedProps(() => ({
+    strokeDashoffset: offsetSv.value,
+  }));
 
   return (
     <View className="w-[88px] h-[88px] items-center justify-center">
@@ -29,7 +50,7 @@ export function TimerRing({
           strokeWidth={STROKE}
           fill="none"
         />
-        <Circle
+        <AnimatedCircle
           cx={SIZE / 2}
           cy={SIZE / 2}
           r={R}
@@ -37,7 +58,7 @@ export function TimerRing({
           strokeWidth={STROKE}
           fill="none"
           strokeDasharray={`${CIRC} ${CIRC}`}
-          strokeDashoffset={offset}
+          animatedProps={circleProps}
           strokeLinecap="round"
           rotation="-90"
           origin={`${SIZE / 2}, ${SIZE / 2}`}

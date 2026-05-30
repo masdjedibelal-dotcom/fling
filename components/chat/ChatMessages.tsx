@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, Platform, StyleSheet, Pressable } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { Audio } from 'expo-av';
@@ -111,7 +112,7 @@ function ViewOnceBubble({
   onOpen: () => void;
 }) {
   const opened = Boolean(msg.viewed_at);
-  const canOpen = isPartner && !opened && msg.media_url;
+  const canOpen = isPartner && !opened && Boolean(msg.media_url);
 
   return (
     <Pressable
@@ -124,16 +125,22 @@ function ViewOnceBubble({
         borderRadius: FLING_RADIUS.bubble,
         borderBottomLeftRadius: isPartner ? FLING_RADIUS.bubbleTail : FLING_RADIUS.bubble,
         borderBottomRightRadius: isPartner ? FLING_RADIUS.bubble : FLING_RADIUS.bubbleTail,
+        opacity: opened ? 0.72 : 1,
       }}
     >
       <View className="flex-row items-center gap-2.5">
-        <FlingIcon name="camera" size={20} color="#fff" />
+        <View
+          className="w-9 h-9 rounded-full items-center justify-center"
+          style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+        >
+          <FlingIcon name="camera" size={18} color="#fff" />
+        </View>
         <View>
           <Text
             className="text-white font-semibold"
             style={{ fontSize: FLING_TYPE.subhead }}
           >
-            Einmal-Foto
+            Foto
           </Text>
           <Text
             className="text-white/60 mt-0.5"
@@ -142,19 +149,11 @@ function ViewOnceBubble({
             {opened
               ? 'Geöffnet'
               : isPartner
-                ? 'Tippen zum Ansehen · 1×'
-                : 'Wird nach dem Öffnen gelöscht'}
+                ? 'Tippen zum Öffnen'
+                : 'Noch nicht geöffnet'}
           </Text>
         </View>
       </View>
-      {opened && isPartner ? (
-        <View className="mt-2 overflow-hidden rounded-lg h-16 items-center justify-center bg-black/30">
-          <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFillObject} />
-          <Text className="text-fg-4" style={{ fontSize: FLING_TYPE.caption2 }}>
-            Nicht mehr verfügbar
-          </Text>
-        </View>
-      ) : null}
     </Pressable>
   );
 }
@@ -252,14 +251,15 @@ function Bubble({
   }
 
   return (
-    <View
+    <Animated.View
+      entering={FadeInUp.duration(200).springify().damping(18)}
       className={`flex-row items-end gap-1.5 max-w-[78%] ${
         isPartner ? '' : 'self-end flex-row-reverse'
       }`}
     >
       <MessageAvatar uri={isPartner ? partnerPhotoUri : userPhotoUri} />
       {content}
-    </View>
+    </Animated.View>
   );
 }
 

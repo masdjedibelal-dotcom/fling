@@ -3,6 +3,7 @@ import { useAppDimensions } from '@/hooks/useAppDimensions';
 import { Image } from 'expo-image';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { ReactNode } from 'react';
+import { SafeTopChrome } from '@/components/ui/SafeTopChrome';
 
 const STORY_SEGMENT_W = 28;
 const STORY_SEGMENT_GAP = 4;
@@ -63,14 +64,12 @@ export function ProfilePhotoViewer({
   height: number;
   topInset: number;
   header?: ReactNode;
-  /** Links unten über dem Bild (Pseudonym, Meta, Interessen, …) */
   overlay?: ReactNode;
 }) {
   const { width } = useAppDimensions();
   const photo = photos[photoIdx] ?? photos[0];
   const count = photos.length;
   const hasStories = count > 1;
-  const headerTop = topInset + (hasStories ? 28 : 10);
   const extendTop = topInset > 0 ? topInset : 0;
 
   const goPrev = () => onIndexChange(Math.max(0, photoIdx - 1));
@@ -103,27 +102,23 @@ export function ProfilePhotoViewer({
         </View>
       </GestureDetector>
 
-      {hasStories ? (
+      {hasStories || header ? (
         <View
-          className="absolute left-0 right-0 z-20 items-center"
-          style={{ top: topInset + 8, paddingHorizontal: 48 }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 }}
           pointerEvents="box-none"
         >
-          <StoryProgressDots
-            count={count}
-            activeIndex={photoIdx}
-            onSelect={onIndexChange}
-          />
-        </View>
-      ) : null}
-
-      {header ? (
-        <View
-          className="absolute left-0 right-0 z-20 px-4"
-          style={{ top: headerTop }}
-          pointerEvents="box-none"
-        >
-          {header}
+          <SafeTopChrome extendBackground="transparent">
+            {hasStories ? (
+              <View className="items-center px-12 mb-2" pointerEvents="box-none">
+                <StoryProgressDots
+                  count={count}
+                  activeIndex={photoIdx}
+                  onSelect={onIndexChange}
+                />
+              </View>
+            ) : null}
+            {header ? <View className="px-4">{header}</View> : null}
+          </SafeTopChrome>
         </View>
       ) : null}
 

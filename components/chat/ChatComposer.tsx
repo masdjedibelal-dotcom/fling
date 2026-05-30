@@ -16,12 +16,15 @@ import { Audio } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import { ChatEmojiBar } from '@/components/chat/ChatEmojiBar';
+import { PhotoSourceSheet } from '@/components/chat/PhotoSourceSheet';
+import { ViewOnceCaptureModal } from '@/components/chat/ViewOnceCaptureModal';
+import { ViewOncePhotoPreview } from '@/components/chat/ViewOncePhotoPreview';
 import { FLING_COLORS, FLING_BUTTON_GRADIENT, FLING_TOUCH, FLING_TYPE } from '@/lib/designTokens';
 import { MAX_MESSAGE_LENGTH, MESSAGE_LIMIT_HINT } from '@/lib/constants';
+import { triggerHaptic } from '@/lib/haptics';
 
 export const CHAT_INPUT_ACCESSORY_ID = 'flingChatEmojiBar';
 
-/** Eine Toolbar-Zeile — iOS Mindesthöhe 44pt (wie Messages/WhatsApp) */
 const BAR_H = FLING_TOUCH.bar;
 const INPUT_FONT = FLING_TYPE.body;
 const INPUT_LINE_H = 22;
@@ -57,6 +60,9 @@ export function ChatComposer({
   const recordStartedAt = useRef(0);
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [androidEmoji, setAndroidEmoji] = useState(false);
   const [inputContentH, setInputContentH] = useState(INPUT_LINE_H);
 
@@ -74,7 +80,15 @@ export function ChatComposer({
         Math.min(INPUT_MAX_H + INPUT_V_PAD * 2, inputContentH + INPUT_V_PAD * 2),
       )
     : BAR_H;
+
   const showAndroidEmoji = Platform.OS === 'android' && androidEmoji && keyboardVisible;
+
+  const bottomPad =
+    Platform.OS === 'web' && keyboardVisible
+      ? Math.max(keyboardInsetBottom, 0)
+      : keyboardVisible
+        ? 0
+        : insets.bottom;
 
   const insertEmoji = useCallback(
     (emoji: string) => {
@@ -85,21 +99,42 @@ export function ChatComposer({
     [text, onChangeText],
   );
 
-  const captureViewOncePhoto = async () => {
-    const perm = await ImagePicker.requestCameraPermissionsAsync();
+  const openPhotoSheet = () => {
+    inputRef.current?.blur();
+    setPhotoSheetOpen(true);
+  };
+
+  const pickFromGallery = async () => {
+    setPhotoSheetOpen(false);
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert('Kamera', 'Bitte Kamera-Zugriff erlauben.');
+      Alert.alert('Galerie', 'Bitte Galerie-Zugriff erlauben.');
       return;
     }
-    setBusy(true);
-    const result = await ImagePicker.launchCameraAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.85,
       allowsEditing: false,
     });
-    setBusy(false);
-    if (result.canceled || !result.assets[0]) return;
-    await onSendImage(result.assets[0].uri);
+    if (!result.canceled && result.assets[0]?.uri) {
+      setPreviewUri(result.assets[0].uri);
+    }
+  };
+
+  const openCamera = () => {
+    setPhotoSheetOpen(false);
+    setCameraOpen(true);
+  };
+
+  const sendPhoto = async (uri: string) => {
+    setBusy(true);
+    try {
+      await onSendImage(uri);
+    } finally {
+      setBusy(false);
+      setPreviewUri(null);
+      setCameraOpen(false);
+    }
   };
 
   const startRecording = async () => {
@@ -145,13 +180,10 @@ export function ChatComposer({
     }
   };
 
-  const onMicPressIn = () => {
+  const onMicPress = () => {
     if (hasText || busy) return;
-    void startRecording();
-  };
-
-  const onMicPressOut = () => {
     if (recording) void stopRecording();
+    else void startRecording();
   };
 
   const emojiAccessory =
@@ -164,46 +196,53 @@ export function ChatComposer({
   return (
     <>
       {emojiAccessory}
-
       {showAndroidEmoji ? <ChatEmojiBar onPick={insertEmoji} /> : null}
+
+      <PhotoSourceSheet
+        visible={photoSheetOpen}
+        onClose={() => setPhotoSheetOpen(false)}
+        onCamera={openCamera}
+        onGallery={() => void pickFromGallery()}
+      />
+
+      <ViewOnceCaptureModal
+        visible={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onCapture={(uri) => setPreviewUri(uri)}
+        onOpenGallery={() => void pickFromGallery()}
+      />
+
+      <ViewOncePhotoPreview
+        visible={Boolean(previewUri)}
+        uri={previewUri ?? ''}
+        onClose={() => setPreviewUri(null)}
+        onRetake={() => setPreviewUri(null)}
+        onSend={() => {
+          if (previewUri) void sendPhoto(previewUri);
+        }}
+      />
 
       <View
         style={{
-          borderTopWidth: 1,
+          borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: FLING_COLORS.line,
           backgroundColor: FLING_COLORS.bg,
-          paddingBottom: keyboardVisible
-            ? Platform.OS === 'web'
-              ? Math.max(keyboardInsetBottom, 8) + 4
-              : 4
-            : Math.max(insets.bottom, 8),
-          paddingTop: 6,
-          paddingHorizontal: 8,
+          paddingBottom: bottomPad,
+          paddingTop: 8,
+          paddingHorizontal: 10,
         }}
       >
-        <View className="flex-row items-center gap-1.5" style={{ minHeight: BAR_H }}>
+        <View className="flex-row items-end gap-2" style={{ minHeight: BAR_H }}>
           <Pressable
-            onPress={() => void captureViewOncePhoto()}
+            onPress={openPhotoSheet}
             disabled={busy}
-            style={[styles.barSlot, styles.cameraSlot]}
-            accessibilityLabel="Einmal-Foto aufnehmen"
+            style={styles.iconSlot}
+            accessibilityLabel="Foto senden"
           >
-            <FlingIcon name="camera" size={20} color={FLING_COLORS.fg} />
-            <View style={styles.viewOnceBadge}>
-              <Text style={styles.viewOnceBadgeText}>1</Text>
-            </View>
+            <FlingIcon name="camera" size={22} color={FLING_COLORS.fg} />
           </Pressable>
 
-          <View
-            nativeID="fling-chat-composer-field"
-            className="flex-1 flex-row items-center rounded-[18px] border border-line-2 overflow-hidden"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.06)',
-              height: fieldH,
-              maxHeight: INPUT_MAX_H + INPUT_V_PAD * 2 + 2,
-              paddingLeft: 12,
-            }}
-          >
+          <View style={[styles.field, { height: fieldH, maxHeight: INPUT_MAX_H + INPUT_V_PAD * 2 }]}>
             <TextInput
               ref={inputRef}
               value={text}
@@ -219,10 +258,9 @@ export function ChatComposer({
               nativeID="fling-chat-input"
               style={[
                 styles.input,
-                styles.inputWithEmoji,
                 useMultiline ? styles.inputMultiline : styles.inputSingleLine,
               ]}
-              textAlign="left"
+              textAlignVertical="center"
               onContentSizeChange={
                 useMultiline
                   ? (e) => {
@@ -244,85 +282,73 @@ export function ChatComposer({
               onFocus={() => {
                 onInputFocus?.();
                 if (Platform.OS === 'android') setAndroidEmoji(true);
-                if (Platform.OS === 'web' && typeof document !== 'undefined') {
-                  requestAnimationFrame(() => {
-                    document
-                      .getElementById('fling-chat-input')
-                      ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                  });
-                }
               }}
               onBlur={() => onInputBlur?.()}
             />
+
             <Pressable
               onPress={() => {
                 inputRef.current?.focus();
                 if (Platform.OS === 'android') setAndroidEmoji((v) => !v);
               }}
-              hitSlop={8}
+              hitSlop={10}
               style={styles.emojiBtn}
               accessibilityLabel="Emojis"
             >
-              <FlingIcon name="smile" size={18} color="rgba(255,255,255,0.55)" />
+              <Text style={styles.emojiGlyph} accessibilityElementsHidden>
+                ☺
+              </Text>
             </Pressable>
-          </View>
-
-          <View style={styles.counterSlot}>
-            <Text
-              style={[
-                styles.counterText,
-                text.length >= MAX_MESSAGE_LENGTH && styles.counterTextLimit,
-              ]}
-            >
-              {text.length}/{MAX_MESSAGE_LENGTH}
-            </Text>
           </View>
 
           {hasText ? (
             <Pressable
-              onPress={onSendText}
+              onPress={() => {
+                triggerHaptic('light');
+                onSendText();
+              }}
               disabled={busy}
-              style={[styles.actionBtn, styles.sendShadow]}
+              style={styles.actionBtn}
               className="rounded-full overflow-hidden"
+              accessibilityLabel="Senden"
             >
               <LinearGradient
                 colors={[...FLING_BUTTON_GRADIENT]}
                 locations={[0, 0.55, 1]}
                 className="flex-1 items-center justify-center"
               >
-                <FlingIcon name="arrow" size={16} color="#fff" />
+                <FlingIcon name="arrow" size={18} color="#fff" />
               </LinearGradient>
             </Pressable>
           ) : (
             <Pressable
-              onPressIn={onMicPressIn}
-              onPressOut={onMicPressOut}
-              disabled={busy}
+              onPress={onMicPress}
+              disabled={busy && !recording}
               style={styles.actionBtn}
               className={`rounded-full items-center justify-center ${
                 recording ? 'bg-accent-2' : 'bg-accent'
               }`}
+              accessibilityLabel={recording ? 'Aufnahme beenden' : 'Sprachnotiz'}
             >
               {busy && !recording ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <FlingIcon name="mic" size={19} color="#fff" />
+                <FlingIcon name="mic" size={20} color="#fff" />
               )}
             </Pressable>
           )}
         </View>
 
-        {text.length >= MAX_MESSAGE_LENGTH ? (
+        {text.length >= MAX_MESSAGE_LENGTH * 0.85 || text.length >= MAX_MESSAGE_LENGTH ? (
           <Text
-            style={{
-              marginTop: 6,
-              textAlign: 'center',
-              fontSize: FLING_TYPE.caption2,
-              color: FLING_COLORS.accent2,
-              fontFamily: 'Inter_500Medium',
-            }}
+            style={[
+              styles.counter,
+              text.length >= MAX_MESSAGE_LENGTH && styles.counterLimit,
+            ]}
           >
-            {MESSAGE_LIMIT_HINT}
+            {text.length >= MAX_MESSAGE_LENGTH
+              ? MESSAGE_LIMIT_HINT
+              : `${text.length}/${MAX_MESSAGE_LENGTH}`}
           </Text>
         ) : null}
       </View>
@@ -331,72 +357,33 @@ export function ChatComposer({
 }
 
 const styles = StyleSheet.create({
-  barSlot: {
+  iconSlot: {
     width: BAR_H,
     height: BAR_H,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 0,
   },
-  cameraSlot: {
-    position: 'relative',
-    overflow: 'visible',
-  },
-  viewOnceBadge: {
-    position: 'absolute',
-    right: 2,
-    bottom: 4,
-    minWidth: 14,
-    height: 14,
-    borderRadius: 7,
-    paddingHorizontal: 3,
+  field: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: FLING_COLORS.accent,
-    borderWidth: 1.5,
-    borderColor: FLING_COLORS.bg,
-  },
-  viewOnceBadgeText: {
-    color: '#FFFFFF',
-    fontSize: FLING_TYPE.caption2,
-    fontWeight: '700',
-    lineHeight: 11,
-  },
-  counterSlot: {
-    minWidth: 44,
-    height: BAR_H,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  counterText: {
-    color: 'rgba(255,255,255,0.32)',
-    fontSize: FLING_TYPE.caption2,
-    fontFamily: 'JetBrainsMono_400Regular',
-    letterSpacing: -0.3,
-  },
-  counterTextLimit: {
-    color: FLING_COLORS.accent2,
-  },
-  emojiBtn: {
-    width: 34,
-    height: BAR_H,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 2,
-    zIndex: 2,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingLeft: 14,
+    paddingRight: 4,
+    minHeight: BAR_H,
   },
   input: {
     flex: 1,
     minWidth: 0,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Inter_400Regular',
     fontSize: INPUT_FONT,
     lineHeight: INPUT_LINE_H,
     color: '#FFFFFF',
     paddingLeft: 0,
-    paddingRight: 0,
+    paddingRight: 6,
     margin: 0,
-    textAlign: 'left',
-    textAlignVertical: 'center',
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
     ...(Platform.OS === 'web'
       ? {
@@ -410,28 +397,42 @@ const styles = StyleSheet.create({
     height: BAR_H,
     minHeight: BAR_H,
     maxHeight: BAR_H,
-    paddingTop: 0,
-    paddingBottom: 0,
-    lineHeight: Platform.OS === 'ios' ? BAR_H - 2 : BAR_H,
-  },
-  inputWithEmoji: {
-    paddingRight: 4,
+    paddingTop: Platform.OS === 'ios' ? 11 : 10,
+    paddingBottom: Platform.OS === 'ios' ? 11 : 10,
   },
   inputMultiline: {
     minHeight: INPUT_LINE_H,
     maxHeight: INPUT_MAX_H,
     paddingTop: INPUT_V_PAD,
     paddingBottom: INPUT_V_PAD,
+    textAlignVertical: 'top',
+  },
+  emojiBtn: {
+    width: 36,
+    height: BAR_H,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emojiGlyph: {
+    fontSize: 22,
+    lineHeight: 26,
+    color: 'rgba(255,255,255,0.72)',
   },
   actionBtn: {
     width: BAR_H,
     height: BAR_H,
+    borderRadius: BAR_H / 2,
+    overflow: 'hidden',
   },
-  sendShadow: {
-    shadowColor: FLING_COLORS.accentGlow,
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+  counter: {
+    marginTop: 6,
+    textAlign: 'center',
+    fontSize: FLING_TYPE.caption2,
+    color: 'rgba(255,255,255,0.32)',
+    fontFamily: 'JetBrainsMono_400Regular',
+  },
+  counterLimit: {
+    color: FLING_COLORS.accent2,
+    fontFamily: 'Inter_500Medium',
   },
 });

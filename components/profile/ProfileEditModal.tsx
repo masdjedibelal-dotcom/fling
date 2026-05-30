@@ -15,8 +15,7 @@ import { ProfileLocationBar } from '@/components/profile/ProfileLocationBar';
 import { MAX_JOB_LENGTH, MAX_PSEUDONYM_LENGTH } from '@/lib/constants';
 import type { Availability, LocationMode } from '@/lib/types';
 import { FLING_INPUT_TEXT } from '@/lib/designTokens';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppDimensions } from '@/hooks/useAppDimensions';
+import { BOTTOM_SHEET_MAX_RATIO } from '@/components/ui/BottomSheet';
 
 export type ProfileEditDraft = {
   pseudonym: string;
@@ -51,17 +50,11 @@ export function ProfileEditModal({
   onSave: () => void;
   onDetectLocation: () => void;
 }) {
-  const insets = useSafeAreaInsets();
-  const { height: screenH } = useAppDimensions();
-  const panelTopInset = insets.top + 52;
-  const sheetHeight = screenH - panelTopInset;
-  const maxHeightRatio = sheetHeight / screenH;
-
   const footer = (
     <View className="flex-row gap-3">
       <Pressable
         onPress={onCancel}
-        className="flex-1 py-3.5 rounded-pill border border-white/12 bg-white/[0.04] items-center"
+        className="flex-1 py-3.5 rounded-pill bg-white/[0.06] items-center"
       >
         <Text className="text-white font-semibold">Abbrechen</Text>
       </Pressable>
@@ -76,19 +69,14 @@ export function ProfileEditModal({
   );
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onCancel}
-      panelTopInset={panelTopInset}
-    >
+    <BottomSheet visible={visible} onClose={onCancel}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ width: '100%', height: sheetHeight }}
+        style={{ width: '100%' }}
       >
         <BottomSheetPanel
-          maxHeightRatio={maxHeightRatio}
+          maxHeightRatio={BOTTOM_SHEET_MAX_RATIO}
           footer={footer}
-          style={{ flex: 1, minHeight: 0 }}
         >
           <View style={{ flexShrink: 0 }}>
             <TitleText className="text-center mb-4">Profil bearbeiten</TitleText>

@@ -11,6 +11,9 @@ import { useAppDimensions } from '@/hooks/useAppDimensions';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FLING_COLORS, FLING_RADIUS } from '@/lib/designTokens';
 
+/** Standard-Obergrenze — Sheets füllen nicht den ganzen Bildschirm */
+export const BOTTOM_SHEET_MAX_RATIO = 0.78;
+
 type BottomSheetProps = {
   visible: boolean;
   onClose: () => void;
@@ -100,9 +103,8 @@ export function BottomSheetPanel({
 }: BottomSheetPanelProps) {
   const insets = useSafeAreaInsets();
   const { height: screenH } = useAppDimensions();
-  const cappedHeight = maxHeightRatio
-    ? Math.round(screenH * maxHeightRatio)
-    : undefined;
+  const ratio = maxHeightRatio ?? BOTTOM_SHEET_MAX_RATIO;
+  const cappedHeight = Math.round(screenH * ratio);
   const fixedHeight = cappedHeight != null && footer ? cappedHeight : undefined;
 
   return (
@@ -112,9 +114,7 @@ export function BottomSheetPanel({
         styles.panel,
         fixedHeight != null
           ? { height: fixedHeight, maxHeight: fixedHeight, flex: 1, minHeight: 0 }
-          : cappedHeight != null
-            ? { maxHeight: cappedHeight }
-            : null,
+          : { maxHeight: cappedHeight },
         { paddingBottom: Math.max(insets.bottom, 16) },
         style,
       ]}

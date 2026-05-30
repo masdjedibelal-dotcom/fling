@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, Modal } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import { BackButton } from '@/components/ui/BackButton';
 import { ChatPartnerName } from '@/components/ui/Typography';
@@ -24,7 +24,10 @@ type Props = {
   onOpenProfile: () => void;
   onEndPick: () => void;
   onReport: () => void;
+  onBlock: () => void;
 };
+
+const HEADER_BTN = FLING_TOUCH.min;
 
 export function ChatHeader({
   partnerPhoto,
@@ -39,48 +42,103 @@ export function ChatHeader({
   onOpenProfile,
   onEndPick,
   onReport,
+  onBlock,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
-    <View className="pb-1">
-      <View className="flex-row items-center justify-between px-4 pt-1">
+    <View className="pb-1" style={styles.root}>
+      {menuOpen ? (
+        <Pressable
+          style={styles.menuBackdrop}
+          onPress={closeMenu}
+          accessibilityLabel="Menü schließen"
+        />
+      ) : null}
+
+      <View style={styles.topRow} className="flex-row items-center justify-between px-4 pt-1">
         <BackButton onPress={onBack} />
 
-        <View className="flex-row items-center gap-2">
-          <Pressable
-            onPress={() => setMenuOpen(true)}
-            hitSlop={10}
-            className="rounded-full bg-white/5 border border-line items-center justify-center"
-            style={{ width: FLING_TOUCH.min, height: FLING_TOUCH.min }}
-            accessibilityLabel="Mehr"
-          >
-            <Text
-              className="text-fg-3 leading-none"
-              style={{ fontSize: FLING_TYPE.title }}
+        <View className="flex-row items-center gap-2" style={styles.actions}>
+          <View style={styles.menuAnchor}>
+            <Pressable
+              onPress={() => setMenuOpen((v) => !v)}
+              hitSlop={10}
+              className="rounded-full bg-white/5 items-center justify-center"
+              style={{ width: HEADER_BTN, height: HEADER_BTN }}
+              accessibilityLabel="Mehr"
             >
-              ⋯
-            </Text>
-          </Pressable>
+              <Text
+                className="text-fg-3 leading-none"
+                style={{ fontSize: FLING_TYPE.title, marginTop: -2 }}
+              >
+                ⋯
+              </Text>
+            </Pressable>
+
+            {menuOpen ? (
+              <View style={styles.menuDropdown}>
+                <Pressable
+                  onPress={() => {
+                    closeMenu();
+                    onReport();
+                  }}
+                  className="px-4 py-3.5 border-b border-line"
+                >
+                  <Text
+                    className="text-white font-semibold"
+                    style={{ fontSize: FLING_TYPE.subhead }}
+                  >
+                    Melden
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    closeMenu();
+                    onBlock();
+                  }}
+                  className="px-4 py-3.5 border-b border-line"
+                >
+                  <Text
+                    className="text-white font-semibold"
+                    style={{ fontSize: FLING_TYPE.subhead }}
+                  >
+                    Blockieren
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    closeMenu();
+                    onEndPick();
+                  }}
+                  className="px-4 py-3.5"
+                >
+                  <Text
+                    className="text-accent font-semibold"
+                    style={{ fontSize: FLING_TYPE.subhead }}
+                  >
+                    {isFemale ? 'Pick beenden' : 'Unpick'}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </View>
+
           <Pressable
             onPress={onEndPick}
             hitSlop={8}
             accessibilityLabel={isFemale ? 'Pick beenden' : 'Unpick'}
-            className="flex-row items-center gap-1.5 px-3 py-2 rounded-pill border border-line-2"
-            style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}
+            className="rounded-full bg-accent items-center justify-center"
+            style={{ width: HEADER_BTN, height: HEADER_BTN }}
           >
-            <FlingIcon name="close" size={12} color={FLING_COLORS.fg} />
-            <Text
-              className="text-fg font-semibold"
-              style={{ fontSize: FLING_TYPE.caption2 }}
-            >
-              {isFemale ? 'Beenden' : 'Unpick'}
-            </Text>
+            <FlingIcon name="close" size={18} color="#fff" />
           </Pressable>
         </View>
       </View>
 
-      <View className="items-center px-6 pt-1 pb-2">
+      <View className="items-center px-6 pt-1 pb-2" style={styles.centerBlock}>
         <Pressable onPress={onOpenProfile} accessibilityLabel="Partnerprofil">
           <TimerRing photoUri={partnerPhoto} progress={progress} color={timerColor} />
         </Pressable>
@@ -98,42 +156,50 @@ export function ChatHeader({
           {formatChatTimerRemaining(remainingHours, remainingMinutes)}
         </Text>
       </View>
-
-      <Modal visible={menuOpen} transparent animationType="fade">
-        <View className="flex-1" style={{ backgroundColor: FLING_COLORS.overlayScrim }}>
-          <Pressable className="absolute inset-0" onPress={() => setMenuOpen(false)} />
-          <View className="absolute top-16 right-4 bg-card border border-line-2 rounded-md overflow-hidden min-w-[200px]">
-          <Pressable
-            onPress={() => {
-              setMenuOpen(false);
-              onReport();
-            }}
-            className="px-4 py-3.5 border-b border-line"
-          >
-            <Text
-              className="text-white font-semibold"
-              style={{ fontSize: FLING_TYPE.subhead }}
-            >
-              Melden
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              setMenuOpen(false);
-              onEndPick();
-            }}
-            className="px-4 py-3.5"
-          >
-            <Text
-              className="text-accent font-semibold"
-              style={{ fontSize: FLING_TYPE.subhead }}
-            >
-              {isFemale ? 'Pick beenden' : 'Unpick'}
-            </Text>
-          </Pressable>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    zIndex: 20,
+    elevation: 20,
+  },
+  menuBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+  },
+  topRow: {
+    zIndex: 30,
+    elevation: 30,
+  },
+  actions: {
+    zIndex: 31,
+    elevation: 31,
+  },
+  menuAnchor: {
+    position: 'relative',
+    zIndex: 32,
+    elevation: 32,
+  },
+  menuDropdown: {
+    position: 'absolute',
+    top: HEADER_BTN + 6,
+    right: 0,
+    minWidth: 196,
+    backgroundColor: FLING_COLORS.card,
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: FLING_COLORS.line2,
+    zIndex: 50,
+    elevation: 50,
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  centerBlock: {
+    zIndex: 10,
+  },
+});

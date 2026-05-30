@@ -5,10 +5,9 @@ import {
   PressableProps,
   View,
   StyleSheet,
-  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FLING_BUTTON_GRADIENT, FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import { FLING_BUTTON_GRADIENT, FLING_TYPE } from '@/lib/designTokens';
 
 type Variant = 'primary' | 'ghost' | 'dark';
 
@@ -24,11 +23,11 @@ const variantStyles: Record<
 > = {
   primary: { container: '', text: 'text-white', useGradient: true },
   ghost: {
-    container: 'bg-white/[0.04] border border-white/12',
+    container: 'bg-white/[0.06]',
     text: 'text-fg-2',
   },
   dark: {
-    container: 'bg-white/[0.06] border border-white/10',
+    container: 'bg-white/[0.06]',
     text: 'text-fg',
   },
 };
@@ -61,7 +60,7 @@ export function Button({
         accessibilityRole="button"
         disabled={isDisabled}
         className={`w-full ${isDisabled ? 'opacity-40' : 'opacity-100'} ${className ?? ''}`}
-        style={[styles.primaryPressable, !isDisabled && primaryShadowStyle()]}
+        style={styles.primaryPressable}
         {...props}
       >
         <LinearGradient
@@ -71,7 +70,6 @@ export function Button({
           end={{ x: 0.5, y: 1 }}
           style={styles.primaryGradient}
         >
-          <View pointerEvents="none" style={styles.primarySheen} />
           {inner}
         </LinearGradient>
       </Pressable>
@@ -98,7 +96,7 @@ const styles = StyleSheet.create({
   primaryPressable: {
     backgroundColor: 'transparent',
     borderRadius: PILL_RADIUS,
-    overflow: 'visible',
+    overflow: 'hidden',
   },
   primaryGradient: {
     borderRadius: PILL_RADIUS,
@@ -108,22 +106,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  primarySheen: {
-    ...StyleSheet.absoluteFillObject,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.25)',
-    borderRadius: PILL_RADIUS,
-    backgroundColor: 'transparent',
-  },
 });
-
-function primaryShadowStyle() {
-  if (Platform.OS === 'web') return undefined;
-  if (Platform.OS === 'android') return { elevation: 6 };
-  return {
-    shadowColor: FLING_COLORS.accent,
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-  };
-}

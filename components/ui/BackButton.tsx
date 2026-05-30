@@ -1,15 +1,40 @@
-import { Pressable } from 'react-native';
-import { router } from 'expo-router';
+import { StyleSheet } from 'react-native';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { FlingIcon } from '@/components/icons/FlingIcon';
+import { safeBack } from '@/lib/navigation';
 
-export function BackButton({ onPress }: { onPress?: () => void }) {
+export function BackButton({
+  onPress,
+  fallbackHref = '/(tabs)',
+}: {
+  onPress?: () => void;
+  fallbackHref?: string;
+}) {
   return (
-    <Pressable
-      onPress={onPress ?? (() => router.back())}
-      className="w-11 h-11 rounded-full bg-white/5 border border-line items-center justify-center"
+    <PressableScale
+      onPress={onPress ?? (() => safeBack(fallbackHref))}
+      hitSlop={8}
+      style={styles.btn}
       accessibilityLabel="Zurück"
+      accessibilityRole="button"
+      haptic="light"
     >
       <FlingIcon name="back" size={20} color="#fff" />
-    </Pressable>
+    </PressableScale>
   );
 }
+
+const styles = StyleSheet.create({
+  btn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.12)',
+    zIndex: 200,
+    elevation: 200,
+  },
+});

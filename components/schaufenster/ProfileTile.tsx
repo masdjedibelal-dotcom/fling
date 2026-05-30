@@ -1,9 +1,17 @@
-import { Pressable, View, Text, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import type { SchaufensterProfile } from '@/lib/types';
 import { onlineStatus, tileDistanceLabel } from '@/lib/profileStatus';
 import { FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { Text } from 'react-native';
 
 const tileTextShadow = {
   textShadowColor: 'rgba(0,0,0,0.85)',
@@ -26,10 +34,26 @@ export function ProfileTile({
   const { dotColor } = onlineStatus(profile);
   const distanceLabel = tileDistanceLabel(profile);
   const height = width / aspectRatio;
+  const overlay = useSharedValue(0);
+
+  useEffect(() => {
+    overlay.value = 0;
+  }, [overlay]);
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: overlay.value,
+  }));
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      onPressIn={() => {
+        overlay.value = withTiming(1, { duration: 80 });
+      }}
+      onPressOut={() => {
+        overlay.value = withTiming(0, { duration: 140 });
+      }}
+      haptic="light"
       style={{
         width,
         aspectRatio,
@@ -51,6 +75,15 @@ export function ProfileTile({
         locations={[0.35, 0.72, 1]}
         style={StyleSheet.absoluteFillObject}
         pointerEvents="none"
+      />
+
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFillObject,
+          { backgroundColor: 'rgba(225,21,57,0.14)' },
+          overlayStyle,
+        ]}
       />
 
       <View className="absolute top-2.5 left-2.5">
@@ -76,6 +109,6 @@ export function ProfileTile({
           {distanceLabel}
         </Text>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }

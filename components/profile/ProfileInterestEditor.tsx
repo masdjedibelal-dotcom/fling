@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, Pressable, ScrollView, TextInput } from 'react-native';
-import { SectionLabel, TitleText } from '@/components/ui/Typography';
+import { SectionLabel, TitleText, MetaText } from '@/components/ui/Typography';
+import { BOTTOM_SHEET_MAX_RATIO } from '@/components/ui/BottomSheet';
 import { BottomSheet, BottomSheetPanel } from '@/components/ui/BottomSheet';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import { INTEREST_TAGS, MAX_INTEREST_TAGS } from '@/lib/constants';
@@ -31,6 +32,9 @@ export function ProfileInterestEditor({
   return (
     <View className="mb-4">
       <SectionLabel className="px-1">Interessen</SectionLabel>
+      <MetaText className="text-fg-4 mb-2 px-1 normal-case">
+        Max. {MAX_INTEREST_TAGS} Interessen
+      </MetaText>
       <View className="flex-row flex-wrap gap-1.5">
         {tags.map((tag) => (
           <View
@@ -65,7 +69,7 @@ export function ProfileInterestEditor({
       </View>
 
       <BottomSheet visible={modalOpen} onClose={() => setModalOpen(false)} animationType="fade">
-        <BottomSheetPanel className="max-h-[70vh]">
+        <BottomSheetPanel maxHeightRatio={BOTTOM_SHEET_MAX_RATIO}>
           <TitleText className="text-center mb-4">Interesse wählen</TitleText>
           <View className="flex-row gap-2 mb-3">
             <TextInput

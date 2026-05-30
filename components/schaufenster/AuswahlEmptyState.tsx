@@ -3,16 +3,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BodyLarge, TitleText } from '@/components/ui/Typography';
 import { ProfileFigureBack } from '@/components/graphics';
 import { Button } from '@/components/ui/Button';
+import { RadiusSheet } from '@/components/schaufenster/RadiusSheet';
+import { AuswahlHeader } from '@/components/schaufenster/AuswahlHeader';
 import { useAppStore } from '@/stores/appStore';
 
 export function AuswahlEmptyState() {
   const insets = useSafeAreaInsets();
-  const setFilterSheetOpen = useAppStore((s) => s.setFilterSheetOpen);
+  const setRadiusSheetOpen = useAppStore((s) => s.setRadiusSheetOpen);
+  const radiusSheetOpen = useAppStore((s) => s.radiusSheetOpen);
+  const viewMode = useAppStore((s) => s.auswahlViewMode);
+  const toggleAuswahlViewMode = useAppStore((s) => s.toggleAuswahlViewMode);
 
   return (
+    <View className="flex-1">
+      <AuswahlHeader
+        activeCount={0}
+        viewMode={viewMode}
+        onNearbyPress={() => setRadiusSheetOpen(!radiusSheetOpen)}
+        onViewModePress={toggleAuswahlViewMode}
+      />
     <View
       className="flex-1 items-center justify-center px-8"
-      style={{ paddingTop: insets.top + 24, paddingBottom: insets.bottom + 40 }}
+      style={{ paddingBottom: insets.bottom + 40 }}
     >
       <View className="mb-5" style={{ width: 150, height: 138 }}>
         <ProfileFigureBack size={150} />
@@ -27,7 +39,12 @@ export function AuswahlEmptyState() {
       <Button
         label="Radius erweitern"
         className="max-w-[280px]"
-        onPress={() => setFilterSheetOpen(true)}
+        onPress={() => setRadiusSheetOpen(true)}
+      />
+    </View>
+      <RadiusSheet
+        visible={radiusSheetOpen}
+        onClose={() => setRadiusSheetOpen(false)}
       />
     </View>
   );

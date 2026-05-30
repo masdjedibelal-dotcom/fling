@@ -1,67 +1,114 @@
-import { View, Text, Pressable } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text } from 'react-native';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { FlingIcon } from '@/components/icons/FlingIcon';
-import { FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import { SafeTopChrome } from '@/components/ui/SafeTopChrome';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { usePulse } from '@/components/graphics/useGraphicMotion';
+import { FLING_COLORS, FLING_TYPE, FLING_TOUCH } from '@/lib/designTokens';
+import { getChromeHeaderHeight } from '@/lib/safeAreaLayout';
+import { useAppStore, type AuswahlViewMode } from '@/stores/appStore';
 
-/** Feste Höhe der oberen Zeile — Filter-Sheet startet direkt darunter */
+/** Höhe bis unterhalb der Header-Zeile (Radius-Sheet startet darunter) */
 export function getAuswahlHeaderHeight(topInset: number): number {
-  return topInset + 6 + 40 + 12;
+  return getChromeHeaderHeight(topInset);
+}
+
+function LiveDot() {
+  const { scale, opacity } = usePulse(2200);
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        {
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: FLING_COLORS.green,
+          shadowColor: FLING_COLORS.green,
+          shadowOpacity: 0.8,
+          shadowRadius: 6,
+        },
+        style,
+      ]}
+    />
+  );
 }
 
 export function AuswahlHeader({
   activeCount,
-  onFilterPress,
-  filterActive,
+  viewMode,
+  onNearbyPress,
+  onViewModePress,
+  overlay,
+  showStatus = true,
+  loading = false,
 }: {
   activeCount: number;
-  onFilterPress: () => void;
-  /** Filter-Sheet offen — Icon hervorheben */
-  filterActive?: boolean;
+  viewMode: AuswahlViewMode;
+  onNearbyPress: () => void;
+  onViewModePress: () => void;
+  overlay?: boolean;
+  showStatus?: boolean;
+  loading?: boolean;
 }) {
-  const insets = useSafeAreaInsets();
+  const radiusKm = useAppStore((s) => s.radiusKm);
+  const listIcon = viewMode === 'grid' ? 'list' : 'grid';
+  const listLabel =
+    viewMode === 'grid' ? 'Listenansicht' : 'Kachelansicht';
+
+  const statusLabel = loading
+    ? `— aktiv · innerhalb von ${radiusKm} km`
+    : `${activeCount} aktiv · innerhalb von ${radiusKm} km`;
 
   return (
-    <View
-      className="flex-row items-center justify-between px-3 pb-3 z-10"
-      style={{
-        paddingTop: insets.top + 6,
-        backgroundColor: FLING_COLORS.bg,
-      }}
+    <SafeTopChrome
+      extendBackground={overlay ? 'transparent' : true}
+      className={`flex-row items-center px-3 pb-3 z-30 ${showStatus ? 'justify-between' : 'justify-end'}`}
     >
-      <View className="flex-row items-center gap-2 flex-1">
-        <View
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-            backgroundColor: FLING_COLORS.green,
-            shadowColor: FLING_COLORS.green,
-            shadowOpacity: 0.8,
-            shadowRadius: 6,
-          }}
-        />
-        <Text
-          className="text-white font-semibold"
-          style={{ fontSize: FLING_TYPE.subhead }}
+      {showStatus ? (
+        <PressableScale
+          onPress={onNearbyPress}
+          disabled={loading}
+          accessibilityLabel="Radius einstellen"
+          className="flex-row items-center gap-2 flex-1 min-w-0"
+          hitSlop={8}
+          haptic="light"
+          scale={0.98}
         >
-          {activeCount} aktiv · in der Nähe
-        </Text>
-      </View>
-      <Pressable
-        onPress={onFilterPress}
-        accessibilityLabel="Filter"
-        className="w-10 h-10 rounded-full items-center justify-center border"
+          <LiveDot />
+          <Text
+            className={`font-semibold ${loading ? 'text-fg-3' : 'text-white'}`}
+            style={{ fontSize: FLING_TYPE.subhead }}
+            numberOfLines={1}
+          >
+            {statusLabel}
+          </Text>
+        </PressableScale>
+      ) : null}
+
+      <PressableScale
+        onPress={onViewModePress}
+        accessibilityLabel={listLabel}
+        haptic="medium"
+        scale={0.94}
+        className="rounded-full items-center justify-center border"
         style={{
-          borderColor: filterActive ? FLING_COLORS.accent : 'rgba(255,255,255,0.12)',
-          backgroundColor: filterActive ? 'rgba(225,21,57,0.2)' : 'rgba(255,255,255,0.05)',
+          width: FLING_TOUCH.min,
+          height: FLING_TOUCH.min,
+          borderColor: 'rgba(255,255,255,0.12)',
+          backgroundColor: overlay
+            ? 'rgba(0,0,0,0.45)'
+            : 'rgba(255,255,255,0.05)',
+          zIndex: 50,
+          elevation: 50,
         }}
       >
-        <FlingIcon
-          name="filter"
-          size={20}
-          color={filterActive ? FLING_COLORS.accent : FLING_COLORS.fg2}
-        />
-      </Pressable>
-    </View>
+        <FlingIcon name={listIcon} size={20} color={FLING_COLORS.fg2} />
+      </PressableScale>
+    </SafeTopChrome>
   );
 }

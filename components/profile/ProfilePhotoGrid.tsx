@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from 'react-native';
+import { MetaText } from '@/components/ui/Typography';
 import { useAppDimensions } from '@/hooks/useAppDimensions';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -38,7 +39,11 @@ export function ProfilePhotoGrid({
     photos.length < MAX_PHOTOS ? [...photos, ''] : photos.slice(0, MAX_PHOTOS);
 
   return (
-    <View className="flex-row flex-wrap mb-5" style={{ gap: GAP }}>
+    <View className="mb-5">
+      <MetaText className="text-fg-4 mb-3 normal-case">
+        Bis zu {MAX_PHOTOS} Fotos — das erste ist dein Hauptbild.
+      </MetaText>
+      <View className="flex-row flex-wrap" style={{ gap: GAP }}>
       {displaySlots.map((uri, i) => {
         const isEmpty = !uri;
         const isPrimary = i === 0 && !isEmpty;
@@ -81,6 +86,7 @@ export function ProfilePhotoGrid({
           </Pressable>
         );
       })}
+      </View>
     </View>
   );
 }
