@@ -52,6 +52,9 @@ workflows:
       - name: Typecheck
         script: npm run lint
 
+      - name: Resolve iOS build number
+        script: bash scripts/ios-resolve-build-number.sh
+
       - name: Expo prebuild (iOS native project)
         script: npx expo prebuild --platform ios --clean
 
@@ -72,16 +75,8 @@ workflows:
       - name: Apply code signing
         script: xcode-project use-profiles
 
-      - name: Increment build number
-        script: |
-          cd "$CM_BUILD_DIR/ios"
-          if [ "$APP_STORE_APPLE_ID" = "0" ]; then
-            echo "WARN: APP_STORE_APPLE_ID nicht gesetzt — BUILD_NUMBER aus Codemagic"
-            LATEST=0
-          else
-            LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
-          fi
-          agvtool new-version -all $(($LATEST + 1))
+      - name: Apply iOS build number
+        script: bash scripts/ios-apply-build-number.sh
 
       - name: Build IPA
         script: |
