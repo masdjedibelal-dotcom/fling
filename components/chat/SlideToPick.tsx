@@ -1,4 +1,5 @@
-import { View, Text, useWindowDimensions } from 'react-native';
+import { View } from 'react-native';
+import { useAppDimensions } from '@/hooks/useAppDimensions';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
@@ -9,15 +10,19 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { FlingIcon } from '@/components/icons/FlingIcon';
+import { FLING_TYPE } from '@/lib/designTokens';
 
-const PAD = 16;
-const TRACK_H = 44;
-const HANDLE = 40;
+const TRACK_H = 56;
+const HANDLE = 48;
+const HANDLE_INSET = 4;
+/** Schmaler als volle Breite — zentriert unter dem Profil */
+const TRACK_WIDTH_RATIO = 0.78;
+const TRACK_MAX_WIDTH = 320;
 
 export function SlideToPick({ onPick }: { onPick: () => void }) {
-  const { width } = useWindowDimensions();
-  const trackW = width - PAD * 2;
-  const maxX = trackW - HANDLE - 6;
+  const { width: screenWidth } = useAppDimensions();
+  const trackW = Math.min(screenWidth * TRACK_WIDTH_RATIO, TRACK_MAX_WIDTH);
+  const maxX = trackW - HANDLE - HANDLE_INSET * 2;
   const x = useSharedValue(0);
 
   const pan = Gesture.Pan()
@@ -32,11 +37,11 @@ export function SlideToPick({ onPick }: { onPick: () => void }) {
     });
 
   const fillStyle = useAnimatedStyle(() => ({
-    width: HANDLE + x.value + 4,
+    width: HANDLE + x.value + HANDLE_INSET,
     backgroundColor: interpolateColor(
       x.value,
       [0, maxX],
-      ['#141210', '#D11537'],
+      ['#1a0f12', '#E11539'],
     ),
     opacity: interpolate(x.value, [0, maxX], [0.35, 1]),
   }));
@@ -50,9 +55,10 @@ export function SlideToPick({ onPick }: { onPick: () => void }) {
   }));
 
   return (
-    <View style={{ paddingHorizontal: PAD }}>
+    <View className="items-center px-4">
       <View
         style={{
+          width: trackW,
           height: TRACK_H,
           borderRadius: TRACK_H / 2,
           backgroundColor: 'rgba(20,18,16,0.92)',
@@ -78,34 +84,33 @@ export function SlideToPick({ onPick }: { onPick: () => void }) {
           style={[
             {
               position: 'absolute',
-              width: '100%',
+              width: trackW,
               textAlign: 'center',
               color: 'rgba(255,255,255,0.75)',
-              fontSize: 11,
+              fontSize: FLING_TYPE.subhead,
               fontWeight: '600',
-              letterSpacing: 1.2,
-              textTransform: 'uppercase',
-              paddingLeft: HANDLE,
+              letterSpacing: 0.3,
+              paddingLeft: HANDLE + 4,
             },
             labelStyle,
           ]}
         >
-          Wischen zum Picken ›››
+          Nach rechts wischen für Pick ›››
         </Animated.Text>
         <GestureDetector gesture={pan}>
           <Animated.View
             style={[
               {
                 position: 'absolute',
-                top: 2,
-                left: 2,
+                top: HANDLE_INSET,
+                left: HANDLE_INSET,
                 width: HANDLE,
                 height: HANDLE,
                 borderRadius: HANDLE / 2,
-                backgroundColor: '#D11537',
+                backgroundColor: '#E11539',
                 alignItems: 'center',
                 justifyContent: 'center',
-                shadowColor: '#D11537',
+                shadowColor: '#E11539',
                 shadowOpacity: 0.45,
                 shadowRadius: 8,
                 shadowOffset: { width: 0, height: 2 },
@@ -113,7 +118,7 @@ export function SlideToPick({ onPick }: { onPick: () => void }) {
               handleStyle,
             ]}
           >
-            <FlingIcon name="pick" size={17} color="#fff" />
+            <FlingIcon name="pick" size={20} color="#fff" />
           </Animated.View>
         </GestureDetector>
       </View>

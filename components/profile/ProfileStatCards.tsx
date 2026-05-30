@@ -1,6 +1,7 @@
 import { View, Text } from 'react-native';
+import { FLING_RADIUS, FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
 
-function StatCard({
+function StatCell({
   label,
   value,
   isLast,
@@ -11,12 +12,19 @@ function StatCard({
 }) {
   return (
     <View
-      className={`flex-1 items-center py-3 px-1 ${isLast ? '' : 'border-r border-line'}`}
+      className={`flex-1 items-center py-4 px-2 ${isLast ? '' : 'border-r border-line'}`}
     >
-      <Text className="text-white text-[17px] font-bold tracking-tight text-center" numberOfLines={1}>
+      <Text
+        className="text-white font-bold text-center tracking-tight"
+        style={{ fontSize: FLING_TYPE.title, lineHeight: 24 }}
+        numberOfLines={1}
+      >
         {value || '—'}
       </Text>
-      <Text className="text-fg-3 text-[10px] uppercase tracking-wider font-semibold mt-1">
+      <Text
+        className="text-fg-3 font-semibold mt-1.5 uppercase tracking-wide"
+        style={{ fontSize: FLING_TYPE.caption2 }}
+      >
         {label}
       </Text>
     </View>
@@ -24,19 +32,22 @@ function StatCard({
 }
 
 export function ProfileStatCards({
-  job,
+  pseudonym,
   age,
-  city,
+  job,
 }: {
-  job: string;
+  pseudonym: string;
   age: string;
-  city: string;
+  job: string;
 }) {
   return (
-    <View className="flex-row rounded-xl overflow-hidden bg-card/80 border border-white/10 mb-2">
-      <StatCard label="Beruf" value={job} />
-      <StatCard label="Alter" value={age} />
-      <StatCard label="Ort" value={city} isLast />
+    <View
+      className="flex-row mb-4 border border-line overflow-hidden"
+      style={{ borderRadius: FLING_RADIUS.md, backgroundColor: FLING_COLORS.card }}
+    >
+      <StatCell label="Pseudonym" value={pseudonym.trim()} />
+      <StatCell label="Alter" value={age.trim()} />
+      <StatCell label="Beruf" value={job.trim()} isLast />
     </View>
   );
 }

@@ -22,6 +22,7 @@ import {
 } from '@expo-google-fonts/jetbrains-mono';
 import * as SplashScreen from 'expo-splash-screen';
 import { AppGuards } from '@/components/app/AppGuards';
+import { MobilePreviewFrame } from '@/components/app/MobilePreviewFrame';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 
 SplashScreen.preventAutoHideAsync();
@@ -44,28 +45,38 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppGuards>
-        <OfflineBanner />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#0E0D0D' },
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="schaufenster/[id]" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="partner/[matchId]" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="chat/[matchId]" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="chat/expired" />
-          <Stack.Screen name="profile/edit" />
-          <Stack.Screen name="profile/photos" />
-          <Stack.Screen name="profile/settings/notifications" />
-          <Stack.Screen name="profile/settings/account" />
-          <Stack.Screen name="profile/settings/team-safe-picks" />
-        </Stack>
-      </AppGuards>
+      <MobilePreviewFrame>
+        <AppGuards>
+          <OfflineBanner />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#120A0C' },
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="schaufenster/[id]"
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="partner/[matchId]"
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="chat/[matchId]"
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen name="chat/expired" />
+            <Stack.Screen name="profile/edit" />
+            <Stack.Screen name="profile/photos" />
+            <Stack.Screen name="profile/settings/notifications" />
+            <Stack.Screen name="profile/settings/account" />
+          </Stack>
+        </AppGuards>
+      </MobilePreviewFrame>
     </GestureHandlerRootView>
   );
 }

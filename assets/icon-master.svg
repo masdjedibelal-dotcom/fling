@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 80 80">
   <defs>
-    <mask id="f" maskUnits="userSpaceOnUse" x="0" y="0" width="80" height="80">
-      <rect width="80" height="80" fill="white"/>
-      <rect x="18" y="14" width="13" height="52" rx="1.5" fill="black"/>
-      <rect x="18" y="14" width="42" height="12" rx="1.5" fill="black"/>
-      <rect x="18" y="37" width="32" height="11" rx="1.5" fill="black"/>
-    </mask>
+    <linearGradient id="fling-bg" x1="40" y1="0" x2="40" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4a1824"/>
+      <stop offset="42%" stop-color="#221418"/>
+      <stop offset="100%" stop-color="#120A0C"/>
+    </linearGradient>
   </defs>
-  <rect width="80" height="80" rx="18" fill="#D11537" mask="url(#f)"/>
+  <rect width="80" height="80" rx="18" fill="url(#fling-bg)"/>
+  <path fill="#E11539" d="M18 14H55L62 21H31V37H51L58 44H31V66H18V14Z"/>
 </svg>

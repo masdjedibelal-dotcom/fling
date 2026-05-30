@@ -4,10 +4,19 @@ import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { BackButton } from '@/components/ui/BackButton';
-import { DisplayText, BodyText } from '@/components/ui/Typography';
+import { ScreenTitle, BodyText, SectionLabel, MetaText } from '@/components/ui/Typography';
 import { useAuthStore } from '@/stores/authStore';
 import { updateUserProfile } from '@/lib/api';
 import { INTEREST_TAGS, MAX_BIO_LENGTH, MAX_JOB_LENGTH } from '@/lib/constants';
+import { FLING_RADIUS, FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+
+const fieldStyle = {
+  fontSize: FLING_TYPE.body,
+  lineHeight: 24,
+  fontFamily: 'Inter_500Medium' as const,
+  borderRadius: FLING_RADIUS.md,
+  backgroundColor: FLING_COLORS.card,
+};
 
 export default function EditProfileScreen() {
   const userId = useAuthStore((s) => s.userId);
@@ -40,50 +49,62 @@ export default function EditProfileScreen() {
     <Screen className="px-4 pt-2">
       <View className="flex-row items-center gap-3 mb-6">
         <BackButton />
-        <DisplayText className="text-xl">Profil bearbeiten</DisplayText>
+        <ScreenTitle className="flex-1">Profil bearbeiten</ScreenTitle>
       </View>
 
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
-        <BodyText className="text-fg-4 text-xs uppercase tracking-wider mb-2">
-          Bio ({bio.length}/{MAX_BIO_LENGTH})
-        </BodyText>
+        <SectionLabel>Bio</SectionLabel>
         <TextInput
           value={bio}
           onChangeText={(t) => setBio(t.slice(0, MAX_BIO_LENGTH))}
           multiline
-          className="bg-card border border-line rounded-md p-4 text-white min-h-[100px] mb-6"
-          placeholderTextColor="rgba(255,255,255,0.3)"
-          placeholder="Kurz über dich…"
+          textAlignVertical="top"
+          className="border border-line text-white min-h-[100px] px-4 py-3 mb-1"
+          style={fieldStyle}
+          placeholderTextColor="rgba(255,255,255,0.38)"
+          placeholder="Kurz über dich — was zählt beim Pick?"
         />
+        <MetaText className="mb-6 normal-case">
+          {bio.length} / {MAX_BIO_LENGTH}
+        </MetaText>
 
-        <BodyText className="text-fg-4 text-xs uppercase tracking-wider mb-2">
-          Beruf ({job.length}/{MAX_JOB_LENGTH})
-        </BodyText>
+        <SectionLabel>Beruf</SectionLabel>
         <TextInput
           value={job}
           onChangeText={(t) => setJob(t.slice(0, MAX_JOB_LENGTH))}
-          className="bg-card border border-line rounded-md p-4 text-white mb-6"
-          placeholderTextColor="rgba(255,255,255,0.3)"
+          className="border border-line text-white px-4 py-3 mb-1"
+          style={fieldStyle}
+          placeholderTextColor="rgba(255,255,255,0.38)"
           placeholder="z.B. Architekt"
         />
+        <MetaText className="mb-1 normal-case">
+          {job.length} / {MAX_JOB_LENGTH}
+        </MetaText>
+        <MetaText className="text-fg-4 mb-6 normal-case">
+          Nur im Pick-Chat sichtbar
+        </MetaText>
 
-        <BodyText className="text-fg-4 text-xs uppercase tracking-wider mb-2">
-          Interessen (max. 5)
-        </BodyText>
+        <SectionLabel>Interessen</SectionLabel>
         <View className="flex-row flex-wrap gap-2 mb-8">
-          {INTEREST_TAGS.map((tag) => (
-            <Pressable
-              key={tag}
-              onPress={() => toggleTag(tag)}
-              className={`px-3 py-2 rounded-pill border ${
-                tags.includes(tag) ? 'bg-accent border-accent' : 'border-line'
-              }`}
-            >
-              <BodyText className={tags.includes(tag) ? 'text-white' : 'text-fg-3'}>
-                {tag}
-              </BodyText>
-            </Pressable>
-          ))}
+          {INTEREST_TAGS.map((tag) => {
+            const active = tags.includes(tag);
+            return (
+              <Pressable
+                key={tag}
+                onPress={() => toggleTag(tag)}
+                className={`px-4 py-2.5 rounded-pill border ${
+                  active ? 'bg-accent border-accent' : 'border-line bg-white/5'
+                }`}
+              >
+                <BodyText
+                  className={active ? 'text-white font-semibold' : 'text-fg-2'}
+                  style={{ fontSize: FLING_TYPE.subhead }}
+                >
+                  {tag}
+                </BodyText>
+              </Pressable>
+            );
+          })}
         </View>
 
         <Button label="Speichern" loading={saving} onPress={save} />

@@ -1,11 +1,14 @@
-import { Modal, View, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { DisplayText, BodyText } from '@/components/ui/Typography';
+import { View } from 'react-native';
+import { TitleText, BodyLarge } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import { BottomSheet, BottomSheetPanel } from '@/components/ui/BottomSheet';
+import { FlingIcon } from '@/components/icons/FlingIcon';
+import type { FlingIconName } from '@/components/icons/FlingIcon';
+import { FLING_COLORS } from '@/lib/designTokens';
 
 interface PermissionSheetProps {
   visible: boolean;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: FlingIconName;
   title: string;
   description: string;
   primaryLabel: string;
@@ -25,23 +28,23 @@ export function PermissionSheet({
   onSecondary,
 }: PermissionSheetProps) {
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 bg-black/55 justify-end">
-        <Pressable className="flex-1" onPress={onSecondary} />
-        <View className="bg-[#1c1a18] border-t border-line-2 rounded-t-3xl px-6 pt-6 pb-8 items-center gap-3">
-          <View className="w-[72px] h-[72px] rounded-[20px] bg-accent/15 border border-accent/30 items-center justify-center mb-1">
-            <Ionicons name={icon} size={32} color="#D11537" />
-          </View>
-          <DisplayText className="text-[22px] text-center leading-tight">
-            {title}
-          </DisplayText>
-          <BodyText className="text-center max-w-[260px]">{description}</BodyText>
-          <View className="w-full gap-2 mt-2">
-            <Button label={primaryLabel} onPress={onPrimary} />
-            <Button label={secondaryLabel} variant="ghost" onPress={onSecondary} />
-          </View>
+    <BottomSheet visible={visible} onClose={onSecondary}>
+      <BottomSheetPanel withHandle={false} className="items-center pt-6">
+        <View
+          className="w-[72px] h-[72px] rounded-[20px] items-center justify-center mb-4 border border-accent/30"
+          style={{ backgroundColor: 'rgba(225,21,57,0.12)' }}
+        >
+          <FlingIcon name={icon} size={32} color={FLING_COLORS.accent} />
         </View>
-      </View>
-    </Modal>
+        <TitleText className="text-center leading-tight mb-2">{title}</TitleText>
+        <BodyLarge className="text-center max-w-[300px] mb-6 leading-7">
+          {description}
+        </BodyLarge>
+        <View className="w-full gap-2.5">
+          <Button label={primaryLabel} onPress={onPrimary} />
+          <Button label={secondaryLabel} variant="ghost" onPress={onSecondary} />
+        </View>
+      </BottomSheetPanel>
+    </BottomSheet>
   );
 }

@@ -1,7 +1,12 @@
-import { View, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
+import { useAppDimensions } from '@/hooks/useAppDimensions';
 import { Image } from 'expo-image';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { ReactNode } from 'react';
+
+const STORY_SEGMENT_W = 28;
+const STORY_SEGMENT_GAP = 4;
+const STORY_BAR_H = 2.5;
 
 function StoryProgressDots({
   count,
@@ -14,20 +19,30 @@ function StoryProgressDots({
 }) {
   if (count <= 1) return null;
 
+  const barWidth =
+    count * STORY_SEGMENT_W + Math.max(0, count - 1) * STORY_SEGMENT_GAP;
+
   return (
-    <View className="flex-row gap-1">
-      {Array.from({ length: count }).map((_, i) => (
-        <Pressable key={i} onPress={() => onSelect(i)} className="flex-1" hitSlop={6}>
-          <View
-            style={{
-              height: 3,
-              borderRadius: 2,
-              backgroundColor:
-                i === activeIndex ? '#ffffff' : 'rgba(255,255,255,0.28)',
-            }}
-          />
-        </Pressable>
-      ))}
+    <View className="items-center w-full" pointerEvents="box-none">
+      <View className="flex-row" style={{ width: barWidth, gap: STORY_SEGMENT_GAP }}>
+        {Array.from({ length: count }).map((_, i) => (
+          <Pressable
+            key={i}
+            onPress={() => onSelect(i)}
+            hitSlop={8}
+            style={{ width: STORY_SEGMENT_W }}
+          >
+            <View
+              style={{
+                height: STORY_BAR_H,
+                borderRadius: 2,
+                backgroundColor:
+                  i === activeIndex ? '#ffffff' : 'rgba(255,255,255,0.32)',
+              }}
+            />
+          </Pressable>
+        ))}
+      </View>
     </View>
   );
 }
@@ -39,21 +54,24 @@ export function ProfilePhotoViewer({
   height,
   topInset,
   header,
-  footer,
+  overlay,
 }: {
   photos: string[];
   photoIdx: number;
   onIndexChange: (index: number) => void;
+  /** Gesamthöhe inkl. Bereich unter der Statusleiste */
   height: number;
   topInset: number;
   header?: ReactNode;
-  footer?: ReactNode;
+  /** Links unten über dem Bild (Pseudonym, Meta, Interessen, …) */
+  overlay?: ReactNode;
 }) {
-  const { width } = useWindowDimensions();
+  const { width } = useAppDimensions();
   const photo = photos[photoIdx] ?? photos[0];
   const count = photos.length;
   const hasStories = count > 1;
-  const headerTop = topInset + (hasStories ? 20 : 8);
+  const headerTop = topInset + (hasStories ? 28 : 10);
+  const extendTop = topInset > 0 ? topInset : 0;
 
   const goPrev = () => onIndexChange(Math.max(0, photoIdx - 1));
   const goNext = () => onIndexChange(Math.min(count - 1, photoIdx + 1));
@@ -66,17 +84,29 @@ export function ProfilePhotoViewer({
     });
 
   return (
-    <View style={{ height }} className="relative bg-black overflow-hidden">
+    <View
+      style={{
+        height,
+        marginTop: extendTop > 0 ? -extendTop : 0,
+      }}
+      className="relative overflow-hidden"
+    >
       <GestureDetector gesture={pan}>
         <View style={StyleSheet.absoluteFill}>
-          <Image source={{ uri: photo }} className="w-full h-full" contentFit="cover" />
+          <Image
+            source={{ uri: photo }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            contentPosition="top"
+            transition={180}
+          />
         </View>
       </GestureDetector>
 
       {hasStories ? (
         <View
-          className="absolute left-0 right-0 z-20 px-4"
-          style={{ top: topInset + 6 }}
+          className="absolute left-0 right-0 z-20 items-center"
+          style={{ top: topInset + 8, paddingHorizontal: 48 }}
           pointerEvents="box-none"
         >
           <StoryProgressDots
@@ -97,6 +127,15 @@ export function ProfilePhotoViewer({
         </View>
       ) : null}
 
+      {overlay ? (
+        <View
+          className="absolute left-0 right-0 bottom-0 z-10"
+          pointerEvents="box-none"
+        >
+          {overlay}
+        </View>
+      ) : null}
+
       <Pressable
         onPress={goPrev}
         disabled={photoIdx === 0}
@@ -111,8 +150,6 @@ export function ProfilePhotoViewer({
         style={{ width: width * 0.28, opacity: photoIdx >= count - 1 ? 0.3 : 1 }}
         accessibilityLabel="Nächstes Foto"
       />
-
-      {footer}
     </View>
   );
 }

@@ -3,6 +3,7 @@ import { Screen } from '@/components/ui/Screen';
 import { GridSkeleton } from '@/components/ui/Skeleton';
 import { MasonryGrid } from '@/components/schaufenster/MasonryGrid';
 import { AuswahlEmptyState } from '@/components/schaufenster/AuswahlEmptyState';
+import { useAppStore } from '@/stores/appStore';
 import { MaleHomeView } from '@/components/schaufenster/MaleHomeView';
 import { useSchaufenster } from '@/hooks/useSchaufenster';
 import { useMatch } from '@/hooks/useMatch';
@@ -23,6 +24,8 @@ function FemaleAuswahl({
   profiles: Parameters<typeof MasonryGrid>[0]['profiles'];
 }) {
   useDiscreetScreen();
+  const filterOpen = useAppStore((s) => s.filterSheetOpen);
+  const setFilterSheetOpen = useAppStore((s) => s.setFilterSheetOpen);
 
   return (
     <Screen edges={[]}>
@@ -33,7 +36,12 @@ function FemaleAuswahl({
       ) : profiles.length === 0 ? (
         <AuswahlEmptyState />
       ) : (
-        <MasonryGrid profiles={profiles} />
+        <MasonryGrid
+          profiles={profiles}
+          filterOpen={filterOpen}
+          onFilterPress={() => setFilterSheetOpen(!filterOpen)}
+          onFilterClose={() => setFilterSheetOpen(false)}
+        />
       )}
     </Screen>
   );

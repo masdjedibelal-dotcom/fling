@@ -1,5 +1,7 @@
-import { View } from 'react-native';
-import { DisplayText, BodyText } from '@/components/ui/Typography';
+import { View, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BodyLarge } from '@/components/ui/Typography';
+import { FLING_COLORS, FLING_RADIUS, FLING_TYPE } from '@/lib/designTokens';
 
 interface OnboardingCardProps {
   title: string;
@@ -9,18 +11,35 @@ interface OnboardingCardProps {
 
 export function OnboardingCard({ title, body, graphic }: OnboardingCardProps) {
   return (
-    <View className="mt-6 rounded-[20px] border border-accent/20 bg-card-2 p-5 overflow-hidden">
-      <View
-        className="absolute -top-6 -right-6 w-40 h-40 rounded-full"
-        style={{ backgroundColor: 'rgba(209,21,55,0.25)' }}
-      />
-      {graphic ? (
-        <View className="items-center py-2 mb-1 relative">{graphic}</View>
-      ) : null}
-      <DisplayText className="text-[46px] font-extrabold leading-[0.92] tracking-tight relative">
-        {title}
-      </DisplayText>
-      <BodyText className="text-fg-2 mt-3.5 relative">{body}</BodyText>
+    <View
+      className="mt-6 border border-accent/20 overflow-hidden"
+      style={{ borderRadius: FLING_RADIUS.xl }}
+    >
+      <LinearGradient
+        colors={[FLING_COLORS.card2, FLING_COLORS.bg]}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+        className="p-6 overflow-hidden"
+      >
+        <View
+          className="absolute -top-6 -right-6 w-40 h-40 rounded-full"
+          style={{ backgroundColor: 'rgba(225,21,57,0.25)' }}
+        />
+        {graphic ? (
+          <View className="items-center py-2 mb-2 relative">{graphic}</View>
+        ) : null}
+        <Text
+          className="font-display text-white font-extrabold relative"
+          style={{
+            fontSize: 40,
+            lineHeight: 42,
+            letterSpacing: -1.2,
+          }}
+        >
+          {title}
+        </Text>
+        <BodyLarge className="mt-4 relative leading-7">{body}</BodyLarge>
+      </LinearGradient>
     </View>
   );
 }
@@ -35,16 +54,18 @@ export function OnboardingPoint({
   return (
     <View className="flex-row gap-3 items-start">
       <View
-        className={`w-1.5 h-1.5 rounded-full mt-2 ${
+        className={`w-2 h-2 rounded-full mt-2 ${
           variant === 'green' ? 'bg-green' : 'bg-accent'
         }`}
         style={{
-          shadowColor: variant === 'green' ? '#00e07a' : '#D11537',
+          shadowColor: variant === 'green' ? '#00e07a' : FLING_COLORS.accent,
           shadowOpacity: 0.55,
           shadowRadius: 6,
         }}
       />
-      <BodyText className="text-fg-2 flex-1 text-[13px]">{text}</BodyText>
+      <Text className="text-fg-2 flex-1 font-medium" style={{ fontSize: FLING_TYPE.body, lineHeight: 24 }}>
+        {text}
+      </Text>
     </View>
   );
 }

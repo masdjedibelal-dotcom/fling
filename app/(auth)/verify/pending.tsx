@@ -1,9 +1,10 @@
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Text } from 'react-native';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { FlingIcon } from '@/components/icons/FlingIcon';
+import { FLING_COLORS, FLING_RADIUS, FLING_TYPE } from '@/lib/designTokens';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
-import { DisplayText, BodyText, MetaText } from '@/components/ui/Typography';
+import { HeroText, BodyLarge, StepLabel } from '@/components/ui/Typography';
 import { VerificationProgress } from '@/components/auth/VerificationProgress';
 import { useAuthStore } from '@/stores/authStore';
 import { useVerificationSubscription } from '@/hooks/useVerificationSubscription';
@@ -17,37 +18,28 @@ export default function PendingScreen() {
 
   useVerificationSubscription(userId);
 
-
   return (
     <Screen className="px-5 pt-2 pb-6">
       <View className="pt-4">
         <VerificationProgress total={totalSteps} current={totalSteps} label="läuft" />
-        <MetaText className="mt-5 normal-case tracking-wide text-[11px]">
-          <MetaText className="text-white font-bold">Verifikation</MetaText> · läuft
-        </MetaText>
+        <StepLabel className="mt-5">Verifikation läuft</StepLabel>
       </View>
 
-      <View className="flex-1 items-center justify-center gap-4 px-2">
-        <ActivityIndicator size="large" color="#D11537" />
-        <DisplayText className="text-[32px] text-center leading-tight">
-          Wir prüfen{'\n'}dein Selfie
-        </DisplayText>
-        <BodyText className="text-center max-w-[260px]">
-          Das dauert in der Regel 1–3 Minuten. Wir benachrichtigen dich.
-        </BodyText>
+      <View className="flex-1 items-center justify-center gap-5 px-2">
+        <ActivityIndicator size="large" color={FLING_COLORS.accent} />
+        <HeroText className="text-center">Wir prüfen{'\n'}dein Selfie</HeroText>
+        <BodyLarge className="text-center max-w-[280px]">
+          Meist 1–3 Minuten. Du bekommst eine Push, sobald du drin bist.
+        </BodyLarge>
 
-        <View className="w-full max-w-[260px] gap-1.5 mt-2">
-          <StepRow done label="Telefonnummer bestätigt" />
-          {gender === 'male' ? <StepRow done label="Ausweis verifiziert" /> : null}
-          <StepRow current label="Live-Selfie wird geprüft…" />
+        <View className="w-full max-w-[300px] gap-2 mt-2">
+          <StepRow done label="Telefon bestätigt" />
+          {gender === 'male' ? <StepRow done label="Ausweis hochgeladen" /> : null}
+          <StepRow current label="Live-Selfie wird geprüft" />
         </View>
       </View>
 
-      <Button
-        label="App schließen · wir senden Push"
-        variant="ghost"
-        onPress={() => router.back()}
-      />
+      <Button label="Schließen · Push folgt" variant="ghost" onPress={() => router.back()} />
 
       {isDemoMode ? <DemoShortcuts variant="pending" gender={gender ?? undefined} /> : null}
     </Screen>
@@ -65,26 +57,28 @@ function StepRow({
 }) {
   return (
     <View
-      className={`flex-row items-center gap-3 p-3 rounded-md border ${
+      className={`flex-row items-center gap-3 px-4 py-3.5 border ${
         current ? 'border-accent/30 bg-accent/5' : 'border-line'
       }`}
+      style={{ borderRadius: FLING_RADIUS.md, backgroundColor: FLING_COLORS.card }}
     >
       <View
-        className={`w-[18px] h-[18px] rounded-full border items-center justify-center ${
-          done ? 'bg-white/70 border-white/70' : 'border-line-2'
+        className={`w-5 h-5 rounded-full border items-center justify-center ${
+          done ? 'bg-white/80 border-white/80' : 'border-line-2'
         }`}
       >
         {done ? (
-          <Ionicons name="checkmark" size={11} color="#000" />
+          <FlingIcon name="check" size={12} color="#000" />
         ) : current ? (
-          <View className="w-[7px] h-[7px] rounded-full bg-accent" />
+          <View className="w-2 h-2 rounded-full bg-accent" />
         ) : null}
       </View>
-      <BodyText
-        className={`text-[12.5px] ${current ? 'text-white' : done ? 'text-fg-2' : 'text-fg-3'}`}
+      <Text
+        className={`font-medium flex-1 ${current ? 'text-white' : 'text-fg-3'}`}
+        style={{ fontSize: FLING_TYPE.subhead }}
       >
         {label}
-      </BodyText>
+      </Text>
     </View>
   );
 }

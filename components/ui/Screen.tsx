@@ -22,7 +22,7 @@ export function Screen({
     <SafeAreaView
       edges={edges}
       className="flex-1"
-      style={{ backgroundColor: '#0E0D0D' }}
+      style={{ backgroundColor: '#120A0C' }}
     >
       <StatusBar style="light" />
       {pattern ? <PatternBackground /> : null}

@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { Button } from '@/components/ui/Button';
-import { BodyText } from '@/components/ui/Typography';
+import { CaptionText } from '@/components/ui/Typography';
 import {
   isDemoMode,
   confirmDemoPhone,
@@ -18,14 +18,14 @@ interface DemoShortcutsProps {
 }
 
 export function DemoShortcuts({ variant = 'banner', gender }: DemoShortcutsProps) {
-  if (!isDemoMode) return null;
+  if (!__DEV__ || !isDemoMode) return null;
 
   if (variant === 'phone') {
     return (
       <View className="gap-2 pb-2">
-        <BodyText className="text-fg-4 text-center text-[11px]">
+        <CaptionText className="text-fg-4 text-center">
           Demo · kein echter SMS-Code nötig
-        </BodyText>
+        </CaptionText>
         <Button
           label="Demo: Code bestätigen (123456)"
           variant="dark"
@@ -64,9 +64,9 @@ export function DemoShortcuts({ variant = 'banner', gender }: DemoShortcutsProps
 
   return (
     <View className="py-2 px-1 border border-dashed border-accent/40 rounded-md bg-accent/5 gap-2">
-      <BodyText className="text-accent text-center text-[11px] font-semibold">
+      <CaptionText className="text-accent text-center font-semibold">
         Demo-Modus · zum Testen
-      </BodyText>
+      </CaptionText>
       <Button label="Direkt zur App (alles überspringen)" onPress={() => skipToApp(gender)} />
     </View>
   );

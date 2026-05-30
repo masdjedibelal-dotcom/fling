@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { View, TextInput } from 'react-native';
+import { View, TextInput, Text } from 'react-native';
 import { router } from 'expo-router';
-import { Screen } from '@/components/ui/Screen';
+import { AuthLayout } from '@/components/ui/AuthLayout';
 import { Button } from '@/components/ui/Button';
-import { DisplayText, BodyText, StepLabel } from '@/components/ui/Typography';
+import { BodyText } from '@/components/ui/Typography';
 import {
   isAtLeast18,
   parseBirthDate,
   formatBirthDateISO,
 } from '@/lib/validation';
 import { useAuthStore } from '@/stores/authStore';
+import { FLING_RADIUS, FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
 
 export default function AgeGateScreen() {
   const setBirthDate = useAuthStore((s) => s.setBirthDate);
@@ -29,65 +30,79 @@ export default function AgeGateScreen() {
     router.push('/(auth)/agb');
   };
 
-  const inputClass =
-    'flex-1 bg-card border border-line rounded-md py-3.5 px-3 text-center text-white text-2xl font-display font-bold tracking-tight';
+  const inputStyle = {
+    flex: 1,
+    backgroundColor: FLING_COLORS.card,
+    borderWidth: 1,
+    borderColor: FLING_COLORS.line2,
+    borderRadius: FLING_RADIUS.md,
+    paddingVertical: 16,
+    textAlign: 'center' as const,
+    color: '#fff',
+    fontSize: FLING_TYPE.displayInput,
+    fontFamily: 'Unbounded_700Bold',
+  };
 
   return (
-    <Screen className="px-6 pt-2 pb-6 gap-[18px]">
-      <StepLabel>Vor dem Start</StepLabel>
-      <DisplayText className="text-[30px] font-extrabold leading-tight tracking-tight">
-        Wann bist{'\n'}du geboren?
-      </DisplayText>
-      <BodyText className="max-w-[260px]">
-        Du musst mindestens 18 Jahre alt sein, um Fling zu nutzen.
-      </BodyText>
-
-      <View className="flex-row gap-2 mt-2">
+    <AuthLayout
+      step="Vor dem Start"
+      title={'Wann bist\ndu geboren?'}
+      subtitle="Du musst mindestens 18 sein — dein Geburtsdatum bleibt privat."
+      footer={<Button label="Weiter" disabled={!valid} onPress={onContinue} />}
+    >
+      <View className="flex-row gap-2.5">
         <TextInput
           value={day}
           onChangeText={(t) => setDay(t.replace(/\D/g, '').slice(0, 2))}
           placeholder="TT"
-          placeholderTextColor="rgba(255,255,255,0.3)"
+          placeholderTextColor={FLING_COLORS.fg4}
           keyboardType="number-pad"
           maxLength={2}
-          className={inputClass}
+          style={inputStyle}
         />
         <TextInput
           value={month}
           onChangeText={(t) => setMonth(t.replace(/\D/g, '').slice(0, 2))}
           placeholder="MM"
-          placeholderTextColor="rgba(255,255,255,0.3)"
+          placeholderTextColor={FLING_COLORS.fg4}
           keyboardType="number-pad"
           maxLength={2}
-          className={inputClass}
+          style={inputStyle}
         />
         <TextInput
           value={year}
           onChangeText={(t) => setYear(t.replace(/\D/g, '').slice(0, 4))}
           placeholder="JJJJ"
-          placeholderTextColor="rgba(255,255,255,0.3)"
+          placeholderTextColor={FLING_COLORS.fg4}
           keyboardType="number-pad"
           maxLength={4}
-          className={inputClass}
+          style={inputStyle}
         />
       </View>
-
-      <View className="flex-row gap-2 -mt-3">
+      <View className="flex-row gap-2.5 mt-2">
         {['Tag', 'Monat', 'Jahr'].map((label) => (
-          <View key={label} className="flex-1 items-center">
-            <StepLabel>{label}</StepLabel>
-          </View>
+          <Text
+            key={label}
+            className="flex-1 text-center text-fg-4 font-semibold uppercase tracking-wide"
+            style={{ fontSize: FLING_TYPE.caption }}
+          >
+            {label}
+          </Text>
         ))}
       </View>
-
-      <View className="mt-auto p-3.5 bg-accent/10 border border-accent/20 rounded-md">
-        <BodyText className="text-fg-2 text-xs leading-5">
-          <BodyText className="text-accent font-bold">Hinweis:</BodyText> Dein
-          Geburtsdatum bleibt privat und wird nur zur Altersprüfung verwendet.
+      <View
+        className="mt-8 p-4 border border-accent/25"
+        style={{
+          borderRadius: FLING_RADIUS.md,
+          backgroundColor: 'rgba(225,21,57,0.08)',
+        }}
+      >
+        <BodyText className="text-fg-2 leading-6">
+          <Text className="text-accent font-bold">Diskret: </Text>
+          Wir nutzen dein Alter nur zur Freischaltung — nichts wird öffentlich
+          angezeigt.
         </BodyText>
       </View>
-
-      <Button label="Weiter" disabled={!valid} onPress={onContinue} />
-    </Screen>
+    </AuthLayout>
   );
 }

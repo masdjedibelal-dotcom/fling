@@ -8,7 +8,7 @@ import { OnboardingCard, OnboardingPoint } from '@/components/auth/OnboardingCar
 import { useAuthStore } from '@/stores/authStore';
 import { DemoShortcuts } from '@/components/auth/DemoShortcuts';
 import { ONBOARDING_MALE_VERIFY } from '@/lib/marketingCopy';
-import { OnboardingManGraphic, OnboardingTrustSection } from '@/components/graphics';
+import { ProfileFigureWait, OnboardingTrustSection } from '@/components/graphics';
 
 export default function OnboardingMaleScreen() {
   const advanceOnboarding = useAuthStore((s) => s.advanceOnboarding);
@@ -23,7 +23,7 @@ export default function OnboardingMaleScreen() {
       <OnboardingCard
         title={'Du\nwartest.'}
         body={ONBOARDING_MALE_VERIFY}
-        graphic={<OnboardingManGraphic size={200} />}
+        graphic={<ProfileFigureWait size={160} />}
       />
 
       <View className="mt-4 gap-3">

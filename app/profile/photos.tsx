@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { BackButton } from '@/components/ui/BackButton';
-import { DisplayText, BodyText } from '@/components/ui/Typography';
+import { ScreenTitle, BodyLarge, MetaText } from '@/components/ui/Typography';
 import { PermissionSheet } from '@/components/auth/PermissionSheet';
 import { useAuthStore } from '@/stores/authStore';
 import { updateUserProfile } from '@/lib/api';
@@ -52,11 +52,11 @@ export default function PhotosScreen() {
     <Screen className="px-4 pt-2">
       <View className="flex-row items-center gap-3 mb-2">
         <BackButton />
-        <DisplayText className="text-xl">Fotos verwalten</DisplayText>
+        <ScreenTitle className="flex-1">Fotos</ScreenTitle>
       </View>
-      <BodyText className="text-fg-3 mb-6 text-center">
-        Mit zwei Fingern zoomen — Foto 1 ist dein Hauptbild.
-      </BodyText>
+      <BodyLarge className="text-fg-3 mb-6 text-center leading-7 px-2">
+        Foto 1 ist dein Hauptbild im Schaufenster — wähl Bilder, die Lust wecken.
+      </BodyLarge>
 
       <View className="flex-row flex-wrap gap-3 justify-center mb-8">
         {slots.map((uri, i) => (
@@ -70,12 +70,12 @@ export default function PhotosScreen() {
             {uri ? (
               <Image source={{ uri }} className="w-full h-full" contentFit="cover" />
             ) : (
-              <BodyText className="text-fg-4">+</BodyText>
+              <MetaText className="text-fg-4 text-2xl normal-case">+</MetaText>
             )}
-            <View className="absolute bottom-1 left-1 bg-black/60 px-1.5 rounded">
-              <BodyText className="text-[10px] text-white">
+            <View className="absolute bottom-1.5 left-1.5 bg-black/65 px-2 py-0.5 rounded">
+              <MetaText className="text-white normal-case tracking-normal">
                 {i === 0 ? 'Haupt' : String(i + 1)}
-              </BodyText>
+              </MetaText>
             </View>
           </Pressable>
         ))}
@@ -85,7 +85,7 @@ export default function PhotosScreen() {
 
       <PermissionSheet
         visible={permOpen}
-        icon="images-outline"
+        icon="images"
         title="Wähle deine\nProfil-Fotos"
         description="Du kannst auch nur einzelne Fotos teilen — wir greifen nicht auf den Rest zu."
         primaryLabel="Fotos auswählen"

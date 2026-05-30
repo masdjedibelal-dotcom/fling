@@ -1,19 +1,22 @@
-import { View } from 'react-native';
-import { BodyText } from '@/components/ui/Typography';
-import { VerifiedStamp } from './VerifiedStamp';
+import { View, Text } from 'react-native';
+import { FLING_TYPE } from '@/lib/designTokens';
+import { FlingIcon } from '@/components/icons/FlingIcon';
 
 type Props = {
   label?: string;
   size?: number;
 };
 
-export function VerifiedBadge({ label = 'Verifiziert', size = 20 }: Props) {
+export function VerifiedBadge({ label = 'Verifiziert', size = 16 }: Props) {
   return (
     <View className="flex-row items-center gap-1.5">
-      <VerifiedStamp size={size} />
-      <BodyText className="text-fg-3 text-[11px] font-semibold uppercase tracking-wider">
+      <FlingIcon name="verified" size={size} color="#E11539" />
+      <Text
+        className="text-fg-3 font-semibold"
+        style={{ fontSize: FLING_TYPE.caption }}
+      >
         {label}
-      </BodyText>
+      </Text>
     </View>
   );
 }

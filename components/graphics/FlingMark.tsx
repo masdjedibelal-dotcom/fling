@@ -1,34 +1,59 @@
 import { useId } from 'react';
-import Svg, { Defs, Mask, Rect } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { FLING_COLORS } from '@/lib/designTokens';
+import {
+  FLING_MARK_F_PATH,
+  FLING_MARK_TILE_RADIUS,
+  FLING_MARK_VIEWBOX,
+} from '@/lib/flingMarkSvg';
 
 type Props = {
   size?: number;
   radius?: number;
+  /** F-Farbe; Hintergrund bleibt Wein-Verlauf */
   color?: string;
+  /** Nur das F ohne Kachel (z. B. in der App-Leiste) */
+  letterOnly?: boolean;
 };
 
-/** App-Icon: F als negative Form auf Crimson */
+/** App-Marke: Funken-Kerbe auf dunklem Wein-Tile (Option 5) */
 export function FlingMark({
   size = 80,
-  radius = 18,
+  radius = FLING_MARK_TILE_RADIUS,
   color = FLING_COLORS.accent,
+  letterOnly = false,
 }: Props) {
-  const maskId = useId().replace(/:/g, '');
-  const scale = size / 80;
+  const gradId = useId().replace(/:/g, '');
+  const scale = size / FLING_MARK_VIEWBOX;
   const rx = radius * scale;
 
   return (
-    <Svg width={size} height={size} viewBox="0 0 80 80">
-      <Defs>
-        <Mask id={maskId} x="0" y="0" width="80" height="80">
-          <Rect width="80" height="80" fill="#fff" />
-          <Rect x="18" y="14" width="13" height="52" rx="1.5" fill="#000" />
-          <Rect x="18" y="14" width="42" height="12" rx="1.5" fill="#000" />
-          <Rect x="18" y="37" width="32" height="11" rx="1.5" fill="#000" />
-        </Mask>
-      </Defs>
-      <Rect width="80" height="80" rx={rx} fill={color} mask={`url(#${maskId})`} />
+    <Svg width={size} height={size} viewBox={`0 0 ${FLING_MARK_VIEWBOX} ${FLING_MARK_VIEWBOX}`}>
+      {!letterOnly ? (
+        <Defs>
+          <LinearGradient
+            id={gradId}
+            x1={FLING_MARK_VIEWBOX / 2}
+            y1="0"
+            x2={FLING_MARK_VIEWBOX / 2}
+            y2={String(FLING_MARK_VIEWBOX)}
+            gradientUnits="userSpaceOnUse"
+          >
+            <Stop offset="0" stopColor="#4a1824" />
+            <Stop offset="0.42" stopColor={FLING_COLORS.card} />
+            <Stop offset="1" stopColor={FLING_COLORS.bg} />
+          </LinearGradient>
+        </Defs>
+      ) : null}
+      {!letterOnly ? (
+        <Rect
+          width={FLING_MARK_VIEWBOX}
+          height={FLING_MARK_VIEWBOX}
+          rx={rx / scale}
+          fill={`url(#${gradId})`}
+        />
+      ) : null}
+      <Path d={FLING_MARK_F_PATH} fill={color} />
     </Svg>
   );
 }

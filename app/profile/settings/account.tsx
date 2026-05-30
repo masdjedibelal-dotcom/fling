@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { Screen } from '@/components/ui/Screen';
 import { BackButton } from '@/components/ui/BackButton';
-import { DisplayText, BodyText } from '@/components/ui/Typography';
+import { ScreenTitle, BodyLarge } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { ConfirmModal } from '@/components/ui/Modal';
 import { signOut } from '@/lib/auth';
@@ -25,22 +25,18 @@ export default function AccountSettingsScreen() {
   };
 
   return (
-    <Screen className="px-4 pt-2">
+    <Screen className="px-5 pt-3">
       <View className="flex-row items-center gap-3 mb-6">
         <BackButton />
-        <DisplayText className="text-xl">Konto</DisplayText>
+        <ScreenTitle>Konto</ScreenTitle>
       </View>
 
-      <BodyText className="text-fg-3 mb-8">
-        Hier kannst du dein Konto dauerhaft löschen. Alle Profildaten werden
-        unwiderruflich entfernt.
-      </BodyText>
+      <BodyLarge className="leading-7 mb-10">
+        Dein Konto und alle Daten werden unwiderruflich gelöscht — Chats, Fotos,
+        Profil.
+      </BodyLarge>
 
-      <Button
-        label="Konto löschen"
-        variant="ghost"
-        onPress={() => setDeleteOpen(true)}
-      />
+      <Button label="Konto löschen" variant="ghost" onPress={() => setDeleteOpen(true)} />
 
       <ConfirmModal
         visible={deleteOpen}

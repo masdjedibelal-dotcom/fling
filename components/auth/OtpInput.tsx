@@ -38,14 +38,14 @@ export function OtpInput({ value, onChange, length = 6 }: OtpInputProps) {
           return (
             <View
               key={i}
-              className={`w-9 h-[46px] rounded-[10px] border items-center justify-center ${
+              className={`w-11 h-[52px] rounded-xl border items-center justify-center ${
                 current
                   ? 'border-accent bg-accent/10'
                   : 'border-line bg-white/[0.03]'
               }`}
             >
               <Text
-                className={`text-xl font-bold ${
+                className={`text-2xl font-bold ${
                   filled ? 'text-white' : 'text-fg-4 font-normal'
                 }`}
               >

@@ -2,7 +2,7 @@ import { View, Pressable } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlingIcon, type FlingIconName } from '@/components/icons/FlingIcon';
-import { FLING_COLORS } from '@/lib/designTokens';
+import { FLING_COLORS, FLING_TOUCH } from '@/lib/designTokens';
 
 const ROUTE_ICON: Record<string, FlingIconName> = {
   index: 'home',
@@ -34,9 +34,10 @@ export function FlingTabBar({ state, navigation }: BottomTabBarProps) {
               onPress={() => navigation.navigate(route.name)}
               accessibilityRole="button"
               accessibilityState={focused ? { selected: true } : {}}
-              className="items-center min-w-[56px] py-1"
+              className="items-center justify-center min-w-[72px]"
+              style={{ minHeight: FLING_TOUCH.min }}
             >
-              <FlingIcon name={icon} size={24} color={color} />
+              <FlingIcon name={icon} size={FLING_TOUCH.icon} color={color} />
               <View
                 className="mt-1.5 rounded-full"
                 style={{

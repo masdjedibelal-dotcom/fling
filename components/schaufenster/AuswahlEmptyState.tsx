@@ -1,31 +1,34 @@
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DisplayText, BodyText } from '@/components/ui/Typography';
-import { EmptyWaitingGraphic } from '@/components/graphics';
-import { AUSWAHL_MAX_RADIUS_KM, AUSWAHL_MAX_PROFILES } from '@/lib/constants';
+import { BodyLarge, TitleText } from '@/components/ui/Typography';
+import { ProfileFigureBack } from '@/components/graphics';
+import { Button } from '@/components/ui/Button';
+import { useAppStore } from '@/stores/appStore';
 
 export function AuswahlEmptyState() {
   const insets = useSafeAreaInsets();
+  const setFilterSheetOpen = useAppStore((s) => s.setFilterSheetOpen);
 
   return (
     <View
       className="flex-1 items-center justify-center px-8"
       style={{ paddingTop: insets.top + 24, paddingBottom: insets.bottom + 40 }}
     >
-      <View className="mb-5">
-        <EmptyWaitingGraphic size={160} />
+      <View className="mb-5" style={{ width: 150, height: 138 }}>
+        <ProfileFigureBack size={150} />
       </View>
-      <DisplayText className="text-2xl text-center mb-3">
-        Gerade niemand in der Nähe
-      </DisplayText>
-      <BodyText className="text-fg-3 text-center leading-6 mb-2">
-        In deinem Umkreis von {AUSWAHL_MAX_RADIUS_KM} km ist momentan niemand online
-        oder kürzlich aktiv.
-      </BodyText>
-      <BodyText className="text-fg-4 text-center text-[13px] leading-5">
-        Schau später nochmal vorbei — wir zeigen dir dann wieder bis zu{' '}
-        {AUSWAHL_MAX_PROFILES} aktive Profile in deiner Nähe.
-      </BodyText>
+      <TitleText className="text-center mb-3 leading-tight">
+        Schaufenster{'\n'}wartet
+      </TitleText>
+      <BodyLarge className="text-center text-fg-3 max-w-[280px] mb-6 leading-7">
+        Noch keine aktiven Männer in deinem Radius. Erweitere den Radius oder versuch&apos;s
+        später.
+      </BodyLarge>
+      <Button
+        label="Radius erweitern"
+        className="max-w-[280px]"
+        onPress={() => setFilterSheetOpen(true)}
+      />
     </View>
   );
 }

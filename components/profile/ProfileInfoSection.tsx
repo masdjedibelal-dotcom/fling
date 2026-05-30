@@ -1,6 +1,7 @@
 import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import type { LocationMode } from '@/lib/types';
 import { MAX_CITY_LENGTH, MAX_JOB_LENGTH } from '@/lib/constants';
+import { FLING_INPUT_TEXT, FLING_TYPE } from '@/lib/designTokens';
 
 function InfoCard({
   label,
@@ -17,10 +18,17 @@ function InfoCard({
     <View
       className={`flex-1 items-center py-3 px-1 ${isLast ? '' : 'border-r border-line'}`}
     >
-      <Text className="text-white text-[17px] font-bold tracking-tight text-center" numberOfLines={1}>
+      <Text
+        className="text-white font-bold tracking-tight text-center"
+        style={{ fontSize: FLING_TYPE.body }}
+        numberOfLines={1}
+      >
         {value || '—'}
       </Text>
-      <Text className="text-fg-3 text-[10px] uppercase tracking-wider font-semibold mt-1">
+      <Text
+        className="text-fg-3 font-semibold mt-1.5"
+        style={{ fontSize: FLING_TYPE.caption }}
+      >
         {label}
       </Text>
     </View>
@@ -94,7 +102,8 @@ export function ProfileInfoSection({
           onChangeText={(t) => onJobChange(t.slice(0, MAX_JOB_LENGTH))}
           onBlur={() => onEditField(null)}
           autoFocus
-          className="mt-2 bg-white/5 border border-line-2 rounded-md px-4 py-3 text-white text-[15px] font-body"
+          className="mt-2 bg-white/5 border border-line-2 rounded-md px-4 py-3 text-white font-body"
+          style={FLING_INPUT_TEXT}
           placeholderTextColor="rgba(255,255,255,0.35)"
           placeholder="z.B. Architekt"
         />
@@ -106,7 +115,8 @@ export function ProfileInfoSection({
           onBlur={() => onEditField(null)}
           autoFocus
           keyboardType="number-pad"
-          className="mt-2 bg-white/5 border border-line-2 rounded-md px-4 py-3 text-white text-[15px] font-body"
+          className="mt-2 bg-white/5 border border-line-2 rounded-md px-4 py-3 text-white font-body"
+          style={FLING_INPUT_TEXT}
           placeholderTextColor="rgba(255,255,255,0.35)"
           placeholder="Alter"
         />
@@ -118,7 +128,8 @@ export function ProfileInfoSection({
           onBlur={() => onEditField(null)}
           autoFocus
           editable={locationMode === 'fixed'}
-          className="mt-2 bg-white/5 border border-line-2 rounded-md px-4 py-3 text-white text-[15px] font-body"
+          className="mt-2 bg-white/5 border border-line-2 rounded-md px-4 py-3 text-white font-body"
+          style={FLING_INPUT_TEXT}
           placeholderTextColor="rgba(255,255,255,0.35)"
           placeholder="z.B. München"
         />
@@ -139,9 +150,8 @@ export function ProfileInfoSection({
               }`}
             >
               <Text
-                className={`text-[12px] font-semibold ${
-                  active ? 'text-white' : 'text-fg-3'
-                }`}
+                className={`font-semibold ${active ? 'text-white' : 'text-fg-3'}`}
+                style={{ fontSize: FLING_TYPE.subhead }}
               >
                 {mode === 'fixed' ? 'Fest' : 'Standort'}
               </Text>
@@ -157,9 +167,12 @@ export function ProfileInfoSection({
           className="mt-2 py-2.5 rounded-md border border-line bg-white/5 flex-row items-center justify-center gap-2"
         >
           {detectingLocation ? (
-            <ActivityIndicator size="small" color="#D11537" />
+            <ActivityIndicator size="small" color="#E11539" />
           ) : (
-            <Text className="text-fg-2 text-[13px] font-semibold">
+            <Text
+              className="text-fg-2 font-semibold"
+              style={{ fontSize: FLING_TYPE.caption }}
+            >
               Standort jetzt ermitteln
             </Text>
           )}

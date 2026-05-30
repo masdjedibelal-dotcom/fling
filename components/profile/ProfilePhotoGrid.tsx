@@ -1,8 +1,10 @@
-import { View, Text, Pressable, useWindowDimensions } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
+import { useAppDimensions } from '@/hooks/useAppDimensions';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
+import { FlingIcon } from '@/components/icons/FlingIcon';
 import { MAX_PHOTOS } from '@/lib/constants';
+import { FLING_TYPE } from '@/lib/designTokens';
 
 const GAP = 8;
 const COLS = 3;
@@ -14,7 +16,7 @@ export function ProfilePhotoGrid({
   photos: string[];
   onChange: (photos: string[]) => void;
 }) {
-  const { width } = useWindowDimensions();
+  const { width } = useAppDimensions();
   const tileW = (width - 32 - GAP * (COLS - 1)) / COLS;
   const tileH = tileW * 1.25;
 
@@ -58,17 +60,22 @@ export function ProfilePhotoGrid({
                   hitSlop={8}
                   className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/65 items-center justify-center"
                 >
-                  <Ionicons name="close" size={14} color="#fff" />
+                  <FlingIcon name="close" size={14} color="#fff" />
                 </Pressable>
                 {isPrimary ? (
                   <View className="absolute bottom-1.5 left-1.5 bg-accent px-2 py-0.5 rounded-pill">
-                    <Text className="text-white text-[9px] font-semibold">Haupt</Text>
+                    <Text
+                      className="text-white font-semibold"
+                      style={{ fontSize: FLING_TYPE.caption2 }}
+                    >
+                      Haupt
+                    </Text>
                   </View>
                 ) : null}
               </>
             ) : (
               <View className="flex-1 items-center justify-center">
-                <Ionicons name="add" size={28} color="rgba(255,255,255,0.35)" />
+                <FlingIcon name="plus" size={28} color="rgba(255,255,255,0.35)" />
               </View>
             )}
           </Pressable>

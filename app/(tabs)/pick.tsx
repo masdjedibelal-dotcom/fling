@@ -2,13 +2,13 @@ import { View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
-import { DisplayText, BodyText, MetaText } from '@/components/ui/Typography';
+import { BodyText, BodyLarge, MetaText, TitleText } from '@/components/ui/Typography';
 import { useAuthStore } from '@/stores/authStore';
 import { useMatch } from '@/hooks/useMatch';
 import { DEMO_STATS } from '@/lib/demo';
-import { AUSWAHL_SUBLINE } from '@/lib/auswahlCopy';
+import { chatPartnerName } from '@/lib/profileDisplay';
 import { Image } from 'expo-image';
-import { EmptyWaitingGraphic, EmptyManWaitingGraphic } from '@/components/graphics';
+import { ProfileFigureTwo, ProfileFigureWait } from '@/components/graphics';
 
 export default function PickScreen() {
   const gender = useAuthStore((s) => s.gender);
@@ -36,8 +36,11 @@ export default function PickScreen() {
         : match.female_profile?.photos[match.female_profile.primary_photo_idx ?? 0];
     const partnerName =
       gender === 'female'
-        ? match.male_profile?.display_name ?? match.male_profile?.job ?? 'Pick'
-        : match.female_profile?.display_name ?? match.female_display_name ?? 'Anna';
+        ? chatPartnerName(match.male_profile?.display_name, 'Pick')
+        : chatPartnerName(
+            match.female_display_name ?? match.female_profile?.display_name,
+            'Anna',
+          );
 
     return (
       <Screen className="px-5 pt-4 items-center justify-center">
@@ -51,7 +54,7 @@ export default function PickScreen() {
               className="w-full h-full"
             />
           </View>
-          <DisplayText className="text-xl mb-1">Dein Pick</DisplayText>
+          <TitleText className="mb-1">Dein Pick</TitleText>
           <BodyText className="text-center mb-6">{partnerName}</BodyText>
           <Button label="Chat öffnen" onPress={() => router.push(`/chat/${match.id}`)} />
         </Pressable>
@@ -61,38 +64,35 @@ export default function PickScreen() {
 
   if (gender === 'female') {
     return (
-      <Screen className="px-5 pt-4 items-center justify-center">
-        <View className="mb-6">
-          <EmptyWaitingGraphic size={150} />
+      <Screen className="px-5 pt-4 items-center justify-center flex-1">
+        <View className="mb-6" style={{ width: 150, height: 150 }}>
+          <ProfileFigureTwo size={150} />
         </View>
-        <MetaText className="mb-4">
-          {DEMO_STATS.nearby_active} Männer in der Nähe
-        </MetaText>
-        <DisplayText className="text-xl text-center mb-2">
-          Noch kein aktiver Chat.
-        </DisplayText>
-        <BodyText className="text-center text-fg-3 mb-6">
-          {AUSWAHL_SUBLINE}
-        </BodyText>
-        <Button
-          label="Zur Auswahl"
-          className="mt-2"
-          onPress={() => router.push('/(tabs)')}
-        />
+        <TitleText className="text-center mb-3 leading-tight">
+          Jetzt einen{'\n'}Mann picken
+        </TitleText>
+        <BodyLarge className="text-center text-fg-3 max-w-[280px] mb-6 leading-7">
+          Du hast aktuell keinen Pick. Schau, wer in deinem Radius aktiv ist, und wisch nach
+          rechts.
+        </BodyLarge>
+        <Button label="Zum Schaufenster" onPress={() => router.push('/(tabs)')} />
       </Screen>
     );
   }
 
   return (
     <Screen className="px-5 pt-4 items-center justify-center flex-1">
-      <View className="mb-6">
-        <EmptyManWaitingGraphic size={150} />
+      <View className="mb-6" style={{ width: 140, height: 154 }}>
+        <ProfileFigureWait size={140} />
       </View>
-      <DisplayText className="text-xl text-center mb-2">Noch keine Auswahl</DisplayText>
-      <BodyText className="text-center mb-8">
-        Du bist sichtbar — sobald dich jemand auswählt, startet hier der Chat.
-      </BodyText>
-      <MetaText className="text-center absolute bottom-24">
+      <TitleText className="text-center mb-3 leading-tight">
+        Noch kein{'\n'}Pick
+      </TitleText>
+      <BodyLarge className="text-center text-fg-3 max-w-[280px] mb-8 leading-7">
+        Bald wird eine Frau dich aussuchen. Halt dein Profil scharf und deine Verfügbarkeit
+        aktuell.
+      </BodyLarge>
+      <MetaText className="text-center text-fg-4">
         Sichtbar für {DEMO_STATS.male_views} Frauen · {profile?.search_radius_km ?? 5} km
       </MetaText>
     </Screen>

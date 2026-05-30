@@ -2,21 +2,21 @@ import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
-import { DisplayText, BodyText } from '@/components/ui/Typography';
-import { VerifiedStamp } from '@/components/graphics';
+import { HeroText, BodyLarge } from '@/components/ui/Typography';
+import { ProfileFigureTwo } from '@/components/graphics';
 
-/** Kurzer Erfolgs-Screen nach Freischaltung (Demo / Deep-Link) */
 export default function VerifyApprovedScreen() {
   return (
-    <Screen className="px-5 items-center justify-center">
-      <VerifiedStamp size={120} />
-      <DisplayText className="text-[32px] text-center leading-tight mt-6 mb-3">
-        Verifiziert
-      </DisplayText>
-      <BodyText className="text-center text-fg-3 max-w-[260px] mb-8 leading-6">
-        Du bist freigeschaltet. Willkommen bei Fling.
-      </BodyText>
-      <Button label="Zur Auswahl" onPress={() => router.replace('/(tabs)')} />
+    <Screen className="px-6 items-center justify-center flex-1">
+      <View className="mb-4" style={{ width: 150, height: 150 }}>
+        <ProfileFigureTwo size={150} animate />
+      </View>
+      <HeroText className="text-center mb-3">Verifiziert</HeroText>
+      <BodyLarge className="text-center max-w-[280px] mb-10 leading-7">
+        Du bist im Schaufenster sichtbar. Stell deine Verfügbarkeit ein — der erste
+        Pick kann jederzeit kommen.
+      </BodyLarge>
+      <Button label="Schaufenster öffnen" onPress={() => router.replace('/(tabs)')} />
     </Screen>
   );
 }

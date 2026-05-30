@@ -1,26 +1,26 @@
 import { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen } from '@/components/ui/Screen';
 import { BodyText } from '@/components/ui/Typography';
 import { SlideToPick } from '@/components/chat/SlideToPick';
 import { PublicProfileDetail } from '@/components/schaufenster/PublicProfileDetail';
 import { fetchSchaufensterProfile, createMatch } from '@/lib/api';
-import { statsForMaleProfile } from '@/lib/partnerProfile';
+import { ensureDemoSession } from '@/lib/demoMode';
 import { useAuthStore } from '@/stores/authStore';
 import type { SchaufensterProfile } from '@/lib/types';
 import { useDiscreetScreen } from '@/hooks/useDiscreetScreen';
+import { FLING_TYPE } from '@/lib/designTokens';
 
 export default function SchaufensterDetailScreen() {
   useDiscreetScreen();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.userId) ?? 'demo-female-user';
   const [profile, setProfile] = useState<SchaufensterProfile | null>(null);
   const [picking, setPicking] = useState(false);
 
   useEffect(() => {
+    ensureDemoSession();
     if (id) fetchSchaufensterProfile(id).then(setProfile);
   }, [id]);
 
@@ -47,25 +47,18 @@ export default function SchaufensterDetailScreen() {
     <Screen edges={[]} className="flex-1">
       <PublicProfileDetail
         profile={profile}
-        stats={statsForMaleProfile(profile)}
-        bottomInset={72}
         footer={
-          <View
-            className="absolute left-0 right-0 border-t border-line/80"
-            style={{
-              bottom: 0,
-              paddingBottom: Math.max(insets.bottom, 10),
-              paddingTop: 10,
-              backgroundColor: 'rgba(14,13,13,0.96)',
-            }}
-          >
+          <>
             <SlideToPick onPick={onPick} />
             {picking ? (
-              <Text className="text-center text-fg-3 text-[10px] mt-1.5">
+              <Text
+                className="text-center text-fg-3 mt-2"
+                style={{ fontSize: FLING_TYPE.caption2 }}
+              >
                 Verbindung wird hergestellt…
               </Text>
             ) : null}
-          </View>
+          </>
         }
       />
     </Screen>

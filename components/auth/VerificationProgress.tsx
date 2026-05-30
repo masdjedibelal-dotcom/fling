@@ -1,5 +1,7 @@
-import { View } from 'react-native';
-import { MetaText } from '@/components/ui/Typography';
+import { View, Text } from 'react-native';
+import { FLING_TYPE } from '@/lib/designTokens';
+import { StepLabel } from '@/components/ui/Typography';
+import { FLING_COLORS } from '@/lib/designTokens';
 
 interface VerificationProgressProps {
   total: number;
@@ -13,7 +15,7 @@ export function VerificationProgress({
   label,
 }: VerificationProgressProps) {
   return (
-    <View className="gap-5">
+    <View className="gap-4">
       <View className="flex-row items-center gap-2.5">
         {Array.from({ length: total }).map((_, i) => {
           const step = i + 1;
@@ -22,7 +24,7 @@ export function VerificationProgress({
           return (
             <View key={step} className="flex-row items-center gap-2.5 flex-1">
               <View
-                className={`w-[7px] h-[7px] rounded-full border ${
+                className={`w-2 h-2 rounded-full border ${
                   done
                     ? 'bg-white/70 border-white/70'
                     : curr
@@ -32,7 +34,7 @@ export function VerificationProgress({
                 style={
                   curr
                     ? {
-                        shadowColor: '#D11537',
+                        shadowColor: FLING_COLORS.accent,
                         shadowOpacity: 0.35,
                         shadowRadius: 8,
                       }
@@ -46,10 +48,13 @@ export function VerificationProgress({
           );
         })}
       </View>
-      <MetaText className="text-fg-3 normal-case tracking-wide text-[11px]">
-        <MetaText className="text-white font-bold">Schritt {String(current).padStart(2, '0')}</MetaText>
-        {' · '}von {String(total).padStart(2, '0')} · {label}
-      </MetaText>
+      <Text className="text-fg-3" style={{ fontSize: FLING_TYPE.caption }}>
+        <Text className="text-white font-semibold">
+          Schritt {String(current).padStart(2, '0')}
+        </Text>
+        {' · '}
+        von {String(total).padStart(2, '0')} · {label}
+      </Text>
     </View>
   );
 }

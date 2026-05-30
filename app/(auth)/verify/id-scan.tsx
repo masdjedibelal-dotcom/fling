@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { View, Alert } from 'react-native';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
+import { FlingIcon } from '@/components/icons/FlingIcon';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
-import { DisplayText, BodyText } from '@/components/ui/Typography';
+import { HeroText, BodyLarge, BodyText, CaptionText } from '@/components/ui/Typography';
 import { VerificationProgress } from '@/components/auth/VerificationProgress';
 import { PermissionSheet } from '@/components/auth/PermissionSheet';
 import {
@@ -51,12 +51,10 @@ export default function IdScanScreen() {
     <Screen className="px-5 pt-2 pb-6">
       <View className="pt-4 gap-5">
         <VerificationProgress total={3} current={2} label="Identität" />
-        <DisplayText className="text-[32px] font-extrabold leading-tight">
-          Ausweis{'\n'}fotografieren
-        </DisplayText>
-        <BodyText className="max-w-[260px]">
-          Leg den Personalausweis flach auf eine dunkle Fläche. Vorderseite zuerst.
-        </BodyText>
+        <HeroText>Ausweis{'\n'}fotografieren</HeroText>
+        <BodyLarge className="max-w-[300px] mt-2 leading-7">
+          Flach auf dunkle Fläche. Vorderseite zuerst — kurz und scharf.
+        </BodyLarge>
       </View>
 
       <View className="flex-1 items-center justify-center">
@@ -70,15 +68,15 @@ export default function IdScanScreen() {
             </View>
           </View>
           <View className="absolute bottom-3.5 px-3 py-1.5 rounded-pill bg-black/55 border border-white/10">
-            <BodyText className="text-white text-[10.5px] text-center">
+            <CaptionText className="text-white text-center">
               Halte den Ausweis ruhig
-            </BodyText>
+            </CaptionText>
           </View>
         </View>
 
         <View className="flex-row items-center gap-2 mt-5 px-3 py-1.5 rounded-pill bg-white/5 border border-line">
-          <Ionicons name="lock-closed-outline" size={12} color="rgba(255,255,255,0.5)" />
-          <BodyText className="text-[11px]">Daten werden nicht gespeichert</BodyText>
+          <FlingIcon name="lock" size={12} color="rgba(255,255,255,0.5)" />
+          <BodyText className="text-fg-4">Daten werden nicht gespeichert</BodyText>
         </View>
       </View>
 
@@ -91,7 +89,7 @@ export default function IdScanScreen() {
 
       <PermissionSheet
         visible={showPermission}
-        icon="camera-outline"
+        icon="camera"
         title="Kamera-Zugriff"
         description="Nötig für Ausweis-Scan und Live-Selfie. Du hast volle Kontrolle über jede Aufnahme."
         primaryLabel="Erlauben"

@@ -12,7 +12,7 @@ import {
   ONBOARDING_FEMALE_POINTS,
   ONBOARDING_FEMALE_TITLE,
 } from '@/lib/marketingCopy';
-import { OnboardingWomanGraphic, OnboardingTrustSection } from '@/components/graphics';
+import { ProfileFigureBack, OnboardingTrustSection } from '@/components/graphics';
 
 export default function OnboardingFemaleScreen() {
   const advanceOnboarding = useAuthStore((s) => s.advanceOnboarding);
@@ -27,7 +27,7 @@ export default function OnboardingFemaleScreen() {
       <OnboardingCard
         title={ONBOARDING_FEMALE_TITLE}
         body={ONBOARDING_FEMALE_BODY}
-        graphic={<OnboardingWomanGraphic size={200} />}
+        graphic={<ProfileFigureBack size={180} />}
       />
 
       <View className="mt-4 gap-3">

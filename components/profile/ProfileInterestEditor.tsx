@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { View, Text, Pressable, Modal, ScrollView, TextInput } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, Pressable, ScrollView, TextInput } from 'react-native';
+import { SectionLabel, TitleText } from '@/components/ui/Typography';
+import { BottomSheet, BottomSheetPanel } from '@/components/ui/BottomSheet';
+import { FlingIcon } from '@/components/icons/FlingIcon';
 import { INTEREST_TAGS, MAX_INTEREST_TAGS } from '@/lib/constants';
+import { FLING_INPUT_TEXT, FLING_TYPE } from '@/lib/designTokens';
 
 export function ProfileInterestEditor({
   tags,
@@ -27,18 +30,21 @@ export function ProfileInterestEditor({
 
   return (
     <View className="mb-4">
-      <Text className="text-fg-4 text-[10px] uppercase tracking-widest font-semibold mb-2 px-1">
-        Interessen
-      </Text>
+      <SectionLabel className="px-1">Interessen</SectionLabel>
       <View className="flex-row flex-wrap gap-1.5">
         {tags.map((tag) => (
           <View
             key={tag}
             className="flex-row items-center pl-2.5 pr-1.5 py-1 rounded-pill bg-white/5 border border-line"
           >
-            <Text className="text-white text-[11.5px] font-semibold mr-1">{tag}</Text>
+            <Text
+              className="text-white font-semibold mr-1"
+              style={{ fontSize: FLING_TYPE.subhead }}
+            >
+              {tag}
+            </Text>
             <Pressable onPress={() => remove(tag)} hitSlop={6} className="p-0.5">
-              <Ionicons name="close-circle" size={16} color="rgba(255,255,255,0.45)" />
+              <FlingIcon name="close" size={14} color="rgba(255,255,255,0.45)" />
             </Pressable>
           </View>
         ))}
@@ -47,33 +53,40 @@ export function ProfileInterestEditor({
             onPress={() => setModalOpen(true)}
             className="flex-row items-center gap-1 px-2.5 py-1 rounded-pill border border-dashed border-line-2"
           >
-            <Ionicons name="add" size={14} color="rgba(255,255,255,0.5)" />
-            <Text className="text-fg-3 text-[11.5px] font-semibold">Hinzufügen</Text>
+            <FlingIcon name="plus" size={14} color="rgba(255,255,255,0.5)" />
+            <Text
+              className="text-fg-3 font-semibold"
+              style={{ fontSize: FLING_TYPE.subhead }}
+            >
+              Hinzufügen
+            </Text>
           </Pressable>
         ) : null}
       </View>
 
-      <Modal visible={modalOpen} transparent animationType="fade">
-        <Pressable
-          className="flex-1 bg-black/60"
-          onPress={() => setModalOpen(false)}
-        />
-        <View className="absolute bottom-0 left-0 right-0 bg-card border-t border-line-2 rounded-t-3xl p-5 max-h-[70%]">
-          <Text className="text-white text-lg font-bold mb-3 text-center">Interesse wählen</Text>
+      <BottomSheet visible={modalOpen} onClose={() => setModalOpen(false)} animationType="fade">
+        <BottomSheetPanel className="max-h-[70vh]">
+          <TitleText className="text-center mb-4">Interesse wählen</TitleText>
           <View className="flex-row gap-2 mb-3">
             <TextInput
               value={customTag}
               onChangeText={setCustomTag}
               placeholder="Eigenes Tag…"
               placeholderTextColor="rgba(255,255,255,0.35)"
-              className="flex-1 bg-white/5 border border-line rounded-pill px-4 py-2.5 text-white text-[14px]"
+              className="flex-1 bg-white/5 border border-line rounded-pill px-4 py-2.5 text-white"
+              style={FLING_INPUT_TEXT}
               onSubmitEditing={() => add(customTag)}
             />
             <Pressable
               onPress={() => add(customTag)}
               className="px-4 py-2.5 rounded-pill bg-accent justify-center"
             >
-              <Text className="text-white font-semibold text-[13px]">OK</Text>
+              <Text
+                className="text-white font-semibold"
+                style={{ fontSize: FLING_TYPE.caption }}
+              >
+                OK
+              </Text>
             </Pressable>
           </View>
           <ScrollView className="max-h-64">
@@ -82,15 +95,20 @@ export function ProfileInterestEditor({
                 <Pressable
                   key={tag}
                   onPress={() => add(tag)}
-                  className="px-3 py-2 rounded-pill border border-line bg-white/5"
+                  className="px-3 py-2 rounded-pill border border-white/12 bg-white/[0.06]"
                 >
-                  <Text className="text-white text-[13px] font-semibold">{tag}</Text>
+                  <Text
+                    className="text-white font-semibold"
+                    style={{ fontSize: FLING_TYPE.caption }}
+                  >
+                    {tag}
+                  </Text>
                 </Pressable>
               ))}
             </View>
           </ScrollView>
-        </View>
-      </Modal>
+        </BottomSheetPanel>
+      </BottomSheet>
     </View>
   );
 }

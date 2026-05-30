@@ -1,6 +1,7 @@
 import { Modal as RNModal, View, Pressable } from 'react-native';
-import { DisplayText, BodyText } from './Typography';
+import { TitleText, BodyLarge } from './Typography';
 import { Button } from './Button';
+import { FLING_RADIUS, FLING_COLORS } from '@/lib/designTokens';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -23,14 +24,23 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   return (
     <RNModal visible={visible} transparent animationType="fade">
-      <View className="flex-1 bg-black/65 items-center justify-center px-5">
-        <View className="w-full bg-card border border-line-2 rounded-[22px] p-5 items-center">
-          <View className="w-[54px] h-[54px] rounded-full bg-accent/15 border border-accent/30 items-center justify-center mb-3">
-            <DisplayText className="text-accent text-2xl">!</DisplayText>
+      <View
+        className="flex-1 items-center justify-center px-5"
+        style={{ backgroundColor: FLING_COLORS.overlayScrim }}
+      >
+        <View
+          className="w-full border border-line-2 p-6 items-center"
+          style={{ borderRadius: FLING_RADIUS.xl, backgroundColor: FLING_COLORS.card }}
+        >
+          <View
+            className="w-14 h-14 rounded-full items-center justify-center mb-4 border border-accent/30"
+            style={{ backgroundColor: 'rgba(225,21,57,0.14)' }}
+          >
+            <TitleText className="text-accent">!</TitleText>
           </View>
-          <DisplayText className="text-[22px] text-center mb-2">{title}</DisplayText>
-          <BodyText className="text-center mb-4">{message}</BodyText>
-          <View className="w-full gap-2">
+          <TitleText className="text-center mb-2">{title}</TitleText>
+          <BodyLarge className="text-center mb-6 leading-7">{message}</BodyLarge>
+          <View className="w-full gap-2.5">
             <Button label={confirmLabel} onPress={onConfirm} />
             <Button label={cancelLabel} variant="ghost" onPress={onCancel} />
           </View>

@@ -1,7 +1,7 @@
 import { ScrollView, View, Text, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
+import { FlingIcon } from '@/components/icons/FlingIcon';
 import { MAX_PHOTOS } from '@/lib/constants';
 
 const TILE = 72;
@@ -56,7 +56,7 @@ export function ProfilePhotoRow({
                   onPress={() => removePhoto(i)}
                   className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 items-center justify-center"
                 >
-                  <Ionicons name="close" size={12} color="#fff" />
+                  <FlingIcon name="close" size={12} color="#fff" />
                 </Pressable>
                 {isPrimary ? (
                   <View className="absolute bottom-1 left-1 bg-accent/90 px-1.5 py-0.5 rounded">
@@ -66,7 +66,7 @@ export function ProfilePhotoRow({
               </>
             ) : (
               <View className="flex-1 items-center justify-center">
-                <Ionicons name="add" size={22} color="rgba(255,255,255,0.35)" />
+                <FlingIcon name="plus" size={22} color="rgba(255,255,255,0.35)" />
               </View>
             )}
           </Pressable>

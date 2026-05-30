@@ -41,7 +41,7 @@ export default function Index() {
   if (!hydrated) {
     return (
       <Screen className="items-center justify-center">
-        <ActivityIndicator color="#D11537" />
+        <ActivityIndicator color="#E11539" />
       </Screen>
     );
   }

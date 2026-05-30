@@ -3,7 +3,7 @@ import { View, TextInput, Pressable, Text, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
-import { DisplayText, BodyText, MetaText } from '@/components/ui/Typography';
+import { HeroText, BodyText, BodyLarge, MetaText } from '@/components/ui/Typography';
 import { VerificationProgress } from '@/components/auth/VerificationProgress';
 import { OtpInput } from '@/components/auth/OtpInput';
 import { useAuthStore } from '@/stores/authStore';
@@ -18,6 +18,7 @@ import { getPostAuthRoute } from '@/stores/authStore';
 import { isDemoMode } from '@/lib/demoMode';
 import { DemoShortcuts } from '@/components/auth/DemoShortcuts';
 import type { Gender } from '@/lib/types';
+import { FLING_TYPE } from '@/lib/designTokens';
 
 type Phase = 'phone' | 'otp' | 'welcome_back';
 
@@ -125,18 +126,16 @@ export default function PhoneVerifyScreen() {
           <View className="w-[72px] h-[72px] rounded-full bg-green/10 border border-green/30 items-center justify-center">
             <Text className="text-green text-3xl">✓</Text>
           </View>
-          <DisplayText className="text-[32px] text-center leading-tight">
-            Willkommen{'\n'}zurück
-          </DisplayText>
-          <BodyText className="text-center">
+          <HeroText className="text-center">Willkommen{'\n'}zurück</HeroText>
+          <BodyLarge className="text-center leading-7">
             Diese Nummer ist bereits bei Fling registriert. Melde dich an, um
             deinen Account zu nutzen.
-          </BodyText>
+          </BodyLarge>
           <View className="w-full p-4 bg-card border border-line rounded-md">
-            <MetaText className="text-fg-3 normal-case tracking-normal text-sm">
+            <MetaText className="text-fg-3 normal-case tracking-normal">
               {maskPhone(phoneE164 || '+490000000000')}
             </MetaText>
-            <BodyText className="text-fg-4 text-[11px] mt-1">
+            <BodyText className="text-fg-4 mt-2">
               Wir senden dir einen Login-Code per SMS.
             </BodyText>
           </View>
@@ -161,25 +160,28 @@ export default function PhoneVerifyScreen() {
       <Screen className="px-5 pt-2">
         <View className="pt-4 gap-5">
           <VerificationProgress total={totalSteps} current={1} label="Telefon" />
-          <DisplayText className="text-[32px] font-extrabold leading-tight">
-            Bestätige{'\n'}deine Nummer
-          </DisplayText>
-          <BodyText className="max-w-[260px]">
-            Wir schicken dir einen 6-stelligen Code. Keine Werbung, keine
-            Weitergabe.
-          </BodyText>
+          <HeroText>Bestätige{'\n'}deine Nummer</HeroText>
+          <BodyLarge className="max-w-[300px] mt-2 leading-7">
+            6-stelliger Code per SMS. Keine Werbung, keine Weitergabe.
+          </BodyLarge>
         </View>
 
         <View className="flex-1 justify-center px-1">
           <View className="flex-row items-center bg-card border border-line rounded-md px-4 py-3.5">
-            <Text className="text-white font-mono text-base mr-2">+49</Text>
+            <Text
+              className="text-white font-mono mr-2"
+              style={{ fontSize: FLING_TYPE.body }}
+            >
+              +49
+            </Text>
             <TextInput
               value={localPhone}
               onChangeText={setLocalPhone}
               placeholder="151 23456789"
               placeholderTextColor="rgba(255,255,255,0.3)"
               keyboardType="phone-pad"
-              className="flex-1 text-white text-base font-body"
+              className="flex-1 text-white font-body"
+              style={{ fontSize: FLING_TYPE.body }}
             />
           </View>
         </View>
@@ -196,13 +198,10 @@ export default function PhoneVerifyScreen() {
     <Screen className="px-5 pt-2">
       <View className="pt-4 gap-5">
         <VerificationProgress total={totalSteps} current={1} label="Telefon" />
-        <DisplayText className="text-[32px] font-extrabold leading-tight">
-          Bestätige{'\n'}deine Nummer
-        </DisplayText>
-        <BodyText className="max-w-[260px]">
-          Wir schicken dir einen 6-stelligen Code. Keine Werbung, keine
-          Weitergabe.
-        </BodyText>
+        <HeroText>Bestätige{'\n'}deine Nummer</HeroText>
+        <BodyLarge className="max-w-[300px] mt-2 leading-7">
+          6-stelliger Code per SMS. Keine Werbung, keine Weitergabe.
+        </BodyLarge>
       </View>
 
       <View className="flex-1 justify-center gap-5">
@@ -212,7 +211,7 @@ export default function PhoneVerifyScreen() {
           onPress={sendOtp}
           className="items-center"
         >
-          <MetaText className="text-[11px] tracking-wide">
+          <MetaText className="normal-case">
             Erneut senden in{' '}
             <Text className="text-accent">
               {resendSeconds > 0

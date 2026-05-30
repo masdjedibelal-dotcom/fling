@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Pressable, ScrollView, Alert, Text, Linking } from 'react-native';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/ui/Screen';
-import { DisplayText, BodyText } from '@/components/ui/Typography';
+import { ScreenTitle, BodyText, BodyLarge } from '@/components/ui/Typography';
+import { SettingsGroup, SettingsRow } from '@/components/ui/SettingsGroup';
 import { ProfileHero } from '@/components/profile/ProfileHero';
 import { ProfilePhotoRow } from '@/components/profile/ProfilePhotoRow';
 import { ProfileStatCards } from '@/components/profile/ProfileStatCards';
+import { LEGAL_URLS } from '@/lib/legalUrls';
 import {
   ProfileEditModal,
   type ProfileEditDraft,
@@ -19,43 +20,11 @@ import { birthDateFromAge, getAgeFromBirthDate } from '@/lib/validation';
 import { useAuthStore } from '@/stores/authStore';
 import type { Availability, LocationMode, UserProfile } from '@/lib/types';
 import { DEFAULT_RADIUS_KM } from '@/lib/constants';
-
-function SectionCard({
-  title,
-  rows,
-}: {
-  title: string;
-  rows: { label: string; sub?: string; onPress: () => void }[];
-}) {
-  return (
-    <View className="mb-5">
-      <BodyText className="text-fg-4 text-[10px] uppercase tracking-widest mb-2 px-1">
-        {title}
-      </BodyText>
-      <View className="bg-card border border-line rounded-md overflow-hidden">
-        {rows.map((row, i) => (
-          <Pressable
-            key={row.label}
-            onPress={row.onPress}
-            className={`flex-row justify-between items-center px-4 py-3.5 ${
-              i < rows.length - 1 ? 'border-b border-line' : ''
-            }`}
-          >
-            <View>
-              <BodyText className="text-white font-semibold">{row.label}</BodyText>
-              {row.sub ? (
-                <BodyText className="text-fg-3 text-xs mt-0.5">{row.sub}</BodyText>
-              ) : null}
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.3)" />
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
-}
+import { chatPartnerName } from '@/lib/profileDisplay';
+import { FLING_TYPE } from '@/lib/designTokens';
 
 type ProfileDraft = {
+  pseudonym: string;
   display_name: string;
   photos: string[];
   job: string;
@@ -74,6 +43,7 @@ type ProfileDraft = {
 function draftFromProfile(p: UserProfile): ProfileDraft {
   const age = getAgeFromBirthDate(p.birth_date);
   return {
+    pseudonym: p.pseudonym ?? '',
     display_name: p.display_name ?? '',
     photos: p.photos ?? [],
     job: p.job ?? '',
@@ -98,6 +68,7 @@ function draftToPatch(d: ProfileDraft): Partial<UserProfile> {
       : d.birth_date;
 
   return {
+    pseudonym: d.pseudonym.trim() || null,
     display_name: d.display_name.trim() || null,
     photos: d.photos.filter(Boolean).slice(0, 5),
     primary_photo_idx: 0,
@@ -116,6 +87,7 @@ function draftToPatch(d: ProfileDraft): Partial<UserProfile> {
 
 function toEditDraft(d: ProfileDraft): ProfileEditDraft {
   return {
+    pseudonym: d.pseudonym,
     display_name: d.display_name,
     job: d.job,
     age: d.age,
@@ -123,7 +95,6 @@ function toEditDraft(d: ProfileDraft): ProfileEditDraft {
     location_mode: d.location_mode,
     latitude: d.latitude,
     longitude: d.longitude,
-    search_radius_km: d.search_radius_km,
     availability: d.availability,
     interest_tags: d.interest_tags,
     bio: d.bio,
@@ -182,7 +153,7 @@ export default function ProfileScreen() {
     if (!result) {
       Alert.alert(
         'Standort',
-        'Bitte erlaube den Standortzugriff in den Geräteeinstellungen.',
+        'Standort konnte nicht ermittelt werden. Bitte erlaube den Zugriff in den Geräteeinstellungen und versuche es erneut.',
       );
       return;
     }
@@ -236,18 +207,18 @@ export default function ProfileScreen() {
   }
 
   const mainPhoto =
-    draft.photos[draft.photos.length > 0 ? 0 : 0] ??
+    draft.photos[0] ??
     profile.photos[profile.primary_photo_idx] ??
     'https://i.pravatar.cc/400?img=5';
 
   return (
     <Screen edges={['top']} className="flex-1">
-      <ScrollView className="flex-1 px-4 pt-2" contentContainerClassName="pb-10">
-        <DisplayText className="text-lg mb-4 tracking-tight">Profil</DisplayText>
+      <ScrollView className="flex-1 px-5 pt-3" contentContainerClassName="pb-12">
+        <ScreenTitle className="mb-5">Profil</ScreenTitle>
 
         <ProfileHero
           photoUri={mainPhoto}
-          displayName={draft.display_name || 'Profil'}
+          displayName={chatPartnerName(draft.display_name)}
           verified={verificationStatus === 'approved'}
           onAvatarPress={() => setPhotosOpen((v) => !v)}
           onEditPress={openEdit}
@@ -257,77 +228,77 @@ export default function ProfileScreen() {
           <ProfilePhotoRow photos={draft.photos} onChange={handlePhotosChange} />
         ) : null}
 
-        {/* Reihenfolge wie Schaufenster-Detail: Pills → Karten → Bio */}
-        <View className="flex-row flex-wrap gap-1.5 mb-4">
-          {draft.interest_tags.map((tag) => (
-            <View
-              key={tag}
-              className="px-2.5 py-1 rounded-pill bg-white/5 border border-line"
-            >
-              <BodyText className="text-white text-[11.5px] font-semibold">{tag}</BodyText>
-            </View>
-          ))}
-        </View>
+        {draft.interest_tags.length > 0 ? (
+          <View className="flex-row flex-wrap gap-2 mb-5">
+            {draft.interest_tags.map((tag) => (
+              <View
+                key={tag}
+                className="px-3.5 py-2 rounded-pill border border-line"
+                style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
+              >
+                <Text
+                  className="text-white font-semibold"
+                  style={{ fontSize: FLING_TYPE.subhead }}
+                >
+                  {tag}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
-        <ProfileStatCards job={draft.job} age={draft.age} city={draft.city} />
-
-        <BodyText className="text-fg-4 text-[11px] mb-3 px-1 font-mono tracking-wide">
-          {draft.availability === 'now'
-            ? 'Verfügbarkeit: Jetzt'
-            : draft.availability === 'today'
-              ? 'Verfügbarkeit: Heute'
-              : 'Verfügbarkeit: Pause'}
-          {' · '}
-          {draft.search_radius_km} km
-          {' · '}
-          {draft.location_mode === 'auto' ? 'Standort aktiv' : 'Ort fest'}
-        </BodyText>
-
-        <BodyText className="text-fg-2 leading-6 mb-6">
-          {draft.bio || 'Noch keine Bio.'}
-        </BodyText>
-
-        <View className="h-px bg-line mb-5" />
-
-        <SectionCard
-          title="App"
-          rows={[
-            {
-              label: 'Benachrichtigungen',
-              onPress: () => router.push('/profile/settings/notifications'),
-            },
-            { label: 'Datenschutz', onPress: () => {} },
-            {
-              label: 'App-Einstellungen',
-              onPress: () => router.push('/profile/settings/account'),
-            },
-            ...(isDemoMode && gender === 'female'
-              ? [
-                  {
-                    label: 'Safe Pick · Team',
-                    sub: 'Interne Übersicht (Demo)',
-                    onPress: () => router.push('/profile/settings/team-safe-picks'),
-                  },
-                ]
-              : []),
-          ]}
+        <ProfileStatCards
+          pseudonym={draft.pseudonym}
+          age={draft.age}
+          job={draft.job}
         />
 
-        {gender === 'male' ? (
-          <SectionCard
-            title="Account"
-            rows={[
-              { label: 'Hilfe', onPress: () => {} },
-              { label: 'Abmelden', onPress: handleSignOut },
-              {
-                label: 'Konto löschen',
-                onPress: () => router.push('/profile/settings/account'),
-              },
-            ]}
+        <BodyLarge className="leading-7 mb-8 mt-4">
+          {draft.bio || 'Erzähl kurz, wer du bist — das zählt beim Pick.'}
+        </BodyLarge>
+
+        <SettingsGroup title="App">
+          <SettingsRow
+            label="Benachrichtigungen"
+            onPress={() => router.push('/profile/settings/notifications')}
           />
+          <SettingsRow
+            label="Datenschutz"
+            onPress={() => Linking.openURL(LEGAL_URLS.privacy)}
+          />
+          <SettingsRow
+            label="AGB"
+            onPress={() => Linking.openURL(LEGAL_URLS.terms)}
+          />
+          <SettingsRow
+            label="Impressum"
+            onPress={() => Linking.openURL(LEGAL_URLS.imprint)}
+          />
+          <SettingsRow
+            label="Konto & Einstellungen"
+            onPress={() => router.push('/profile/settings/account')}
+            isLast
+          />
+        </SettingsGroup>
+
+        {gender === 'male' ? (
+          <SettingsGroup title="Account">
+            <SettingsRow label="Hilfe" onPress={() => {}} />
+            <SettingsRow label="Abmelden" onPress={handleSignOut} destructive />
+            <SettingsRow
+              label="Konto löschen"
+              onPress={() => router.push('/profile/settings/account')}
+              isLast
+            />
+          </SettingsGroup>
         ) : (
-          <Pressable onPress={handleSignOut} className="py-4 items-center">
-            <BodyText className="text-accent font-semibold">Abmelden</BodyText>
+          <Pressable onPress={handleSignOut} className="py-5 items-center">
+            <Text
+              className="text-accent font-semibold"
+              style={{ fontSize: FLING_TYPE.callout }}
+            >
+              Abmelden
+            </Text>
           </Pressable>
         )}
       </ScrollView>
@@ -337,12 +308,11 @@ export default function ProfileScreen() {
           visible={editOpen}
           draft={editDraft}
           saving={saving}
-          gender={gender}
           detectingLocation={detectingLocation}
           onChange={(patch) => setEditDraft((d) => (d ? { ...d, ...patch } : d))}
           onCancel={cancelEdit}
           onSave={saveEdit}
-          onDetectAutoLocation={handleDetectAutoInEdit}
+          onDetectLocation={handleDetectAutoInEdit}
         />
       ) : null}
     </Screen>

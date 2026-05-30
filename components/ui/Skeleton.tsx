@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
+import { useAppDimensions } from '@/hooks/useAppDimensions';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -30,13 +31,29 @@ export function ShimmerBox({
   );
 }
 
+const SKELETON_RATIOS = [3 / 4, 3 / 5.5, 4 / 5] as const;
+
 export function GridSkeleton() {
+  const { width: screenWidth } = useAppDimensions();
+  const colWidth = Math.floor((screenWidth - 8 * 2 - 8 * 2) / 3);
+  const stagger = Math.round(colWidth * 0.42);
+
   return (
-    <View className="flex-row gap-1 px-1 flex-1">
+    <View className="flex-row px-2 gap-2 flex-1">
       {[0, 1, 2].map((col) => (
-        <View key={col} className={`flex-1 gap-1 ${col === 1 ? 'mt-12' : ''}`}>
-          <ShimmerBox className="aspect-[3/4] w-full" />
-          <ShimmerBox className="aspect-[4/5] w-full" />
+        <View
+          key={col}
+          style={{
+            width: colWidth,
+            flexShrink: 0,
+            gap: 8,
+            paddingTop: col === 1 ? stagger : 0,
+          }}
+        >
+          <ShimmerBox style={{ width: colWidth, aspectRatio: SKELETON_RATIOS[col % 3] }} />
+          <ShimmerBox
+            style={{ width: colWidth, aspectRatio: SKELETON_RATIOS[(col + 1) % 3] }}
+          />
         </View>
       ))}
     </View>

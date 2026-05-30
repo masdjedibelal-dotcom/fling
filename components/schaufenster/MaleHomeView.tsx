@@ -1,7 +1,9 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { BodyText, MetaText } from '@/components/ui/Typography';
+import { CaptionText, MetaText, TitleText } from '@/components/ui/Typography';
+import { FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import { ProfileFigureWait } from '@/components/graphics';
 import { useAuthStore } from '@/stores/authStore';
 import { DEMO_STATS } from '@/lib/demo';
 import type { Match } from '@/lib/types';
@@ -18,44 +20,71 @@ export function MaleHomeView({ match }: { match: Match | null }) {
       {match ? (
         <Pressable
           onPress={() => router.push(`/chat/${match.id}`)}
-          className="mt-4 p-4 bg-accent/10 border border-accent/30 rounded-xl"
+          className="mt-4 p-4 rounded-xl border border-accent/30"
+          style={{ backgroundColor: 'rgba(225,21,57,0.1)' }}
         >
-          <Text className="text-accent font-semibold text-sm">
-            Du wurdest ausgewählt · öffnen ›
+          <Text
+            className="text-accent font-semibold"
+            style={{ fontSize: FLING_TYPE.subhead }}
+          >
+            Du wurdest ausgewählt · Chat öffnen ›
           </Text>
         </Pressable>
-      ) : null}
+      ) : (
+        <View className="items-center mt-6 mb-2" style={{ height: 120 }}>
+          <ProfileFigureWait size={110} animate />
+        </View>
+      )}
 
-      <BodyText className="text-center mt-6 mb-4 text-fg-3">
-        So sehen dich Frauen
-      </BodyText>
+      <TitleText className="text-center mt-4 mb-1">So siehst du aus</TitleText>
+      <CaptionText className="text-center text-fg-3 mb-5">
+        Diskret sichtbar — nur für Frauen in deinem Radius
+      </CaptionText>
 
       <View className="items-center mb-5">
         <View
-          className="w-[200px] aspect-[5/6] overflow-hidden bg-surface"
-          style={{ borderRadius: 12 }}
+          className="w-[200px] aspect-[5/6] overflow-hidden border border-line"
+          style={{ borderRadius: 12, backgroundColor: FLING_COLORS.card }}
         >
           <Image source={{ uri: photo }} className="w-full h-full" contentFit="cover" />
-          <View className="absolute inset-0 bg-black/40" style={{ top: '50%' }} />
+          <View
+            className="absolute inset-0"
+            style={{
+              backgroundColor: 'transparent',
+            }}
+          />
+          <View
+            className="absolute inset-0"
+            style={{
+              backgroundColor: FLING_COLORS.tileGlow,
+              opacity: 0.35,
+            }}
+          />
+          <View
+            className="absolute left-0 right-0 bottom-0 h-1/2"
+            style={{ backgroundColor: FLING_COLORS.tileScrim }}
+          />
         </View>
       </View>
 
-      <MetaText className="text-center mb-6 normal-case text-fg-4 text-[11px]">
-        Verfügbarkeit: {availabilityLabel} · Radius {profile?.search_radius_km ?? 5} km
-        {'\n'}Im Profil bearbeiten
+      <MetaText className="text-center mb-6 normal-case text-fg-4">
+        Verfügbarkeit: {availabilityLabel} · {profile?.search_radius_km ?? 5} km
       </MetaText>
 
       <View className="gap-2">
         {[
           `Sichtbar für ${DEMO_STATS.male_views} Frauen`,
           `Radius ${profile?.search_radius_km ?? 5} km`,
-          'Verifizierung ✓',
+          'Verifiziert',
         ].map((line) => (
           <View
             key={line}
-            className="py-3 px-4 bg-card/80 border border-white/10 rounded-xl"
+            className="py-3 px-4 rounded-xl border border-line"
+            style={{ backgroundColor: FLING_COLORS.card }}
           >
-            <BodyText className="text-fg-2 text-center text-[13px] font-semibold">{line}</BodyText>
+            <CaptionText className="text-fg-2 text-center font-semibold">
+              {line}
+            </CaptionText>
           </View>
         ))}
       </View>
