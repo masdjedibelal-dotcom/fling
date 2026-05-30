@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Modal as RNModal, View, Pressable } from 'react-native';
 import { TitleText, BodyLarge } from './Typography';
 import { Button } from './Button';
@@ -11,6 +12,7 @@ interface ConfirmModalProps {
   cancelLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  icon?: ReactNode;
 }
 
 export function ConfirmModal({
@@ -21,6 +23,7 @@ export function ConfirmModal({
   cancelLabel,
   onConfirm,
   onCancel,
+  icon,
 }: ConfirmModalProps) {
   return (
     <RNModal visible={visible} transparent animationType="fade">
@@ -36,7 +39,7 @@ export function ConfirmModal({
             className="w-14 h-14 rounded-full items-center justify-center mb-4 border border-accent/30"
             style={{ backgroundColor: 'rgba(225,21,57,0.14)' }}
           >
-            <TitleText className="text-accent">!</TitleText>
+            {icon ?? <TitleText className="text-accent">!</TitleText>}
           </View>
           <TitleText className="text-center mb-2">{title}</TitleText>
           <BodyLarge className="text-center mb-6 leading-7">{message}</BodyLarge>

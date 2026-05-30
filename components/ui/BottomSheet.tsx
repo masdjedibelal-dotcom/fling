@@ -57,7 +57,7 @@ export function BottomSheet({
         ]}
         pointerEvents="box-none"
       >
-        {children}
+        <View style={styles.sheetChildWrap}>{children}</View>
       </View>
     </View>
   );
@@ -105,7 +105,7 @@ export function BottomSheetPanel({
   const { height: screenH } = useAppDimensions();
   const ratio = maxHeightRatio ?? BOTTOM_SHEET_MAX_RATIO;
   const cappedHeight = Math.round(screenH * ratio);
-  const fixedHeight = cappedHeight != null && footer ? cappedHeight : undefined;
+  const fixedHeight = footer ? cappedHeight : undefined;
 
   return (
     <View
@@ -113,7 +113,13 @@ export function BottomSheetPanel({
       style={[
         styles.panel,
         fixedHeight != null
-          ? { height: fixedHeight, maxHeight: fixedHeight, flex: 1, minHeight: 0 }
+          ? {
+              height: fixedHeight,
+              maxHeight: fixedHeight,
+              width: '100%',
+              flexShrink: 0,
+              alignSelf: 'stretch',
+            }
           : { maxHeight: cappedHeight },
         { paddingBottom: Math.max(insets.bottom, 16) },
         style,
@@ -156,6 +162,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     minHeight: 0,
   },
+  sheetChildWrap: {
+    width: '100%',
+    flexShrink: 0,
+    alignSelf: 'stretch',
+  },
   panel: {
     width: '100%',
     alignSelf: 'stretch',
@@ -175,7 +186,7 @@ const styles = StyleSheet.create({
   },
   contentTop: {
     flex: 1,
-    minHeight: 0,
+    minHeight: Platform.OS === 'web' ? 220 : 0,
     flexDirection: 'column',
   },
   footer: {

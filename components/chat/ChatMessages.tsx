@@ -9,11 +9,42 @@ import { FlingIcon } from '@/components/icons/FlingIcon';
 import { ViewOncePhotoModal } from '@/components/chat/ViewOncePhotoModal';
 import { FLING_RADIUS, FLING_TYPE } from '@/lib/designTokens';
 
-const textBlurWeb = {
-  filter: 'blur(6px)',
-  opacity: 0.65,
+const mediaBlurWeb = {
+  filter: 'blur(8px)',
+  opacity: 0.55,
   userSelect: 'none',
 } as object;
+
+function HiddenHistoryShell({
+  hidden,
+  children,
+}: {
+  hidden?: boolean;
+  children: React.ReactNode;
+}) {
+  if (!hidden) return <>{children}</>;
+
+  return (
+    <View className="relative overflow-hidden">
+      <View
+        pointerEvents="none"
+        style={Platform.OS === 'web' ? mediaBlurWeb : undefined}
+      >
+        {children}
+      </View>
+      {Platform.OS !== 'web' ? (
+        <BlurView
+          pointerEvents="none"
+          intensity={56}
+          tint="dark"
+          style={StyleSheet.absoluteFillObject}
+        />
+      ) : (
+        <View pointerEvents="auto" style={StyleSheet.absoluteFillObject} />
+      )}
+    </View>
+  );
+}
 
 const AVATAR = 26;
 
@@ -36,10 +67,12 @@ function VoiceNotePlayer({
   uri,
   durationMs,
   isPartner,
+  disabled = false,
 }: {
   uri: string;
   durationMs: number;
   isPartner: boolean;
+  disabled?: boolean;
 }) {
   const [playing, setPlaying] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
@@ -51,6 +84,7 @@ function VoiceNotePlayer({
   }, []);
 
   const toggle = async () => {
+    if (disabled) return;
     if (playing && soundRef.current) {
       await soundRef.current.stopAsync();
       setPlaying(false);
@@ -72,6 +106,7 @@ function VoiceNotePlayer({
   return (
     <Pressable
       onPress={() => void toggle()}
+      disabled={disabled}
       className="flex-row items-center gap-2.5 min-w-[120px]"
     >
       <View
@@ -105,14 +140,17 @@ function VoiceNotePlayer({
 function ViewOnceBubble({
   msg,
   isPartner,
+  hiddenHistory,
   onOpen,
 }: {
   msg: Message;
   isPartner: boolean;
+  hiddenHistory?: boolean;
   onOpen: () => void;
 }) {
   const opened = Boolean(msg.viewed_at);
-  const canOpen = isPartner && !opened && Boolean(msg.media_url);
+  const canOpen =
+    !hiddenHistory && Boolean(msg.media_url) && !(isPartner && opened);
 
   return (
     <Pressable
@@ -125,53 +163,57 @@ function ViewOnceBubble({
         borderRadius: FLING_RADIUS.bubble,
         borderBottomLeftRadius: isPartner ? FLING_RADIUS.bubbleTail : FLING_RADIUS.bubble,
         borderBottomRightRadius: isPartner ? FLING_RADIUS.bubble : FLING_RADIUS.bubbleTail,
-        opacity: opened ? 0.72 : 1,
+        opacity: opened && !hiddenHistory ? 0.72 : 1,
       }}
     >
-      <View className="flex-row items-center gap-2.5">
-        <View
-          className="w-9 h-9 rounded-full items-center justify-center"
-          style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-        >
-          <FlingIcon name="camera" size={18} color="#fff" />
-        </View>
-        <View>
-          <Text
-            className="text-white font-semibold"
-            style={{ fontSize: FLING_TYPE.subhead }}
+      <HiddenHistoryShell hidden={hiddenHistory}>
+        <View className="flex-row items-center gap-2.5">
+          <View
+            className="w-9 h-9 rounded-full items-center justify-center"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
           >
-            Foto
-          </Text>
-          <Text
-            className="text-white/60 mt-0.5"
-            style={{ fontSize: FLING_TYPE.caption2 }}
-          >
-            {opened
-              ? 'Geöffnet'
-              : isPartner
-                ? 'Tippen zum Öffnen'
-                : 'Noch nicht geöffnet'}
-          </Text>
+            <FlingIcon name="camera" size={18} color="#fff" />
+          </View>
+          <View>
+            <Text
+              className="text-white font-semibold"
+              style={{ fontSize: FLING_TYPE.subhead }}
+            >
+              Foto
+            </Text>
+            <Text
+              className="text-white/60 mt-0.5"
+              style={{ fontSize: FLING_TYPE.caption2 }}
+            >
+              {hiddenHistory
+                ? 'Verlauf unsichtbar'
+                : opened
+                  ? 'Geöffnet'
+                  : isPartner
+                    ? 'Tippen zum Öffnen'
+                    : 'Tippen zum Ansehen'}
+            </Text>
+          </View>
         </View>
-      </View>
+      </HiddenHistoryShell>
     </Pressable>
   );
 }
 
 function Bubble({
   msg,
-  blurText,
+  hiddenHistory,
   partnerPhotoUri,
   userPhotoUri,
   viewerIsFemale,
-  onViewOnce,
+  onOpenPhoto,
 }: {
   msg: Message;
-  blurText?: boolean;
+  hiddenHistory?: boolean;
   partnerPhotoUri: string;
   userPhotoUri: string;
   viewerIsFemale: boolean;
-  onViewOnce: (msg: Message) => void;
+  onOpenPhoto: (msg: Message, isPartner: boolean) => void;
 }) {
   const isPartner = viewerIsFemale ? !msg.is_female : msg.is_female;
   const type = msg.message_type ?? 'text';
@@ -180,10 +222,15 @@ function Bubble({
 
   if (type === 'image' && msg.view_once) {
     content = (
-      <ViewOnceBubble msg={msg} isPartner={isPartner} onOpen={() => onViewOnce(msg)} />
+      <ViewOnceBubble
+        msg={msg}
+        isPartner={isPartner}
+        hiddenHistory={hiddenHistory}
+        onOpen={() => onOpenPhoto(msg, isPartner)}
+      />
     );
   } else if (type === 'image' && msg.media_url) {
-    content = (
+    const image = (
       <View className="overflow-hidden rounded-[16px] max-w-[200px]">
         <Image
           source={{ uri: msg.media_url }}
@@ -200,6 +247,17 @@ function Bubble({
         ) : null}
       </View>
     );
+
+    content = hiddenHistory ? (
+      <HiddenHistoryShell hidden>{image}</HiddenHistoryShell>
+    ) : (
+      <Pressable
+        onPress={() => onOpenPhoto(msg, isPartner)}
+        accessibilityLabel="Foto öffnen"
+      >
+        {image}
+      </Pressable>
+    );
   } else if (type === 'voice' && msg.media_url) {
     content = (
       <View
@@ -210,11 +268,14 @@ function Bubble({
           borderBottomRightRadius: isPartner ? FLING_RADIUS.bubble : FLING_RADIUS.bubbleTail,
         }}
       >
-        <VoiceNotePlayer
-          uri={msg.media_url}
-          durationMs={msg.media_duration_ms ?? 0}
-          isPartner={isPartner}
-        />
+        <HiddenHistoryShell hidden={hiddenHistory}>
+          <VoiceNotePlayer
+            uri={msg.media_url}
+            durationMs={msg.media_duration_ms ?? 0}
+            isPartner={isPartner}
+            disabled={hiddenHistory}
+          />
+        </HiddenHistoryShell>
       </View>
     );
   } else {
@@ -227,25 +288,14 @@ function Bubble({
           borderBottomRightRadius: isPartner ? FLING_RADIUS.bubble : FLING_RADIUS.bubbleTail,
         }}
       >
-        <View className="relative overflow-hidden">
+        <HiddenHistoryShell hidden={hiddenHistory}>
           <Text
             className="font-body text-white font-medium"
-            style={[
-              { fontSize: FLING_TYPE.subhead, lineHeight: 20 },
-              blurText && Platform.OS === 'web' ? textBlurWeb : undefined,
-            ]}
+            style={{ fontSize: FLING_TYPE.subhead, lineHeight: 20 }}
           >
             {msg.body}
           </Text>
-          {blurText && Platform.OS !== 'web' ? (
-            <BlurView
-              pointerEvents="none"
-              intensity={56}
-              tint="dark"
-              style={StyleSheet.absoluteFillObject}
-            />
-          ) : null}
-        </View>
+        </HiddenHistoryShell>
       </View>
     );
   }
@@ -278,18 +328,27 @@ export function ChatMessages({
   viewerIsFemale: boolean;
   onMarkViewed: (messageId: string) => Promise<void>;
 }) {
-  const [viewOnce, setViewOnce] = useState<{ id: string; uri: string } | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<{
+    id: string;
+    uri: string;
+    markOnClose: boolean;
+  } | null>(null);
 
-  const openViewOnce = (msg: Message) => {
-    if (!msg.media_url || msg.viewed_at) return;
-    setViewOnce({ id: msg.id, uri: msg.media_url });
+  const openPhoto = (msg: Message, isPartner: boolean) => {
+    if (!msg.media_url) return;
+    if (msg.view_once && isPartner && msg.viewed_at) return;
+    setPhotoPreview({
+      id: msg.id,
+      uri: msg.media_url,
+      markOnClose: Boolean(msg.view_once && isPartner),
+    });
   };
 
-  const closeViewOnce = async () => {
-    if (viewOnce) {
-      await onMarkViewed(viewOnce.id);
-      setViewOnce(null);
+  const closePhoto = async () => {
+    if (photoPreview?.markOnClose) {
+      await onMarkViewed(photoPreview.id);
     }
+    setPhotoPreview(null);
   };
 
   return (
@@ -299,11 +358,11 @@ export function ChatMessages({
           <Bubble
             key={m.id}
             msg={m}
-            blurText
+            hiddenHistory
             partnerPhotoUri={partnerPhotoUri}
             userPhotoUri={userPhotoUri}
             viewerIsFemale={viewerIsFemale}
-            onViewOnce={openViewOnce}
+            onOpenPhoto={openPhoto}
           />
         ))}
 
@@ -327,15 +386,15 @@ export function ChatMessages({
             partnerPhotoUri={partnerPhotoUri}
             userPhotoUri={userPhotoUri}
             viewerIsFemale={viewerIsFemale}
-            onViewOnce={openViewOnce}
+            onOpenPhoto={openPhoto}
           />
         ))}
       </View>
 
       <ViewOncePhotoModal
-        visible={Boolean(viewOnce)}
-        uri={viewOnce?.uri ?? ''}
-        onClose={() => void closeViewOnce()}
+        visible={Boolean(photoPreview)}
+        uri={photoPreview?.uri ?? ''}
+        onClose={() => void closePhoto()}
       />
     </>
   );

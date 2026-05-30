@@ -1,6 +1,6 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useAppDimensions } from '@/hooks/useAppDimensions';
-import { Image } from 'expo-image';
+import { ProfileMediaSlide } from '@/components/schaufenster/ProfileMediaSlide';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { ReactNode } from 'react';
 import { SafeTopChrome } from '@/components/ui/SafeTopChrome';
@@ -92,13 +92,7 @@ export function ProfilePhotoViewer({
     >
       <GestureDetector gesture={pan}>
         <View style={StyleSheet.absoluteFill}>
-          <Image
-            source={{ uri: photo }}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            contentPosition="top"
-            transition={180}
-          />
+          <ProfileMediaSlide uri={photo} isActive />
         </View>
       </GestureDetector>
 

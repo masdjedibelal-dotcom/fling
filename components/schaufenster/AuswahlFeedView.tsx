@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { View } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { AuswahlHeader } from './AuswahlHeader';
 import { AuswahlProfileFeed } from './AuswahlProfileFeed';
 import { RadiusSheet } from './RadiusSheet';
@@ -31,29 +31,43 @@ export function AuswahlFeedView({
   const feedStartProfileId = useAppStore((s) => s.feedStartProfileId);
   const setFeedStartProfileId = useAppStore((s) => s.setFeedStartProfileId);
 
-  const startIndex = feedStartProfileId
-    ? Math.max(0, profiles.findIndex((p) => p.id === feedStartProfileId))
-    : 0;
+  const scrollIndex = useMemo(() => {
+    if (!feedStartProfileId) return 0;
+    return profiles.findIndex((p) => p.id === feedStartProfileId);
+  }, [feedStartProfileId, profiles]);
+
+  const waitingForProfile =
+    Boolean(feedStartProfileId) && scrollIndex < 0 && profiles.length > 0;
 
   useEffect(() => {
-    if (feedStartProfileId && profiles.length > 0) {
-      const idx = profiles.findIndex((p) => p.id === feedStartProfileId);
-      if (idx < 0) setFeedStartProfileId(null);
-    }
-  }, [feedStartProfileId, profiles, setFeedStartProfileId]);
+    if (!waitingForProfile) return;
+    const t = setTimeout(() => setFeedStartProfileId(null), 1200);
+    return () => clearTimeout(t);
+  }, [waitingForProfile, setFeedStartProfileId]);
 
   return (
     <View className="flex-1">
-      <AuswahlProfileFeed
-        profiles={profiles}
-        userId={userId}
-        initialIndex={startIndex}
-        scrollEnabled={!radiusSheetOpen}
-        hasFeedHeader
-        onRefresh={onRefresh}
-        refreshing={refreshing}
-        onInitialScrollDone={() => setFeedStartProfileId(null)}
-      />
+      {waitingForProfile ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color="#E11539" />
+        </View>
+      ) : (
+        <AuswahlProfileFeed
+          key={
+            feedStartProfileId
+              ? `${feedStartProfileId}-${scrollIndex}`
+              : 'auswahl-feed'
+          }
+          profiles={profiles}
+          userId={userId}
+          initialIndex={feedStartProfileId ? Math.max(0, scrollIndex) : 0}
+          scrollEnabled={!radiusSheetOpen}
+          hasFeedHeader
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+          onInitialScrollDone={() => setFeedStartProfileId(null)}
+        />
+      )}
 
       <View
         className="absolute top-0 left-0 right-0"

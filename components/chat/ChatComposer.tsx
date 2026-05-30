@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  InputAccessoryView,
   StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,15 +14,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlingIcon } from '@/components/icons/FlingIcon';
-import { ChatEmojiBar } from '@/components/chat/ChatEmojiBar';
 import { PhotoSourceSheet } from '@/components/chat/PhotoSourceSheet';
 import { ViewOnceCaptureModal } from '@/components/chat/ViewOnceCaptureModal';
 import { ViewOncePhotoPreview } from '@/components/chat/ViewOncePhotoPreview';
 import { FLING_COLORS, FLING_BUTTON_GRADIENT, FLING_TOUCH, FLING_TYPE } from '@/lib/designTokens';
 import { MAX_MESSAGE_LENGTH, MESSAGE_LIMIT_HINT } from '@/lib/constants';
 import { triggerHaptic } from '@/lib/haptics';
-
-export const CHAT_INPUT_ACCESSORY_ID = 'flingChatEmojiBar';
 
 const BAR_H = FLING_TOUCH.bar;
 const INPUT_FONT = FLING_TYPE.body;
@@ -63,7 +59,6 @@ export function ChatComposer({
   const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
-  const [androidEmoji, setAndroidEmoji] = useState(false);
   const [inputContentH, setInputContentH] = useState(INPUT_LINE_H);
 
   useEffect(() => {
@@ -71,17 +66,11 @@ export function ChatComposer({
   }, [text]);
 
   const hasText = text.trim().length > 0;
-  const useMultiline =
-    hasText || text.includes('\n') || inputContentH > INPUT_LINE_H + 2;
 
-  const fieldH = useMultiline
-    ? Math.max(
-        BAR_H,
-        Math.min(INPUT_MAX_H + INPUT_V_PAD * 2, inputContentH + INPUT_V_PAD * 2),
-      )
-    : BAR_H;
-
-  const showAndroidEmoji = Platform.OS === 'android' && androidEmoji && keyboardVisible;
+  const fieldH = Math.max(
+    BAR_H,
+    Math.min(INPUT_MAX_H + INPUT_V_PAD * 2, inputContentH + INPUT_V_PAD * 2),
+  );
 
   const bottomPad =
     Platform.OS === 'web' && keyboardVisible
@@ -89,15 +78,6 @@ export function ChatComposer({
       : keyboardVisible
         ? 0
         : insets.bottom;
-
-  const insertEmoji = useCallback(
-    (emoji: string) => {
-      const next = `${text}${emoji}`.slice(0, MAX_MESSAGE_LENGTH);
-      onChangeText(next);
-      inputRef.current?.focus();
-    },
-    [text, onChangeText],
-  );
 
   const openPhotoSheet = () => {
     inputRef.current?.blur();
@@ -186,18 +166,8 @@ export function ChatComposer({
     else void startRecording();
   };
 
-  const emojiAccessory =
-    Platform.OS === 'ios' ? (
-      <InputAccessoryView nativeID={CHAT_INPUT_ACCESSORY_ID}>
-        <ChatEmojiBar onPick={insertEmoji} />
-      </InputAccessoryView>
-    ) : null;
-
   return (
     <>
-      {emojiAccessory}
-      {showAndroidEmoji ? <ChatEmojiBar onPick={insertEmoji} /> : null}
-
       <PhotoSourceSheet
         visible={photoSheetOpen}
         onClose={() => setPhotoSheetOpen(false)}
@@ -232,7 +202,7 @@ export function ChatComposer({
           paddingHorizontal: 10,
         }}
       >
-        <View className="flex-row items-end gap-2" style={{ minHeight: BAR_H }}>
+        <View className="flex-row items-center gap-2" style={{ minHeight: BAR_H }}>
           <Pressable
             onPress={openPhotoSheet}
             disabled={busy}
@@ -249,56 +219,27 @@ export function ChatComposer({
               onChangeText={(t) => onChangeText(t.slice(0, MAX_MESSAGE_LENGTH))}
               placeholder="Nachricht"
               placeholderTextColor="rgba(255,255,255,0.38)"
-              multiline={useMultiline}
+              multiline
               editable
               autoCorrect
               spellCheck
               blurOnSubmit={false}
-              scrollEnabled={useMultiline && inputContentH >= INPUT_MAX_H}
+              scrollEnabled={inputContentH >= INPUT_MAX_H}
               nativeID="fling-chat-input"
-              style={[
-                styles.input,
-                useMultiline ? styles.inputMultiline : styles.inputSingleLine,
-              ]}
+              style={styles.input}
               textAlignVertical="center"
-              onContentSizeChange={
-                useMultiline
-                  ? (e) => {
-                      const h = Math.ceil(e.nativeEvent.contentSize.height);
-                      if (Platform.OS === 'web' && !text.trim()) {
-                        setInputContentH(INPUT_LINE_H);
-                        return;
-                      }
-                      setInputContentH(
-                        Math.min(INPUT_MAX_H, Math.max(INPUT_LINE_H, h)),
-                      );
-                    }
-                  : undefined
-              }
-              inputAccessoryViewID={
-                Platform.OS === 'ios' ? CHAT_INPUT_ACCESSORY_ID : undefined
-              }
+              onContentSizeChange={(e) => {
+                const h = Math.ceil(e.nativeEvent.contentSize.height);
+                if (Platform.OS === 'web' && !text.trim()) {
+                  setInputContentH(INPUT_LINE_H);
+                  return;
+                }
+                setInputContentH(Math.min(INPUT_MAX_H, Math.max(INPUT_LINE_H, h)));
+              }}
               showSoftInputOnFocus={Platform.OS !== 'web'}
-              onFocus={() => {
-                onInputFocus?.();
-                if (Platform.OS === 'android') setAndroidEmoji(true);
-              }}
-              onBlur={() => onInputBlur?.()}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
             />
-
-            <Pressable
-              onPress={() => {
-                inputRef.current?.focus();
-                if (Platform.OS === 'android') setAndroidEmoji((v) => !v);
-              }}
-              hitSlop={10}
-              style={styles.emojiBtn}
-              accessibilityLabel="Emojis"
-            >
-              <Text style={styles.emojiGlyph} accessibilityElementsHidden>
-                ☺
-              </Text>
-            </Pressable>
           </View>
 
           {hasText ? (
@@ -309,25 +250,23 @@ export function ChatComposer({
               }}
               disabled={busy}
               style={styles.actionBtn}
-              className="rounded-full overflow-hidden"
               accessibilityLabel="Senden"
             >
               <LinearGradient
                 colors={[...FLING_BUTTON_GRADIENT]}
                 locations={[0, 0.55, 1]}
-                className="flex-1 items-center justify-center"
-              >
-                <FlingIcon name="arrow" size={18} color="#fff" />
-              </LinearGradient>
+                style={StyleSheet.absoluteFillObject}
+              />
+              <FlingIcon name="send" size={20} color="#fff" />
             </Pressable>
           ) : (
             <Pressable
               onPress={onMicPress}
               disabled={busy && !recording}
-              style={styles.actionBtn}
-              className={`rounded-full items-center justify-center ${
-                recording ? 'bg-accent-2' : 'bg-accent'
-              }`}
+              style={[
+                styles.actionBtn,
+                { backgroundColor: recording ? FLING_COLORS.accent2 : FLING_COLORS.accent },
+              ]}
               accessibilityLabel={recording ? 'Aufnahme beenden' : 'Sprachnotiz'}
             >
               {busy && !recording ? (
@@ -362,28 +301,26 @@ const styles = StyleSheet.create({
     height: BAR_H,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 0,
   },
   field: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
     borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingLeft: 14,
-    paddingRight: 4,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
     minHeight: BAR_H,
   },
   input: {
     flex: 1,
     minWidth: 0,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Inter_500Medium',
     fontSize: INPUT_FONT,
     lineHeight: INPUT_LINE_H,
     color: '#FFFFFF',
-    paddingLeft: 0,
-    paddingRight: 6,
+    paddingTop: INPUT_V_PAD,
+    paddingBottom: INPUT_V_PAD,
     margin: 0,
+    maxHeight: INPUT_MAX_H,
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
     ...(Platform.OS === 'web'
       ? {
@@ -393,36 +330,14 @@ const styles = StyleSheet.create({
         }
       : {}),
   },
-  inputSingleLine: {
-    height: BAR_H,
-    minHeight: BAR_H,
-    maxHeight: BAR_H,
-    paddingTop: Platform.OS === 'ios' ? 11 : 10,
-    paddingBottom: Platform.OS === 'ios' ? 11 : 10,
-  },
-  inputMultiline: {
-    minHeight: INPUT_LINE_H,
-    maxHeight: INPUT_MAX_H,
-    paddingTop: INPUT_V_PAD,
-    paddingBottom: INPUT_V_PAD,
-    textAlignVertical: 'top',
-  },
-  emojiBtn: {
-    width: 36,
-    height: BAR_H,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emojiGlyph: {
-    fontSize: 22,
-    lineHeight: 26,
-    color: 'rgba(255,255,255,0.72)',
-  },
   actionBtn: {
     width: BAR_H,
     height: BAR_H,
     borderRadius: BAR_H / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
+    flexShrink: 0,
   },
   counter: {
     marginTop: 6,

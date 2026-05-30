@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
+import { ProfileMediaSlide } from '@/components/schaufenster/ProfileMediaSlide';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -15,10 +15,12 @@ import { TitleText } from '@/components/ui/Typography';
 import { PickFab } from '@/components/schaufenster/PickFab';
 import { PickCelebration } from '@/components/schaufenster/PickCelebration';
 import { PickConfirmModal } from '@/components/schaufenster/PickConfirmModal';
+import { PickReplaceModal } from '@/components/schaufenster/PickReplaceModal';
 import { PhotoIndexDots } from '@/components/schaufenster/PhotoIndexDots';
 import { ProfileMetaPills } from '@/components/schaufenster/ProfileMetaPills';
 import { BioPreview } from '@/components/schaufenster/BioPreview';
-import { createMatch } from '@/lib/api';
+import { createMatch, replaceMatch } from '@/lib/api';
+import { useMatch } from '@/hooks/useMatch';
 import { onlineStatus } from '@/lib/profileStatus';
 import { profilePseudonym } from '@/lib/profileDisplay';
 import type { SchaufensterProfile } from '@/lib/types';
@@ -72,8 +74,12 @@ export function ProfileFullscreenPage({
   const [photoIdx, setPhotoIdx] = useState(0);
   const [picking, setPicking] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [replaceOpen, setReplaceOpen] = useState(false);
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const { match: activeMatch, reload: reloadActiveMatch } = useMatch(
+    showPick && userId ? userId : null,
+  );
   const photoFade = useSharedValue(1);
   const pseudonym = profilePseudonym(profile.pseudonym);
   const { dotColor } = onlineStatus(profile);
@@ -104,18 +110,67 @@ export function ProfileFullscreenPage({
       else if (e.translationX > 36) goPrev();
     });
 
-  const executePick = async () => {
+  const executePick = async (replaceExisting = false) => {
     if (!userId || picking) return;
     setPicking(true);
-    const { match, error } = await createMatch(userId, profile.id);
+
+    let result;
+    if (
+      replaceExisting &&
+      activeMatch &&
+      activeMatch.male_id !== profile.id
+    ) {
+      result = await replaceMatch(userId, profile.id, activeMatch.id);
+    } else {
+      result = await createMatch(userId, profile.id);
+    }
+
     setPicking(false);
     setCelebrationOpen(false);
     setConfirmOpen(false);
+    setReplaceOpen(false);
+
+    const { match, error } = result;
     if (error) {
+      if (
+        error.includes('aktiver Pick') ||
+        error.includes('Bereits ein aktiver Pick')
+      ) {
+        setReplaceOpen(true);
+        return;
+      }
       setToast(error);
       return;
     }
+
+    await reloadActiveMatch();
     if (match) router.replace(`/chat/${match.id}`);
+  };
+
+  const currentPickName = profilePseudonym(activeMatch?.male_profile?.pseudonym);
+
+  const openPickFlow = () => {
+    if (activeMatch) {
+      if (activeMatch.male_id === profile.id) {
+        router.replace(`/chat/${activeMatch.id}`);
+        return;
+      }
+      setReplaceOpen(true);
+      return;
+    }
+    setConfirmOpen(true);
+  };
+
+  const openCelebrationOrReplace = () => {
+    if (activeMatch) {
+      if (activeMatch.male_id === profile.id) {
+        router.replace(`/chat/${activeMatch.id}`);
+        return;
+      }
+      setReplaceOpen(true);
+      return;
+    }
+    setCelebrationOpen(true);
   };
 
   return (
@@ -123,12 +178,7 @@ export function ProfileFullscreenPage({
       <Toast message={toast} onHidden={() => setToast(null)} />
 
       <Animated.View style={[StyleSheet.absoluteFill, photoFadeStyle]}>
-        <Image
-          source={{ uri: photo }}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          contentPosition="top"
-        />
+        <ProfileMediaSlide uri={photo} isActive />
       </Animated.View>
 
       {count > 1 ? (
@@ -207,7 +257,7 @@ export function ProfileFullscreenPage({
           <ProfileMetaPills profile={profile} />
           <InterestTagPills tags={profile.interest_tags} />
           {profile.bio ? (
-            <BioPreview bio={profile.bio} className="max-w-[95%] mt-1" blurBelow />
+            <BioPreview bio={profile.bio} className="max-w-[95%] mt-1" />
           ) : null}
         </View>
 
@@ -226,19 +276,26 @@ export function ProfileFullscreenPage({
           <PickFab
             disabled={picking || celebrationOpen}
             bottomInset={bottomInset}
-            onTap={() => setConfirmOpen(true)}
-            onHoldComplete={() => setCelebrationOpen(true)}
+            onTap={openPickFlow}
+            onHoldComplete={openCelebrationOrReplace}
           />
           <PickConfirmModal
             visible={confirmOpen}
             partnerName={pseudonym}
-            onConfirm={() => void executePick()}
+            onConfirm={() => void executePick(false)}
             onCancel={() => setConfirmOpen(false)}
+          />
+          <PickReplaceModal
+            visible={replaceOpen}
+            currentPartnerName={currentPickName}
+            newPartnerName={pseudonym}
+            onConfirm={() => void executePick(true)}
+            onCancel={() => setReplaceOpen(false)}
           />
           <PickCelebration
             visible={celebrationOpen}
             partnerName={pseudonym}
-            onFinished={() => void executePick()}
+            onFinished={() => void executePick(false)}
           />
         </>
       ) : null}

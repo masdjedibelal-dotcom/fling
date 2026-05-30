@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { View, ViewProps } from 'react-native';
+import { View, ViewProps, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { PatternBackground } from '@/components/ui/PatternBackground';
@@ -28,7 +28,10 @@ export function Screen({
       {pattern ? <PatternBackground /> : null}
       <View
         className={`flex-1 ${className ?? ''}`}
-        style={{ backgroundColor: 'transparent' }}
+        style={[
+          { backgroundColor: 'transparent' },
+          Platform.OS === 'web' ? { position: 'relative' as const } : null,
+        ]}
         {...props}
       >
         {children}

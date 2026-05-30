@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import type { SchaufensterProfile } from '@/lib/types';
+import { getProfileThumbnailUri } from '@/lib/profileMedia';
 import { onlineStatus, tileDistanceLabel } from '@/lib/profileStatus';
 import { FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
 import { PressableScale } from '@/components/ui/PressableScale';
@@ -30,7 +31,7 @@ export function ProfileTile({
   aspectRatio: number;
   onPress: () => void;
 }) {
-  const photo = profile.photos[profile.primary_photo_idx] ?? profile.photos[0];
+  const photo = getProfileThumbnailUri(profile.photos) ?? profile.photos[0];
   const { dotColor } = onlineStatus(profile);
   const distanceLabel = tileDistanceLabel(profile);
   const height = width / aspectRatio;

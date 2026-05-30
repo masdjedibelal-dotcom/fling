@@ -14,7 +14,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { FlingIcon } from '@/components/icons/FlingIcon';
-import { FLING_COLORS, FLING_TOUCH } from '@/lib/designTokens';
+import { FLING_COLORS } from '@/lib/designTokens';
 
 const SIZE = 64;
 const FAB_RIGHT = 16;
@@ -166,10 +166,11 @@ export function PickFab({
     }
   };
 
-  /** Der Button skaliert — Farbe von Hell (Crimson) zu Dunkel (App-Hintergrund). */
+  /** Kreis in Endgröße rendern, von klein skalieren — vermeidet Verpixelung beim Hochskalieren. */
   const btnStyle = useAnimatedStyle(() => {
     const eased = Math.min(1, Math.max(0, progress.value));
-    const scale = 1 + (maxScaleSv.value - 1) * eased;
+    const max = Math.max(maxScaleSv.value, 1.001);
+    const scale = 1 / max + (1 - 1 / max) * eased;
     return {
       transform: [{ scale }],
       backgroundColor: interpolateColor(
@@ -190,13 +191,17 @@ export function PickFab({
 
   const iconStyle = useAnimatedStyle(() => {
     const eased = Math.min(1, Math.max(0, progress.value));
-    const btnScale = 1 + (maxScaleSv.value - 1) * eased;
-    const iconScale = 1 + (btnScale - 1) * ICON_BTN_GROW;
+    const max = Math.max(maxScaleSv.value, 1.001);
+    const btnScale = 1 / max + (1 - 1 / max) * eased;
+    const iconScale = 1 + (btnScale - 1 / max) * ICON_BTN_GROW * max;
     return {
       transform: [{ scale: iconScale }],
       opacity: interpolate(eased, [0, 0.82, 1], [1, 1, 0]),
     };
   });
+
+  const coverDiameter = SIZE * maxScale;
+  const coverOffset = (SIZE - coverDiameter) / 2;
 
   return (
     <View
@@ -228,6 +233,13 @@ export function PickFab({
           <Animated.View
             style={[
               styles.btn,
+              {
+                width: coverDiameter,
+                height: coverDiameter,
+                borderRadius: coverDiameter / 2,
+                left: coverOffset,
+                top: coverOffset,
+              },
               btnStyle,
               disabled ? styles.btnDisabled : null,
             ]}
@@ -253,21 +265,21 @@ const styles = StyleSheet.create({
   hit: {
     width: SIZE,
     height: SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
     overflow: 'visible',
   },
   btn: {
-    width: SIZE,
-    height: SIZE,
-    borderRadius: SIZE / 2,
+    position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: FLING_TOUCH.min,
-    minHeight: FLING_TOUCH.min,
     shadowColor: FLING_COLORS.accent,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
+    ...(Platform.OS === 'web'
+      ? {
+          // Schärferer Kreis beim Skalieren im Browser
+          backfaceVisibility: 'hidden' as const,
+        }
+      : null),
   },
   btnDisabled: { opacity: 0.45 },
   iconLayer: {

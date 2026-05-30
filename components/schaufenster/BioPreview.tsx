@@ -1,18 +1,14 @@
 import { useState, useCallback } from 'react';
 import {
   View,
-  Text,
   Pressable,
   ScrollView,
-  Platform,
   StyleSheet,
   type NativeSyntheticEvent,
   type TextLayoutEventData,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAppDimensions } from '@/hooks/useAppDimensions';
-import { FLING_TYPE } from '@/lib/designTokens';
+import { CalloutText, CaptionText } from '@/components/ui/Typography';
 
 const PREVIEW_LINES = 2;
 const CHAR_MORE_HINT = 88;
@@ -20,14 +16,12 @@ const CHAR_MORE_HINT = 88;
 type Props = {
   bio: string;
   className?: string;
-  /** Leichter Blur unter dem Text (TikTok-Feed) */
-  blurBelow?: boolean;
 };
 
 /**
- * Bio wie TikTok: gekürzt + „mehr“, expandiert nach oben inline — kein Modal-Kasten.
+ * Bio gekürzt + „mehr“, expandiert inline — kein Modal, kein Schatten darunter.
  */
-export function BioPreview({ bio, className, blurBelow = true }: Props) {
+export function BioPreview({ bio, className }: Props) {
   const { height: screenH, width: screenW } = useAppDimensions();
   const [expanded, setExpanded] = useState(false);
   const [truncated, setTruncated] = useState(false);
@@ -47,13 +41,6 @@ export function BioPreview({ bio, className, blurBelow = true }: Props) {
 
   if (!trimmed) return null;
 
-  const bioStyle = {
-    fontSize: FLING_TYPE.body,
-    lineHeight: 22,
-    color: 'rgba(255,255,255,0.88)',
-    fontFamily: 'Inter_400Regular' as const,
-  };
-
   if (expanded) {
     return (
       <View
@@ -61,36 +48,14 @@ export function BioPreview({ bio, className, blurBelow = true }: Props) {
         style={[styles.root, { maxWidth: screenW * 0.92 }]}
         onLayout={(e) => setMeasureWidth(e.nativeEvent.layout.width)}
       >
-        <View style={[styles.expandedBlock, { maxHeight: maxExpandedH }]}>
-          <ScrollView
-            style={{ maxHeight: maxExpandedH }}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-            nestedScrollEnabled
-          >
-            <Text style={bioStyle}>{trimmed}</Text>
-          </ScrollView>
-
-          <LinearGradient
-            pointerEvents="none"
-            colors={['transparent', 'rgba(18,10,12,0.55)', 'rgba(18,10,12,0.92)']}
-            locations={[0, 0.45, 1]}
-            style={styles.textBottomFade}
-          />
-        </View>
-
-        {blurBelow ? (
-          <View style={styles.blurBelowWrap} pointerEvents="none">
-            {Platform.OS === 'web' ? (
-              <LinearGradient
-                colors={['transparent', 'rgba(18,10,12,0.35)', 'rgba(18,10,12,0.7)']}
-                style={StyleSheet.absoluteFill}
-              />
-            ) : (
-              <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
-            )}
-          </View>
-        ) : null}
+        <ScrollView
+          style={{ maxHeight: maxExpandedH }}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          nestedScrollEnabled
+        >
+          <CalloutText className="text-white/90">{trimmed}</CalloutText>
+        </ScrollView>
 
         <Pressable
           onPress={() => setExpanded(false)}
@@ -99,7 +64,7 @@ export function BioPreview({ bio, className, blurBelow = true }: Props) {
           accessibilityLabel="Bio einklappen"
           style={styles.moreBtn}
         >
-          <Text style={styles.moreLess}>weniger</Text>
+          <CaptionText className="text-fg-3 font-semibold">weniger</CaptionText>
         </Pressable>
       </View>
     );
@@ -113,18 +78,19 @@ export function BioPreview({ bio, className, blurBelow = true }: Props) {
     >
       {measureWidth > 0 ? (
         <View pointerEvents="none" style={styles.measureWrap}>
-          <Text
-            style={[bioStyle, styles.measureText, { width: measureWidth }]}
+          <CalloutText
+            className="text-white/90"
+            style={[styles.measureText, { width: measureWidth }]}
             onTextLayout={onMeasureLayout}
           >
             {trimmed}
-          </Text>
+          </CalloutText>
         </View>
       ) : null}
 
-      <Text style={bioStyle} numberOfLines={PREVIEW_LINES}>
+      <CalloutText className="text-white/90" numberOfLines={PREVIEW_LINES}>
         {trimmed}
-      </Text>
+      </CalloutText>
 
       {showMore ? (
         <Pressable
@@ -134,7 +100,7 @@ export function BioPreview({ bio, className, blurBelow = true }: Props) {
           accessibilityLabel="Bio vollständig anzeigen"
           style={styles.moreBtn}
         >
-          <Text style={styles.moreLess}>mehr</Text>
+          <CaptionText className="text-fg-3 font-semibold">mehr</CaptionText>
         </Pressable>
       ) : null}
     </View>
@@ -153,32 +119,8 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   measureText: {},
-  expandedBlock: {
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  textBottomFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 36,
-  },
-  blurBelowWrap: {
-    marginTop: 4,
-    marginHorizontal: -12,
-    height: 44,
-    overflow: 'hidden',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-  },
   moreBtn: {
     marginTop: 4,
     alignSelf: 'flex-start',
-  },
-  moreLess: {
-    fontSize: FLING_TYPE.caption,
-    color: 'rgba(255,255,255,0.55)',
-    fontFamily: 'Inter_600SemiBold',
   },
 });

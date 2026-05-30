@@ -4,12 +4,12 @@ import { formatDistance } from '@/lib/profileStatus';
 import { FLING_TYPE } from '@/lib/designTokens';
 import type { SchaufensterProfile } from '@/lib/types';
 
-/** Alter · Beruf · Distanz über dem Profilfoto */
+/** Alter · Beruf · Standort/Distanz über dem Profilfoto */
 export function ProfileMetaPills({ profile }: { profile: SchaufensterProfile }) {
   const age =
     profile.age != null && profile.age > 0 ? String(profile.age) : '—';
   const job = profile.job?.trim() || '—';
-  const dist = formatDistance(profile.distance_km);
+  const location = profile.city?.trim() || formatDistance(profile.distance_km);
 
   return (
     <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1 self-start">
@@ -27,7 +27,7 @@ export function ProfileMetaPills({ profile }: { profile: SchaufensterProfile }) 
           className="text-white font-semibold tracking-tight"
           style={{ fontSize: FLING_TYPE.subhead }}
         >
-          {dist}
+          {location}
         </Text>
       </View>
     </View>
