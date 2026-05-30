@@ -1,27 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  Pressable,
   KeyboardAvoidingView,
   Platform,
-  Modal,
   ScrollView,
   View,
+  type ScrollView as ScrollViewType,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen } from '@/components/ui/Screen';
-import { BodyText, TitleText } from '@/components/ui/Typography';
 import { ConfirmModal } from '@/components/ui/Modal';
+import { Toast } from '@/components/ui/Toast';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatMessages } from '@/components/chat/ChatMessages';
 import { ChatComposer } from '@/components/chat/ChatComposer';
 import { useAuthStore } from '@/stores/authStore';
 import { useMatch } from '@/hooks/useMatch';
 import { useChat } from '@/hooks/useChat';
-import { cancelMatch, submitReport } from '@/lib/api';
-import { MAX_MESSAGE_LENGTH, REPORT_REASONS } from '@/lib/constants';
+import { blockUser, cancelMatch, submitReport } from '@/lib/api';
+import { MAX_MESSAGE_LENGTH } from '@/lib/constants';
 import {
   chatPartnerName,
   formatChatPartnerMeta,
+  profilePseudonym,
 } from '@/lib/profileDisplay';
 import { useDiscreetScreen } from '@/hooks/useDiscreetScreen';
 import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
@@ -29,6 +30,7 @@ import { FLING_COLORS } from '@/lib/designTokens';
 
 export default function ChatScreen() {
   useDiscreetScreen();
+  const insets = useSafeAreaInsets();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const userId = useAuthStore((s) => s.userId) ?? 'demo';
   const gender = useAuthStore((s) => s.gender);
@@ -51,7 +53,16 @@ export default function ChatScreen() {
     onInputBlur,
   } = useKeyboardVisible();
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [reportOpen, setReportOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollViewType>(null);
+  const lastMsgId = visible[visible.length - 1]?.id;
+
+  useEffect(() => {
+    if (!lastMsgId) return;
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+  }, [lastMsgId]);
 
   if (isExpired) {
     router.replace('/chat/expired');
@@ -69,10 +80,13 @@ export default function ChatScreen() {
     'https://i.pravatar.cc/200?img=5';
 
   const partnerName = isFemale
-    ? chatPartnerName(partnerProfile?.display_name, 'Pick')
+    ? chatPartnerName(
+        partnerProfile?.display_name,
+        profilePseudonym(partnerProfile?.pseudonym, 'Pick'),
+      )
     : chatPartnerName(
         match?.female_display_name ?? partnerProfile?.display_name,
-        'Anna',
+        profilePseudonym(partnerProfile?.pseudonym, 'Anna'),
       );
 
   const metaLine = partnerProfile
@@ -82,16 +96,9 @@ export default function ChatScreen() {
       )
     : '—';
 
-  const openPartnerProfile = () => {
-    if (matchId) router.push(`/partner/${matchId}`);
-  };
+  const reportedId = isFemale ? match?.male_id : match?.female_id;
 
-  const timerColor =
-    remainingHours < 1
-      ? FLING_COLORS.accent
-      : remainingHours < 6
-        ? FLING_COLORS.gold
-        : FLING_COLORS.accent;
+  const keyboardOffset = insets.top + 156;
 
   const onSendText = async () => {
     if (!text.trim() || text.length > MAX_MESSAGE_LENGTH) return;
@@ -124,32 +131,79 @@ export default function ChatScreen() {
     router.replace('/(tabs)/pick');
   };
 
-  const onReport = async (reason: string) => {
-    const reportedId = isFemale ? match?.male_id : match?.female_id;
-    if (reportedId) await submitReport(userId, reportedId, reason);
-    setReportOpen(false);
+  const onReport = async () => {
+    if (!reportedId) {
+      setToast('Melden ist gerade nicht möglich.');
+      return;
+    }
+    const { error } = await submitReport(userId, reportedId, 'Belästigung');
+    setToast(
+      error ? `Melden fehlgeschlagen: ${error}` : 'Gemeldet. Danke für deine Meldung.',
+    );
   };
+
+  const onBlock = async () => {
+    if (!reportedId) {
+      setToast('Blockieren ist gerade nicht möglich.');
+      return;
+    }
+    const { error } = await blockUser(userId, reportedId);
+    if (error) {
+      setToast(`Blockieren fehlgeschlagen: ${error}`);
+      return;
+    }
+    if (matchId) await cancelMatch(matchId);
+    setToast('Nutzer blockiert.');
+    setTimeout(() => router.replace('/(tabs)/pick'), 1200);
+  };
+
+  const composer = (
+    <ChatComposer
+      text={text}
+      onChangeText={setText}
+      onSendText={() => void onSendText()}
+      onSendImage={onSendImage}
+      onSendVoice={onSendVoice}
+      keyboardVisible={keyboardVisible}
+      keyboardInsetBottom={keyboardInsetBottom}
+      onInputFocus={onInputFocus}
+      onInputBlur={onInputBlur}
+    />
+  );
 
   return (
     <Screen edges={['top']} className="flex-1">
+      <Toast message={toast} onHidden={() => setToast(null)} />
+
       <ChatHeader
         partnerPhoto={partnerPhoto}
         partnerName={partnerName}
         metaLine={metaLine}
         progress={progress}
-        timerColor={timerColor}
+        timerColor={
+          remainingHours < 1
+            ? FLING_COLORS.accent
+            : remainingHours < 6
+              ? FLING_COLORS.gold
+              : FLING_COLORS.accent
+        }
         remainingHours={remainingHours}
         remainingMinutes={remainingMinutes}
         isFemale={isFemale}
-        onBack={() => router.back()}
-        onOpenProfile={openPartnerProfile}
+        onBack={() => {
+          if (router.canGoBack()) router.back();
+          else router.replace('/(tabs)/pick');
+        }}
+        onOpenProfile={() => matchId && router.push(`/partner/${matchId}`)}
         onEndPick={() => setCancelOpen(true)}
-        onReport={() => setReportOpen(true)}
+        onReport={() => void onReport()}
+        onBlock={() => void onBlock()}
       />
 
       {Platform.OS === 'web' ? (
         <View className="flex-1">
           <ScrollView
+            ref={scrollRef}
             className="flex-1"
             contentContainerClassName="flex-grow justify-end"
             showsVerticalScrollIndicator={false}
@@ -166,25 +220,16 @@ export default function ChatScreen() {
               }}
             />
           </ScrollView>
-          <ChatComposer
-            text={text}
-            onChangeText={setText}
-            onSendText={() => void onSendText()}
-            onSendImage={onSendImage}
-            onSendVoice={onSendVoice}
-            keyboardVisible={keyboardVisible}
-            keyboardInsetBottom={keyboardInsetBottom}
-            onInputFocus={onInputFocus}
-            onInputBlur={onInputBlur}
-          />
+          {composer}
         </View>
       ) : (
         <KeyboardAvoidingView
-          behavior="padding"
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 2 : 0}
+          keyboardVerticalOffset={keyboardOffset}
         >
           <ScrollView
+            ref={scrollRef}
             className="flex-1"
             contentContainerClassName="flex-grow justify-end"
             showsVerticalScrollIndicator={false}
@@ -202,16 +247,7 @@ export default function ChatScreen() {
               }}
             />
           </ScrollView>
-          <ChatComposer
-            text={text}
-            onChangeText={setText}
-            onSendText={() => void onSendText()}
-            onSendImage={onSendImage}
-            onSendVoice={onSendVoice}
-            keyboardVisible={keyboardVisible}
-            onInputFocus={onInputFocus}
-            onInputBlur={onInputBlur}
-          />
+          {composer}
         </KeyboardAvoidingView>
       )}
 
@@ -228,25 +264,6 @@ export default function ChatScreen() {
         onConfirm={onCancel}
         onCancel={() => setCancelOpen(false)}
       />
-
-      <Modal visible={reportOpen} transparent animationType="slide">
-        <Pressable className="flex-1 bg-black/55" onPress={() => setReportOpen(false)} />
-        <View className="bg-card border-t border-line-2 rounded-t-3xl p-5 max-h-[50%]">
-          <TitleText className="mb-4 text-center">Melden</TitleText>
-          {REPORT_REASONS.map((reason) => (
-            <Pressable
-              key={reason}
-              onPress={() => onReport(reason)}
-              className="py-3.5 border-b border-line"
-            >
-              <BodyText className="text-white text-center">{reason}</BodyText>
-            </Pressable>
-          ))}
-          <Pressable onPress={() => setReportOpen(false)} className="py-4 mt-1">
-            <BodyText className="text-fg-3 text-center">Abbrechen</BodyText>
-          </Pressable>
-        </View>
-      </Modal>
     </Screen>
   );
 }

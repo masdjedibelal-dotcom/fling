@@ -8,9 +8,9 @@ function resolveIosBuildNumber() {
     process.env.BUILD_NUMBER ??
     process.env.CM_BUILD_NUMBER ??
     appJson.expo.ios?.buildNumber ??
-    '2';
+    '4';
   const n = parseInt(String(raw), 10);
-  return String(Number.isFinite(n) && n >= 1 ? n : 2);
+  return String(Number.isFinite(n) && n >= 1 ? n : 4);
 }
 
 module.exports = {

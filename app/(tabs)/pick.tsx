@@ -6,7 +6,10 @@ import { BodyText, BodyLarge, MetaText, TitleText } from '@/components/ui/Typogr
 import { useAuthStore } from '@/stores/authStore';
 import { useMatch } from '@/hooks/useMatch';
 import { DEMO_STATS } from '@/lib/demo';
-import { chatPartnerName } from '@/lib/profileDisplay';
+import {
+  formatChatPartnerMeta,
+  profilePseudonym,
+} from '@/lib/profileDisplay';
 import { Image } from 'expo-image';
 import { ProfileFigureTwo, ProfileFigureWait } from '@/components/graphics';
 
@@ -30,17 +33,25 @@ export default function PickScreen() {
   }
 
   if (match) {
+    const partnerProfile =
+      gender === 'female' ? match.male_profile : match.female_profile;
     const partnerPhoto =
       gender === 'female'
         ? match.male_profile?.photos[0]
         : match.female_profile?.photos[match.female_profile.primary_photo_idx ?? 0];
-    const partnerName =
+    const partnerPseudonym =
       gender === 'female'
-        ? chatPartnerName(match.male_profile?.display_name, 'Pick')
-        : chatPartnerName(
-            match.female_display_name ?? match.female_profile?.display_name,
+        ? profilePseudonym(match.male_profile?.pseudonym, 'Pick')
+        : profilePseudonym(
+            match.female_profile?.pseudonym ?? match.female_display_name,
             'Anna',
           );
+    const metaLine = partnerProfile
+      ? formatChatPartnerMeta(
+          partnerProfile,
+          gender === 'female' ? undefined : { city: match.female_city },
+        )
+      : '—';
 
     return (
       <Screen className="px-5 pt-4 items-center justify-center">
@@ -52,10 +63,12 @@ export default function PickScreen() {
             <Image
               source={{ uri: partnerPhoto ?? 'https://i.pravatar.cc/400?img=32' }}
               className="w-full h-full"
+              contentFit="cover"
             />
           </View>
           <TitleText className="mb-1">Dein Pick</TitleText>
-          <BodyText className="text-center mb-6">{partnerName}</BodyText>
+          <BodyText className="text-center mb-1">{partnerPseudonym}</BodyText>
+          <MetaText className="text-center text-fg-3 mb-6">{metaLine}</MetaText>
           <Button label="Chat öffnen" onPress={() => router.push(`/chat/${match.id}`)} />
         </Pressable>
       </Screen>
@@ -72,8 +85,8 @@ export default function PickScreen() {
           Jetzt einen{'\n'}Mann picken
         </TitleText>
         <BodyLarge className="text-center text-fg-3 max-w-[280px] mb-6 leading-7">
-          Du hast aktuell keinen Pick. Schau, wer in deinem Radius aktiv ist, und wisch nach
-          rechts.
+          Du hast aktuell keinen Pick. Schau in der Auswahl, wer aktiv ist — tippe oder halte
+          den Pick-Button unten rechts.
         </BodyLarge>
         <Button label="Zum Schaufenster" onPress={() => router.push('/(tabs)')} />
       </Screen>

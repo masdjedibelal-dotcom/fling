@@ -3,7 +3,7 @@
     "name": "Fling",
     "slug": "fling",
     "description": "Dein Abenteuer. Deine Entscheidung.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "fling",
@@ -16,10 +16,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.flingapp.app",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "NSCameraUsageDescription": "Fling benötigt die Kamera für Ausweis-Scan und Live-Selfie.",
         "NSPhotoLibraryUsageDescription": "Fling benötigt Zugriff auf deine Fotos für Profilbilder.",
+        "NSMicrophoneUsageDescription": "Fling benötigt das Mikrofon für Sprachnachrichten im Chat.",
         "NSLocationWhenInUseUsageDescription": "Fling zeigt dir Männer in deiner Nähe — deine genaue Adresse bleibt privat.",
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -52,7 +53,8 @@
         {
           "locationWhenInUsePermission": "Fling zeigt dir Männer in deiner Nähe."
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true

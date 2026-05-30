@@ -1,30 +1,36 @@
-import { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo } from 'react';
+import { View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { BodyText } from '@/components/ui/Typography';
-import { SlideToPick } from '@/components/chat/SlideToPick';
-import { PublicProfileDetail } from '@/components/schaufenster/PublicProfileDetail';
-import { fetchSchaufensterProfile, createMatch } from '@/lib/api';
-import { ensureDemoSession } from '@/lib/demoMode';
+import { BackButton } from '@/components/ui/BackButton';
+import { AuswahlProfileFeed } from '@/components/schaufenster/AuswahlProfileFeed';
+import { useSchaufenster } from '@/hooks/useSchaufenster';
 import { useAuthStore } from '@/stores/authStore';
-import type { SchaufensterProfile } from '@/lib/types';
 import { useDiscreetScreen } from '@/hooks/useDiscreetScreen';
-import { FLING_TYPE } from '@/lib/designTokens';
+import { ensureDemoSession } from '@/lib/demoMode';
 
 export default function SchaufensterDetailScreen() {
   useDiscreetScreen();
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = useAuthStore((s) => s.userId) ?? 'demo-female-user';
-  const [profile, setProfile] = useState<SchaufensterProfile | null>(null);
-  const [picking, setPicking] = useState(false);
+  const profile = useAuthStore((s) => s.profile);
+  const { profiles, loading } = useSchaufenster(
+    profile?.latitude ?? undefined,
+    profile?.longitude ?? undefined,
+  );
 
   useEffect(() => {
     ensureDemoSession();
-    if (id) fetchSchaufensterProfile(id).then(setProfile);
-  }, [id]);
+  }, []);
 
-  if (!profile) {
+  const initialIndex = useMemo(() => {
+    if (!id || profiles.length === 0) return 0;
+    const idx = profiles.findIndex((p) => p.id === id);
+    return idx >= 0 ? idx : 0;
+  }, [id, profiles]);
+
+  if (loading && profiles.length === 0) {
     return (
       <Screen className="items-center justify-center">
         <BodyText>Lädt…</BodyText>
@@ -32,34 +38,24 @@ export default function SchaufensterDetailScreen() {
     );
   }
 
-  const onPick = async () => {
-    setPicking(true);
-    const { match, error } = await createMatch(userId, profile.id);
-    setPicking(false);
-    if (error) {
-      alert(error);
-      return;
-    }
-    if (match) router.replace(`/chat/${match.id}`);
-  };
+  if (profiles.length === 0) {
+    return (
+      <Screen className="items-center justify-center px-6">
+        <BodyText className="text-center">Profil nicht gefunden.</BodyText>
+        <View className="mt-4">
+          <BackButton />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen edges={[]} className="flex-1">
-      <PublicProfileDetail
-        profile={profile}
-        footer={
-          <>
-            <SlideToPick onPick={onPick} />
-            {picking ? (
-              <Text
-                className="text-center text-fg-3 mt-2"
-                style={{ fontSize: FLING_TYPE.caption2 }}
-              >
-                Verbindung wird hergestellt…
-              </Text>
-            ) : null}
-          </>
-        }
+      <AuswahlProfileFeed
+        profiles={profiles}
+        userId={userId}
+        initialIndex={initialIndex}
+        fixedTopOverlay={<BackButton />}
       />
     </Screen>
   );

@@ -7,6 +7,7 @@ if (typeof document !== 'undefined') {
 }
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import {
   Unbounded_700Bold,
@@ -45,6 +46,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
       <MobilePreviewFrame>
         <AppGuards>
           <OfflineBanner />
@@ -77,6 +79,7 @@ export default function RootLayout() {
           </Stack>
         </AppGuards>
       </MobilePreviewFrame>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

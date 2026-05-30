@@ -1,9 +1,9 @@
 import { View } from 'react-native';
 import { Screen } from '@/components/ui/Screen';
 import { GridSkeleton } from '@/components/ui/Skeleton';
-import { MasonryGrid } from '@/components/schaufenster/MasonryGrid';
+import { AuswahlHeader } from '@/components/schaufenster/AuswahlHeader';
+import { AuswahlHome } from '@/components/schaufenster/AuswahlHome';
 import { AuswahlEmptyState } from '@/components/schaufenster/AuswahlEmptyState';
-import { useAppStore } from '@/stores/appStore';
 import { MaleHomeView } from '@/components/schaufenster/MaleHomeView';
 import { useSchaufenster } from '@/hooks/useSchaufenster';
 import { useMatch } from '@/hooks/useMatch';
@@ -19,28 +19,42 @@ import { useDiscreetScreen } from '@/hooks/useDiscreetScreen';
 function FemaleAuswahl({
   loading,
   profiles,
+  activeCount,
+  userId,
+  onRefresh,
 }: {
   loading: boolean;
-  profiles: Parameters<typeof MasonryGrid>[0]['profiles'];
+  profiles: Parameters<typeof AuswahlHome>[0]['profiles'];
+  activeCount: number;
+  userId: string;
+  onRefresh: () => void;
 }) {
   useDiscreetScreen();
-  const filterOpen = useAppStore((s) => s.filterSheetOpen);
-  const setFilterSheetOpen = useAppStore((s) => s.setFilterSheetOpen);
 
   return (
     <Screen edges={[]}>
-      {loading ? (
-        <View className="flex-1 px-1 pt-2">
-          <GridSkeleton />
+      {loading && profiles.length === 0 ? (
+        <View className="flex-1">
+          <AuswahlHeader
+            activeCount={0}
+            viewMode="grid"
+            onNearbyPress={() => {}}
+            onViewModePress={() => {}}
+            loading
+          />
+          <View className="flex-1 px-1 pt-2">
+            <GridSkeleton />
+          </View>
         </View>
       ) : profiles.length === 0 ? (
         <AuswahlEmptyState />
       ) : (
-        <MasonryGrid
+        <AuswahlHome
           profiles={profiles}
-          filterOpen={filterOpen}
-          onFilterPress={() => setFilterSheetOpen(!filterOpen)}
-          onFilterClose={() => setFilterSheetOpen(false)}
+          activeCount={activeCount}
+          userId={userId}
+          onRefresh={onRefresh}
+          refreshing={loading && profiles.length > 0}
         />
       )}
     </Screen>
@@ -51,7 +65,7 @@ export default function HomeScreen() {
   const gender = useAuthStore((s) => s.gender);
   const userId = useAuthStore((s) => s.userId);
   const profile = useAuthStore((s) => s.profile);
-  const { profiles, loading } = useSchaufenster(
+  const { profiles, loading, activeCount, reload } = useSchaufenster(
     profile?.latitude ?? undefined,
     profile?.longitude ?? undefined,
   );
@@ -73,5 +87,13 @@ export default function HomeScreen() {
     );
   }
 
-  return <FemaleAuswahl loading={loading} profiles={profiles} />;
+  return (
+    <FemaleAuswahl
+      loading={loading}
+      profiles={profiles}
+      activeCount={activeCount}
+      userId={userId ?? 'demo-female-user'}
+      onRefresh={reload}
+    />
+  );
 }

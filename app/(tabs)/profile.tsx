@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { View, Pressable, ScrollView, Alert, Text, Linking } from 'react-native';
 import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
-import { ScreenTitle, BodyText, BodyLarge } from '@/components/ui/Typography';
+import { BodyText, BodyLarge } from '@/components/ui/Typography';
 import { SettingsGroup, SettingsRow } from '@/components/ui/SettingsGroup';
 import { ProfileHero } from '@/components/profile/ProfileHero';
 import { ProfilePhotoRow } from '@/components/profile/ProfilePhotoRow';
@@ -20,7 +20,7 @@ import { birthDateFromAge, getAgeFromBirthDate } from '@/lib/validation';
 import { useAuthStore } from '@/stores/authStore';
 import type { Availability, LocationMode, UserProfile } from '@/lib/types';
 import { DEFAULT_RADIUS_KM } from '@/lib/constants';
-import { chatPartnerName } from '@/lib/profileDisplay';
+import { ownProfileName } from '@/lib/profileDisplay';
 import { FLING_TYPE } from '@/lib/designTokens';
 
 type ProfileDraft = {
@@ -214,11 +214,9 @@ export default function ProfileScreen() {
   return (
     <Screen edges={['top']} className="flex-1">
       <ScrollView className="flex-1 px-5 pt-3" contentContainerClassName="pb-12">
-        <ScreenTitle className="mb-5">Profil</ScreenTitle>
-
         <ProfileHero
           photoUri={mainPhoto}
-          displayName={chatPartnerName(draft.display_name)}
+          displayName={ownProfileName(draft.display_name, draft.pseudonym)}
           verified={verificationStatus === 'approved'}
           onAvatarPress={() => setPhotosOpen((v) => !v)}
           onEditPress={openEdit}
