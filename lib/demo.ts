@@ -28,7 +28,7 @@ function rowToDemoMale(row: DemoMaleRow): SchaufensterProfile {
   };
 }
 
-/** 12+ Männer im Schaufenster (Demo / Browser ohne Supabase) */
+/** 20 Männer im Schaufenster (Demo / Browser ohne Supabase) */
 const DEMO_MALE_ROWS: DemoMaleRow[] = [
   {
     id: 'demo-m1',
@@ -71,10 +71,11 @@ const DEMO_MALE_ROWS: DemoMaleRow[] = [
     photos: ['https://i.pravatar.cc/600?img=51'],
     primary_photo_idx: 0,
     job: 'Consultant',
+    city: 'Wedding',
     distance_km: 2.8,
     availability: 'today',
     verified_at: new Date().toISOString(),
-    bio: 'Sport morgens, entspannt abends.',
+    bio: 'Sport morgens, entspannt abends. Lust auf Treffen!',
     interest_tags: ['Sport', 'Fitness'],
     last_seen_minutes: 12,
   },
@@ -83,15 +84,17 @@ const DEMO_MALE_ROWS: DemoMaleRow[] = [
     display_name: 'Noah',
     age: 29,
     photos: [
+      'video:https://assets.mixkit.co/videos/preview/mixkit-man-portrait-looking-at-the-camera-3988-large.mp4',
       'https://i.pravatar.cc/600?img=22',
       'https://i.pravatar.cc/600?img=68',
     ],
     primary_photo_idx: 0,
     job: 'Fotograf',
+    city: 'Kreuzberg',
     distance_km: 0.8,
     availability: 'now',
     verified_at: new Date().toISOString(),
-    bio: 'Licht, Städte, ehrliche Gespräche.',
+    bio: 'Licht, Städte, ehrliche Gespräche — swipe zu meinem Clip.',
     interest_tags: ['Fotografie', 'Reisen'],
     last_seen_minutes: 8,
   },
@@ -168,14 +171,21 @@ const DEMO_MALE_ROWS: DemoMaleRow[] = [
   {
     id: 'demo-m10',
     display_name: 'David',
+    pseudonym: 'David_M',
     age: 29,
-    photos: ['https://i.pravatar.cc/600?img=61'],
+    photos: [
+      'https://i.pravatar.cc/600?img=61',
+      'https://i.pravatar.cc/600?img=63',
+      'https://i.pravatar.cc/600?img=64',
+      'video:https://assets.mixkit.co/videos/preview/mixkit-young-man-in-a-neon-lit-room-4255-large.mp4',
+    ],
     primary_photo_idx: 0,
     job: 'Journalist',
+    city: 'Mitte',
     distance_km: 0.9,
     availability: 'now',
     verified_at: new Date().toISOString(),
-    bio: 'Geschichten, Bars, Mitternacht.',
+    bio: 'Ich schreibe über Nachtleben und Menschen, die keine Angst vor Offenheit haben. Berlin ist laut — ich suche Momente, die leise und echt sind. Wenn du neugierig bist, lass uns reden, bevor die Stadt uns wieder einsaugt. Abends gerne in kleinen Bars, ohne Show. Kein Stress, nur ehrliche Gespräche heute.',
     interest_tags: ['Kultur', 'Wein'],
     last_seen_minutes: 1,
   },
@@ -206,6 +216,146 @@ const DEMO_MALE_ROWS: DemoMaleRow[] = [
     bio: 'Busy days, clear nights.',
     interest_tags: ['Tech', 'Fitness'],
     last_seen_minutes: 4,
+  },
+  {
+    id: 'demo-m13',
+    display_name: 'Rafael',
+    age: 31,
+    photos: [
+      'video:https://assets.mixkit.co/videos/preview/mixkit-man-under-multicolored-lights-1237-large.mp4',
+      'https://i.pravatar.cc/600?img=52',
+      'https://i.pravatar.cc/600?img=53',
+    ],
+    primary_photo_idx: 0,
+    job: 'DJ',
+    city: 'Friedrichshain',
+    distance_km: 3.4,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Beats nach Mitternacht — swipe zu meinem Clip.',
+    interest_tags: ['Musik', 'Kino'],
+    last_seen_minutes: 7,
+  },
+  {
+    id: 'demo-m14',
+    display_name: 'Stefan',
+    age: 35,
+    photos: [
+      'https://i.pravatar.cc/600?img=27',
+      'https://i.pravatar.cc/600?img=28',
+      'https://i.pravatar.cc/600?img=29',
+    ],
+    primary_photo_idx: 0,
+    job: 'Koch',
+    city: 'Kreuzberg',
+    distance_km: 2.7,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Tagsüber Küche, abends Lust auf ehrliche Gespräche und gutes Essen.',
+    interest_tags: ['Kochen', 'Wein', 'Reisen'],
+    last_seen_minutes: 11,
+  },
+  {
+    id: 'demo-m15',
+    display_name: 'Philipp',
+    age: 34,
+    photos: ['https://i.pravatar.cc/600?img=30', 'https://i.pravatar.cc/600?img=31'],
+    primary_photo_idx: 0,
+    job: 'Anwalt',
+    city: 'Mitte',
+    distance_km: 1.1,
+    availability: 'today',
+    verified_at: new Date().toISOString(),
+    bio: 'Strukturiert im Job, spontan danach.',
+    interest_tags: ['Reisen', 'Kunst'],
+    last_seen_minutes: 20,
+  },
+  {
+    id: 'demo-m16',
+    display_name: 'Henri',
+    age: 26,
+    photos: [
+      'https://i.pravatar.cc/600?img=40',
+      'video:https://assets.mixkit.co/videos/preview/mixkit-man-portrait-looking-at-the-camera-3988-large.mp4',
+      'https://i.pravatar.cc/600?img=41',
+    ],
+    primary_photo_idx: 0,
+    job: 'Architekt',
+    city: 'Prenzlauer Berg',
+    distance_km: 2.5,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Form follows feeling — auch im Profil.',
+    interest_tags: ['Architektur', 'Fotografie'],
+    last_seen_minutes: 9,
+  },
+  {
+    id: 'demo-m17',
+    display_name: 'Alex',
+    age: 29,
+    photos: ['https://i.pravatar.cc/600?img=44'],
+    primary_photo_idx: 0,
+    job: 'Personal Trainer',
+    city: 'Neukölln',
+    distance_km: 3.3,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Morgens Studio, abends offen für Pläne.',
+    interest_tags: ['Fitness', 'Sport'],
+    last_seen_minutes: 5,
+  },
+  {
+    id: 'demo-m18',
+    display_name: 'Chris',
+    age: 28,
+    photos: [
+      'video:https://assets.mixkit.co/videos/preview/mixkit-young-man-in-a-neon-lit-room-4255-large.mp4',
+      'https://i.pravatar.cc/600?img=55',
+      'https://i.pravatar.cc/600?img=56',
+    ],
+    primary_photo_idx: 0,
+    job: 'Filmproduzent',
+    city: 'Neukölln',
+    distance_km: 3.0,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Kurzclips statt langer Stories.',
+    interest_tags: ['Kino', 'Fotografie'],
+    last_seen_minutes: 3,
+  },
+  {
+    id: 'demo-m19',
+    display_name: 'Daniel',
+    age: 26,
+    photos: [
+      'https://i.pravatar.cc/600?img=57',
+      'https://i.pravatar.cc/600?img=58',
+      'https://i.pravatar.cc/600?img=59',
+    ],
+    primary_photo_idx: 0,
+    job: 'UX Researcher',
+    city: 'Charlottenburg',
+    distance_km: 4.8,
+    availability: 'today',
+    verified_at: new Date().toISOString(),
+    bio: 'Ich höre gerne zu — und stelle die richtigen Fragen.',
+    interest_tags: ['Design', 'Lesen'],
+    last_seen_minutes: 35,
+  },
+  {
+    id: 'demo-m20',
+    display_name: 'Oskar',
+    age: 32,
+    photos: ['https://i.pravatar.cc/600?img=65', 'https://i.pravatar.cc/600?img=66'],
+    primary_photo_idx: 0,
+    job: 'Winzer',
+    city: 'Schöneberg',
+    distance_km: 4.2,
+    availability: 'now',
+    verified_at: new Date().toISOString(),
+    bio: 'Guter Wein, späte Abende, ehrliche Gespräche ohne Perfektionsdruck.',
+    interest_tags: ['Wein', 'Reisen', 'Kochen'],
+    last_seen_minutes: 6,
   },
   {
     id: 'demo-m-far',
@@ -284,11 +434,11 @@ export const DEMO_FEMALE_BASE: Partial<UserProfile> = {
   job: 'Design',
   bio: 'Kaffee, gute Gespräche, spontane Pläne am Wochenende.',
   interest_tags: ['Kino', 'Wein', 'Reisen', 'Kochen'],
-  city: 'München',
+  city: 'Berlin',
   location_mode: 'fixed',
   availability: 'now',
-  latitude: 48.137,
-  longitude: 11.575,
+  latitude: 52.520008,
+  longitude: 13.404954,
   search_radius_km: 5,
   picks_count: 12,
   dates_count: 3,
@@ -376,15 +526,18 @@ export function getDemoProfile(id: string): SchaufensterProfile | null {
   return m ? toPublicSchaufensterProfile(m) : null;
 }
 
+/** Nur der aktive Demo-Match zählt — alte Busy-Listen aus Tests nicht dauerhaft behalten. */
 export async function getDemoBusyMaleIds(): Promise<Set<string>> {
-  const raw = await AsyncStorage.getItem(BUSY_MALES_KEY);
-  return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  const match = await getDemoMatch();
+  if (!match) {
+    await AsyncStorage.removeItem(BUSY_MALES_KEY);
+    return new Set();
+  }
+  return new Set([match.male_id]);
 }
 
 export async function setDemoMaleBusy(maleId: string) {
-  const busy = await getDemoBusyMaleIds();
-  busy.add(maleId);
-  await AsyncStorage.setItem(BUSY_MALES_KEY, JSON.stringify([...busy]));
+  await AsyncStorage.setItem(BUSY_MALES_KEY, JSON.stringify([maleId]));
 }
 
 export async function getDemoMatch(): Promise<Match | null> {

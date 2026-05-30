@@ -83,10 +83,12 @@ export interface SchaufensterProfile {
   bio: string;
   interest_tags: string[];
   last_seen_minutes: number;
+  /** Öffentlich sichtbar in Meta-Zeile */
+  age?: number;
+  job?: string;
+  city?: string;
   /** Nur nach Match im Pick-Chat */
   display_name?: string;
-  job?: string;
-  age?: number;
 }
 
 export interface Match {

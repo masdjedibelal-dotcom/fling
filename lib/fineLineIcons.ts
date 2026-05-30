@@ -78,6 +78,8 @@ export const FINE_LINE_ICONS = {
   back: [{ kind: 'path', d: 'M14.5 5.5 L8 12 L14.5 18.5' }],
   chev: [{ kind: 'path', d: 'M9.5 5.5 L16 12 L9.5 18.5' }],
   arrow: [{ kind: 'path', d: 'M5 12 H19 M13 6 L19 12 L13 18' }],
+  /** Papierflieger — Nachricht senden */
+  send: [{ kind: 'path', d: 'M4.5 19.5 L19.5 12 L4.5 4.5 L4.5 10.5 L13 12 L4.5 13.5 Z', filled: true }],
   pin: [
     {
       kind: 'path',

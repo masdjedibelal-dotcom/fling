@@ -14,16 +14,30 @@ import type { Gender, UserProfile } from '@/lib/types';
 export const isDemoMode = __DEV__ || !isSupabaseConfigured;
 
 /**
- * Mock-Schaufenster wie im Browser, wenn Supabase leer ist oder RPC fehlschlägt.
- * TestFlight: EXPO_PUBLIC_DEMO_MOCKS=true in Codemagic setzen — oder seed_demo_males.sql.
+ * Demo-Auswahl wenn kein Supabase, explizit DEMO_MOCKS, oder Dev ohne DB-Treffer.
+ * Wichtig: nie Demo + Supabase gleichzeitig mischen (falsche Profile beim Klick).
  */
-export function isDemoSchaufensterFallbackEnabled(): boolean {
-  return (
-    __DEV__ ||
-    !isSupabaseConfigured ||
+export function shouldFallbackToDemoSchaufenster(): boolean {
+  if (!isSupabaseConfigured) return true;
+  if (
     process.env.EXPO_PUBLIC_DEMO_MOCKS === 'true' ||
     process.env.EXPO_PUBLIC_DEMO_MOCKS === '1'
-  );
+  ) {
+    return true;
+  }
+  return __DEV__;
+}
+
+/** @deprecated Nur noch für explizites Mergen mit DEMO_MOCKS */
+export function isDemoSchaufensterFallbackEnabled(): boolean {
+  return shouldFallbackToDemoSchaufenster();
+}
+
+/** Demo-Session ohne echten Supabase-User → lokale Profile, keine RPC. */
+export function shouldUseDemoSchaufensterForSession(): boolean {
+  const userId = useAuthStore.getState().userId;
+  if (!userId) return shouldFallbackToDemoSchaufenster();
+  return userId === DEMO_USER_ID || userId === DEMO_MALE_USER_ID;
 }
 
 export function getDemoUserProfile(gender: Gender): UserProfile {
@@ -55,6 +69,17 @@ export function ensureDemoSession(): void {
 
   const store = useAuthStore.getState();
   const gender: Gender = store.gender ?? 'female';
+
+  // Echter Supabase-Login — Profil nicht durch Demo ersetzen
+  if (
+    isSupabaseConfigured &&
+    store.userId &&
+    store.userId !== DEMO_USER_ID &&
+    store.userId !== DEMO_MALE_USER_ID
+  ) {
+    return;
+  }
+
   const needsSession = !store.userId || !store.profile?.id;
 
   if (needsSession) {
@@ -70,7 +95,6 @@ export function ensureDemoSession(): void {
     return;
   }
 
-  // Altes Profil ohne neue Felder (city, location_mode) auffrischen
   if (!store.profile?.city || !store.profile?.location_mode) {
     store.setProfile(buildDemoProfile(gender));
   }

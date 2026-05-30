@@ -30,7 +30,10 @@ import {
   toPublicSchaufensterProfile,
   toMatchPartnerProfile,
 } from './schaufensterProfile';
-import { isDemoSchaufensterFallbackEnabled } from './demoMode';
+import {
+  shouldFallbackToDemoSchaufenster,
+  shouldUseDemoSchaufensterForSession,
+} from './demoMode';
 import type { Match } from './types';
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -84,7 +87,10 @@ async function mergeDemoSchaufenster(
   filter: AvailabilityFilter,
   radiusKm: number,
 ): Promise<SchaufensterProfile[]> {
-  if (!isDemoSchaufensterFallbackEnabled()) return profiles;
+  const mergeExplicit =
+    process.env.EXPO_PUBLIC_DEMO_MOCKS === 'true' ||
+    process.env.EXPO_PUBLIC_DEMO_MOCKS === '1';
+  if (!mergeExplicit) return profiles;
   const busy = await getDemoBusyMaleIds();
   const blocked = await getDemoBlockedIds();
   const demo = getDemoSchaufenster(filter, radiusKm)
@@ -111,7 +117,7 @@ export async function fetchSchaufenster(
   userLat?: number,
   userLng?: number,
 ): Promise<SchaufensterProfile[]> {
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured || shouldUseDemoSchaufensterForSession()) {
     return demoSchaufensterList(filter, radiusKm);
   }
   const { data, error } = await supabase.rpc('get_schaufenster', {
@@ -121,12 +127,27 @@ export async function fetchSchaufenster(
     user_lng: userLng ?? null,
   });
   if (error) {
-    return demoSchaufensterList(filter, radiusKm);
+    if (__DEV__) {
+      console.warn('[fetchSchaufenster]', error.message);
+    }
+    if (shouldFallbackToDemoSchaufenster()) {
+      return demoSchaufensterList(filter, radiusKm);
+    }
+    return [];
   }
   const mapped = ((data ?? []) as SchaufensterProfile[]).map(
     toPublicSchaufensterProfile,
   );
-  return mergeDemoSchaufenster(mapped, filter, radiusKm);
+  if (mapped.length > 0) {
+    return mergeDemoSchaufenster(mapped, filter, radiusKm);
+  }
+  if (shouldFallbackToDemoSchaufenster()) {
+    if (__DEV__) {
+      console.info('[fetchSchaufenster] Supabase leer — Demo-Profile (Dev)');
+    }
+    return demoSchaufensterList(filter, radiusKm);
+  }
+  return [];
 }
 
 export async function fetchSchaufensterProfile(
@@ -136,9 +157,19 @@ export async function fetchSchaufensterProfile(
     const demo = getDemoProfile(id);
     return demo ? toPublicSchaufensterProfile(demo) : null;
   }
-  const { data } = await supabase.rpc('get_schaufenster_profile', { profile_id: id });
-  const raw = (data as SchaufensterProfile) ?? getDemoProfile(id);
-  return raw ? toPublicSchaufensterProfile(raw) : null;
+  const { data, error } = await supabase.rpc('get_schaufenster_profile', {
+    profile_id: id,
+  });
+  if (error && __DEV__) {
+    console.warn('[fetchSchaufensterProfile]', error.message);
+  }
+  const raw = data as SchaufensterProfile | null;
+  if (raw) return toPublicSchaufensterProfile(raw);
+  if (shouldFallbackToDemoSchaufenster()) {
+    const demo = getDemoProfile(id);
+    return demo ? toPublicSchaufensterProfile(demo) : null;
+  }
+  return null;
 }
 
 export async function fetchPartnerProfile(
@@ -215,10 +246,28 @@ async function createMatchViaDemo(
   femaleId: string,
   maleId: string,
 ): Promise<{ match: Match | null; error: string | null }> {
+  const existing = await getDemoMatch();
+  if (existing) {
+    if (existing.male_id === maleId) {
+      return { match: existing, error: null };
+    }
+    return { match: null, error: 'Du hast bereits einen aktiven Pick.' };
+  }
+
   const male = getDemoProfile(maleId);
   if (!male) return { match: null, error: 'Profil nicht gefunden' };
   const match = await createDemoMatch(femaleId, male);
   return { match, error: null };
+}
+
+export async function replaceMatch(
+  femaleId: string,
+  maleId: string,
+  existingMatchId: string,
+): Promise<{ match: Match | null; error: string | null }> {
+  const { error: cancelError } = await cancelMatch(existingMatchId);
+  if (cancelError) return { match: null, error: cancelError };
+  return createMatch(femaleId, maleId);
 }
 
 export async function createMatch(
@@ -415,11 +464,11 @@ export function enrichProfile(p: Partial<UserProfile> | null): UserProfile | nul
     job: p.job ?? (p.gender === 'male' ? 'Architekt' : null),
     bio: p.bio ?? '',
     interest_tags: p.interest_tags ?? [],
-    city: p.city ?? (p.gender === 'male' ? 'München' : 'München'),
+    city: p.city ?? (p.gender === 'female' ? 'Berlin' : 'Berlin'),
     location_mode: p.location_mode ?? 'fixed',
     availability: p.availability ?? 'now',
-    latitude: p.latitude ?? null,
-    longitude: p.longitude ?? null,
+    latitude: p.latitude ?? (p.gender === 'female' ? 52.520008 : null),
+    longitude: p.longitude ?? (p.gender === 'female' ? 13.404954 : null),
     search_radius_km: p.search_radius_km ?? DEFAULT_RADIUS_KM,
     profile_views_today: p.profile_views_today ?? 142,
     picks_count: p.picks_count ?? 12,

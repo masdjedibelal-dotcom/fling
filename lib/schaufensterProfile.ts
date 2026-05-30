@@ -16,6 +16,9 @@ export function toPublicSchaufensterProfile(
     bio: p.bio ?? '',
     interest_tags: p.interest_tags ?? [],
     last_seen_minutes: p.last_seen_minutes ?? 0,
+    age: p.age,
+    job: p.job,
+    city: p.city,
   };
 }
 
