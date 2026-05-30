@@ -37,20 +37,15 @@ Vollständige Anleitung: **[supabase/README.md](./supabase/README.md)**
 
 **Aktuell:** Version **1.0.1**, Build **4**
 
-1. Repo auf GitHub/GitLab pushen (`main`)
-2. [Codemagic](https://codemagic.io) → App → Workflow **Fling iOS · TestFlight**
-3. **Integrations:** App Store Connect API Key (Name: `fling`)
-4. **Environment group** `fling_production`:
-   - `EXPO_PUBLIC_SUPABASE_URL`
-   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-   - `EXPO_PUBLIC_PROJECT_ID`
-   - Optional: `EXPO_PUBLIC_DEMO_MOCKS=true` (Mock-Profile ohne DB-Seed)
-5. In `codemagic.yaml`: `APP_STORE_APPLE_ID` = numerische Apple-ID der App (Auto-Build-Nummer)
-6. Push auf `main` **oder** Build manuell in Codemagic starten → Upload nach TestFlight
+Signing läuft wie beim letzten erfolgreichen Upload: `.p12` + Provisioning Profile in Codemagic, Pipeline nutzt `keychain add-certificates` + `use-profiles` (ohne `fetch-signing-files`).
 
-Vor jedem Upload: `app.json` → `version` + `ios.buildNumber` erhöhen (Build muss > letzter TestFlight-Build sein).
+1. Repo auf GitHub pushen (`main`)
+2. Codemagic: Zertifikat + App-Store-Profil für `com.flingapp.app` (mit Push) hinterlegt lassen
+3. Environment group `fling_production` mit Supabase-Keys
+4. Optional in `codemagic.yaml`: `APP_STORE_APPLE_ID` setzen
+5. Build starten → TestFlight
 
-Details in [`codemagic.yaml`](./codemagic.yaml).
+Vor jedem Upload: `app.json` → `version` + `ios.buildNumber` erhöhen.
 
 ## Struktur
 

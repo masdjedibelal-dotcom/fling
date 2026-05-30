@@ -2,7 +2,7 @@
 # Ermittelt IOS_BUILD_NUMBER für TestFlight (muss > letzter Upload sein).
 set -euo pipefail
 
-MIN_BUILD=4
+MIN_BUILD=5
 
 APP_JSON_BUILD=$(node -p "parseInt(require('./app.json').expo.ios?.buildNumber || '0', 10)" 2>/dev/null || echo 0)
 
