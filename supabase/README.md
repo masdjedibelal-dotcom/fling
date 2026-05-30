@@ -22,6 +22,11 @@ Im **SQL Editor** nacheinander ausführen (Reihenfolge einhalten):
 | 6 | `migrations/006_admin_and_config.sql` | Admin-RPCs, Realtime |
 | 7 | `migrations/007_storage.sql` | Buckets + Foto-Policies |
 | 8 | `migrations/008_cron_and_triggers.sql` | Ablauf, Push-Outbox |
+| 9 | `migrations/009_chat_media.sql` | Chat-Bilder / Voice |
+| 10 | `migrations/010_pseudonym.sql` | Pseudonym + Chat-Profil-RPCs |
+| 11 | `migrations/011_create_match_returns_profiles.sql` | Pick liefert Name/Beruf im Chat |
+
+**Demo-Profile (TestFlight / Staging):** `seed_demo_males.sql` im SQL Editor ausführen — oder in Codemagic `EXPO_PUBLIC_DEMO_MOCKS=true` setzen.
 
 > **Hinweis:** Falls `alter publication supabase_realtime add table …` in 006 fehlschlägt (Tabelle schon drin), Zeile überspringen.
 

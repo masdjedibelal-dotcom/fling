@@ -35,14 +35,22 @@ Vollständige Anleitung: **[supabase/README.md](./supabase/README.md)**
 
 ### iOS Build (Codemagic → TestFlight)
 
-1. Repo auf GitHub/GitLab pushen
-2. [Codemagic](https://codemagic.io) → App hinzufügen → `codemagic.yaml` wird erkannt
-3. **Integrations:** App Store Connect API Key (Name: `fling`)
-4. **Environment group** `fling_production`: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_PROJECT_ID`
-5. In `codemagic.yaml`: `APP_STORE_APPLE_ID` + Beta-Gruppe `Internal Testers` anpassen
-6. Push auf `main` → Build → TestFlight
+**Aktuell:** Version **1.0.1**, Build **4**
 
-Details in den Kommentaren in [`codemagic.yaml`](./codemagic.yaml).
+1. Repo auf GitHub/GitLab pushen (`main`)
+2. [Codemagic](https://codemagic.io) → App → Workflow **Fling iOS · TestFlight**
+3. **Integrations:** App Store Connect API Key (Name: `fling`)
+4. **Environment group** `fling_production`:
+   - `EXPO_PUBLIC_SUPABASE_URL`
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+   - `EXPO_PUBLIC_PROJECT_ID`
+   - Optional: `EXPO_PUBLIC_DEMO_MOCKS=true` (Mock-Profile ohne DB-Seed)
+5. In `codemagic.yaml`: `APP_STORE_APPLE_ID` = numerische Apple-ID der App (Auto-Build-Nummer)
+6. Push auf `main` **oder** Build manuell in Codemagic starten → Upload nach TestFlight
+
+Vor jedem Upload: `app.json` → `version` + `ios.buildNumber` erhöhen (Build muss > letzter TestFlight-Build sein).
+
+Details in [`codemagic.yaml`](./codemagic.yaml).
 
 ## Struktur
 
