@@ -149,8 +149,9 @@ function ViewOnceBubble({
   onOpen: () => void;
 }) {
   const opened = Boolean(msg.viewed_at);
-  const canOpen =
-    !hiddenHistory && Boolean(msg.media_url) && !(isPartner && opened);
+  /** Empfangenes Einmal-Foto: nach dem Öffnen nicht erneut. Eigene Sendung: jederzeit. */
+  const consumed = msg.view_once && isPartner && opened;
+  const canOpen = !hiddenHistory && Boolean(msg.media_url) && !consumed;
 
   return (
     <Pressable
@@ -163,7 +164,12 @@ function ViewOnceBubble({
         borderRadius: FLING_RADIUS.bubble,
         borderBottomLeftRadius: isPartner ? FLING_RADIUS.bubbleTail : FLING_RADIUS.bubble,
         borderBottomRightRadius: isPartner ? FLING_RADIUS.bubble : FLING_RADIUS.bubbleTail,
-        opacity: opened && !hiddenHistory ? 0.72 : 1,
+        opacity: consumed ? 0.5 : 1,
+        backgroundColor: consumed
+          ? isPartner
+            ? 'rgba(196, 30, 58, 0.45)'
+            : 'rgba(255,255,255,0.06)'
+          : undefined,
       }}
     >
       <HiddenHistoryShell hidden={hiddenHistory}>
@@ -187,7 +193,7 @@ function ViewOnceBubble({
             >
               {hiddenHistory
                 ? 'Verlauf unsichtbar'
-                : opened
+                : consumed
                   ? 'Geöffnet'
                   : isPartner
                     ? 'Tippen zum Öffnen'
@@ -200,22 +206,27 @@ function ViewOnceBubble({
   );
 }
 
+function isPartnerMessage(msg: Message, viewerId: string): boolean {
+  if (msg.sender_id) return msg.sender_id !== viewerId;
+  return false;
+}
+
 function Bubble({
   msg,
   hiddenHistory,
   partnerPhotoUri,
   userPhotoUri,
-  viewerIsFemale,
+  viewerId,
   onOpenPhoto,
 }: {
   msg: Message;
   hiddenHistory?: boolean;
   partnerPhotoUri: string;
   userPhotoUri: string;
-  viewerIsFemale: boolean;
+  viewerId: string;
   onOpenPhoto: (msg: Message, isPartner: boolean) => void;
 }) {
-  const isPartner = viewerIsFemale ? !msg.is_female : msg.is_female;
+  const isPartner = isPartnerMessage(msg, viewerId);
   const type = msg.message_type ?? 'text';
 
   let content: React.ReactNode;
@@ -318,36 +329,36 @@ export function ChatMessages({
   visible,
   partnerPhotoUri,
   userPhotoUri,
-  viewerIsFemale,
+  viewerId,
   onMarkViewed,
 }: {
   blurred: Message[];
   visible: Message[];
   partnerPhotoUri: string;
   userPhotoUri: string;
-  viewerIsFemale: boolean;
+  viewerId: string;
   onMarkViewed: (messageId: string) => Promise<void>;
 }) {
   const [photoPreview, setPhotoPreview] = useState<{
     id: string;
     uri: string;
-    markOnClose: boolean;
   } | null>(null);
 
   const openPhoto = (msg: Message, isPartner: boolean) => {
     if (!msg.media_url) return;
     if (msg.view_once && isPartner && msg.viewed_at) return;
+
+    if (msg.view_once && isPartner && !msg.viewed_at) {
+      void onMarkViewed(msg.id);
+    }
+
     setPhotoPreview({
       id: msg.id,
       uri: msg.media_url,
-      markOnClose: Boolean(msg.view_once && isPartner),
     });
   };
 
-  const closePhoto = async () => {
-    if (photoPreview?.markOnClose) {
-      await onMarkViewed(photoPreview.id);
-    }
+  const closePhoto = () => {
     setPhotoPreview(null);
   };
 
@@ -361,7 +372,7 @@ export function ChatMessages({
             hiddenHistory
             partnerPhotoUri={partnerPhotoUri}
             userPhotoUri={userPhotoUri}
-            viewerIsFemale={viewerIsFemale}
+            viewerId={viewerId}
             onOpenPhoto={openPhoto}
           />
         ))}
@@ -385,7 +396,7 @@ export function ChatMessages({
             msg={m}
             partnerPhotoUri={partnerPhotoUri}
             userPhotoUri={userPhotoUri}
-            viewerIsFemale={viewerIsFemale}
+            viewerId={viewerId}
             onOpenPhoto={openPhoto}
           />
         ))}
@@ -394,7 +405,7 @@ export function ChatMessages({
       <ViewOncePhotoModal
         visible={Boolean(photoPreview)}
         uri={photoPreview?.uri ?? ''}
-        onClose={() => void closePhoto()}
+        onClose={closePhoto}
       />
     </>
   );

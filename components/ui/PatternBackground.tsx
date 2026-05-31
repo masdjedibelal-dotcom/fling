@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { useAppDimensions } from '@/hooks/useAppDimensions';
-import { FLING_COLORS } from '@/lib/designTokens';
+import { accentRgba, FLING_COLORS } from '@/lib/designTokens';
 
 const SPACING = 22;
 const MAX_ROWS = 28;
@@ -23,7 +23,7 @@ export function PatternBackground() {
           width: width * 1.2,
           height: height * 0.7,
           borderRadius: 9999,
-          backgroundColor: 'rgba(225,21,57,0.16)',
+          backgroundColor: accentRgba(0.16),
           opacity: 0.55,
         }}
       />

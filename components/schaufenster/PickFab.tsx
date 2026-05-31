@@ -18,8 +18,8 @@ import { FLING_COLORS } from '@/lib/designTokens';
 
 const SIZE = 64;
 const FAB_RIGHT = 16;
-/** Gedrückthalten bis Explosion — durchgehend wachsend, ~3,2 s */
-export const PICK_HOLD_MS = 3200;
+/** Gedrückthalten bis Explosion — durchgehend wachsend, ~2,5 s */
+export const PICK_HOLD_MS = 2500;
 const TAP_MAX_MS = 280;
 /** Icon wächst spürbar mit (~6 % der Button-Skalierung), bleibt aber deutlich kleiner. */
 const ICON_BTN_GROW = 0.06;

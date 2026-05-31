@@ -1,7 +1,9 @@
+import { useCallback } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useAppDimensions } from '@/hooks/useAppDimensions';
 import { ProfileMediaSlide } from '@/components/schaufenster/ProfileMediaSlide';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 import type { ReactNode } from 'react';
 import { SafeTopChrome } from '@/components/ui/SafeTopChrome';
 
@@ -72,14 +74,21 @@ export function ProfilePhotoViewer({
   const hasStories = count > 1;
   const extendTop = topInset > 0 ? topInset : 0;
 
-  const goPrev = () => onIndexChange(Math.max(0, photoIdx - 1));
-  const goNext = () => onIndexChange(Math.min(count - 1, photoIdx + 1));
+  const goPrev = useCallback(
+    () => onIndexChange(Math.max(0, photoIdx - 1)),
+    [photoIdx, onIndexChange],
+  );
+  const goNext = useCallback(
+    () => onIndexChange(Math.min(count - 1, photoIdx + 1)),
+    [photoIdx, count, onIndexChange],
+  );
 
   const pan = Gesture.Pan()
     .activeOffsetX([-16, 16])
+    .failOffsetY([-28, 28])
     .onEnd((e) => {
-      if (e.translationX < -36) goNext();
-      else if (e.translationX > 36) goPrev();
+      if (e.translationX < -36) runOnJS(goNext)();
+      else if (e.translationX > 36) runOnJS(goPrev)();
     });
 
   return (
@@ -125,20 +134,28 @@ export function ProfilePhotoViewer({
         </View>
       ) : null}
 
-      <Pressable
-        onPress={goPrev}
-        disabled={photoIdx === 0}
-        className="absolute left-0 top-0 bottom-0 z-10"
-        style={{ width: width * 0.28, opacity: photoIdx === 0 ? 0.3 : 1 }}
-        accessibilityLabel="Vorheriges Foto"
-      />
-      <Pressable
-        onPress={goNext}
-        disabled={photoIdx >= count - 1}
-        className="absolute right-0 top-0 bottom-0 z-10"
-        style={{ width: width * 0.28, opacity: photoIdx >= count - 1 ? 0.3 : 1 }}
-        accessibilityLabel="Nächstes Foto"
-      />
+      {hasStories ? (
+        <>
+          <Pressable
+            onPress={goPrev}
+            disabled={photoIdx === 0}
+            className="absolute left-0 top-0 bottom-0"
+            style={{ width: width * 0.28, opacity: photoIdx === 0 ? 0.3 : 1, zIndex: 25 }}
+            accessibilityLabel="Vorheriges Foto"
+          />
+          <Pressable
+            onPress={goNext}
+            disabled={photoIdx >= count - 1}
+            className="absolute right-0 top-0 bottom-0"
+            style={{
+              width: width * 0.28,
+              opacity: photoIdx >= count - 1 ? 0.3 : 1,
+              zIndex: 25,
+            }}
+            accessibilityLabel="Nächstes Foto"
+          />
+        </>
+      ) : null}
     </View>
   );
 }

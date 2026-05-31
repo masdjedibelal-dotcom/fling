@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BodyLarge, TitleText } from '@/components/ui/Typography';
 import { ProfileFigureBack } from '@/components/graphics';
 import { Button } from '@/components/ui/Button';
+import { AUSWAHL_EMPTY_BODY, AUSWAHL_EMPTY_TITLE } from '@/lib/marketingCopy';
 import { RadiusSheet } from '@/components/schaufenster/RadiusSheet';
 import { AuswahlHeader } from '@/components/schaufenster/AuswahlHeader';
 import { useAppStore } from '@/stores/appStore';
@@ -30,14 +31,13 @@ export function AuswahlEmptyState() {
         <ProfileFigureBack size={150} />
       </View>
       <TitleText className="text-center mb-3 leading-tight">
-        Schaufenster{'\n'}wartet
+        {AUSWAHL_EMPTY_TITLE}
       </TitleText>
       <BodyLarge className="text-center text-fg-3 max-w-[280px] mb-6 leading-7">
-        Noch keine aktiven Männer in deinem Radius. Erweitere den Radius oder versuch&apos;s
-        später.
+        {AUSWAHL_EMPTY_BODY}
       </BodyLarge>
       <Button
-        label="Radius erweitern"
+        label="Radius ändern"
         className="max-w-[280px]"
         onPress={() => setRadiusSheetOpen(true)}
       />

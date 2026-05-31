@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BodyLarge } from '@/components/ui/Typography';
-import { FLING_COLORS, FLING_RADIUS, FLING_TYPE } from '@/lib/designTokens';
+import { accentRgba, FLING_COLORS, FLING_RADIUS, FLING_TYPE } from '@/lib/designTokens';
 
 interface OnboardingCardProps {
   title: string;
@@ -23,7 +23,7 @@ export function OnboardingCard({ title, body, graphic }: OnboardingCardProps) {
       >
         <View
           className="absolute -top-6 -right-6 w-40 h-40 rounded-full"
-          style={{ backgroundColor: 'rgba(225,21,57,0.25)' }}
+          style={{ backgroundColor: accentRgba(0.25) }}
         />
         {graphic ? (
           <View className="items-center py-2 mb-2 relative">{graphic}</View>

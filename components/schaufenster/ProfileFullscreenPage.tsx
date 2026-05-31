@@ -1,13 +1,15 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { ProfileMediaSlide } from '@/components/schaufenster/ProfileMediaSlide';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useAppDimensions } from '@/hooks/useAppDimensions';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeTopChrome } from '@/components/ui/SafeTopChrome';
 import { Toast } from '@/components/ui/Toast';
@@ -71,7 +73,9 @@ export function ProfileFullscreenPage({
   hasFeedHeader?: boolean;
 }) {
   const insets = useSafeAreaInsets();
+  const { width } = useAppDimensions();
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [bioExpanded, setBioExpanded] = useState(false);
   const [picking, setPicking] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
@@ -91,8 +95,19 @@ export function ProfileFullscreenPage({
   const gestureTop = hasTopChrome ? chromeTop : 0;
   const dotsTop = hasTopChrome ? chromeTop + 6 : insets.top + 12;
 
-  const goPrev = () => setPhotoIdx((i) => Math.max(0, i - 1));
-  const goNext = () => setPhotoIdx((i) => Math.min(count - 1, i + 1));
+  const goPrev = useCallback(
+    () => setPhotoIdx((i) => Math.max(0, i - 1)),
+    [],
+  );
+  const goNext = useCallback(
+    () => setPhotoIdx((i) => Math.min(count - 1, i + 1)),
+    [count],
+  );
+
+  useEffect(() => {
+    setPhotoIdx(0);
+    setBioExpanded(false);
+  }, [profile.id]);
 
   useEffect(() => {
     photoFade.value = 0;
@@ -105,9 +120,10 @@ export function ProfileFullscreenPage({
 
   const pan = Gesture.Pan()
     .activeOffsetX([-16, 16])
+    .failOffsetY([-28, 28])
     .onEnd((e) => {
-      if (e.translationX < -36) goNext();
-      else if (e.translationX > 36) goPrev();
+      if (e.translationX < -36) runOnJS(goNext)();
+      else if (e.translationX > 36) runOnJS(goPrev)();
     });
 
   const executePick = async (replaceExisting = false) => {
@@ -181,6 +197,14 @@ export function ProfileFullscreenPage({
         <ProfileMediaSlide uri={photo} isActive />
       </Animated.View>
 
+      {bioExpanded ? (
+        <Pressable
+          onPress={() => setBioExpanded(false)}
+          accessibilityLabel="Bio einklappen"
+          style={[StyleSheet.absoluteFill, { zIndex: 35, elevation: 35 }]}
+        />
+      ) : null}
+
       {count > 1 ? (
         <GestureDetector gesture={pan}>
           <View
@@ -235,7 +259,12 @@ export function ProfileFullscreenPage({
 
       <View
         className="absolute left-0 right-0 px-4"
-        style={{ bottom: bottomInset, paddingRight: showPick && userId ? 88 : 16 }}
+        style={{
+          bottom: bottomInset,
+          paddingRight: showPick && userId ? 88 : 16,
+          zIndex: bioExpanded ? 40 : undefined,
+          elevation: bioExpanded ? 40 : undefined,
+        }}
         pointerEvents="box-none"
       >
         <View className="items-start gap-2.5">
@@ -257,7 +286,12 @@ export function ProfileFullscreenPage({
           <ProfileMetaPills profile={profile} />
           <InterestTagPills tags={profile.interest_tags} />
           {profile.bio ? (
-            <BioPreview bio={profile.bio} className="max-w-[95%] mt-1" />
+            <BioPreview
+              bio={profile.bio}
+              className="max-w-[95%] mt-1"
+              expanded={bioExpanded}
+              onExpandedChange={setBioExpanded}
+            />
           ) : null}
         </View>
 
@@ -270,6 +304,41 @@ export function ProfileFullscreenPage({
           </Text>
         ) : null}
       </View>
+
+      {count > 1 ? (
+        <>
+          <Pressable
+            onPress={goPrev}
+            disabled={photoIdx === 0}
+            accessibilityLabel="Vorheriges Foto"
+            style={{
+              position: 'absolute',
+              top: gestureTop,
+              left: 0,
+              bottom: 0,
+              width: width * 0.28,
+              zIndex: 30,
+              elevation: 30,
+              opacity: photoIdx === 0 ? 0.3 : 1,
+            }}
+          />
+          <Pressable
+            onPress={goNext}
+            disabled={photoIdx >= count - 1}
+            accessibilityLabel="Nächstes Foto"
+            style={{
+              position: 'absolute',
+              top: gestureTop,
+              right: 0,
+              bottom: 0,
+              width: width * 0.28,
+              zIndex: 30,
+              elevation: 30,
+              opacity: photoIdx >= count - 1 ? 0.3 : 1,
+            }}
+          />
+        </>
+      ) : null}
 
       {showPick && userId ? (
         <>

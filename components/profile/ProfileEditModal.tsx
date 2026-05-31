@@ -15,6 +15,7 @@ import {
 import { ProfileInterestEditor } from '@/components/profile/ProfileInterestEditor';
 import { ProfileBioField } from '@/components/profile/ProfileBioField';
 import { ProfileLocationBar } from '@/components/profile/ProfileLocationBar';
+import { PROFILE_PICK_ONLY_HINT } from '@/lib/marketingCopy';
 import { MAX_JOB_LENGTH, MAX_PSEUDONYM_LENGTH } from '@/lib/constants';
 import type { Availability, LocationMode } from '@/lib/types';
 import { FLING_INPUT_TEXT } from '@/lib/designTokens';
@@ -117,7 +118,7 @@ export function ProfileEditModal({
             placeholder="Dein Name"
           />
           <MetaText className="text-fg-4 mb-4 normal-case">
-            Nur im Pick-Chat sichtbar
+            {PROFILE_PICK_ONLY_HINT}
           </MetaText>
 
           <FieldLabel>Beruf</FieldLabel>

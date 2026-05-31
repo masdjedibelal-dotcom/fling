@@ -16,16 +16,34 @@ const CHAR_MORE_HINT = 88;
 type Props = {
   bio: string;
   className?: string;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 };
 
 /**
- * Bio gekürzt + „mehr“, expandiert inline — kein Modal, kein Schatten darunter.
+ * Bio gekürzt — Tipp auf Text oder „mehr“ klappt auf; erneut tippen oder außerhalb einklappen.
  */
-export function BioPreview({ bio, className }: Props) {
+export function BioPreview({
+  bio,
+  className,
+  expanded: expandedProp,
+  onExpandedChange,
+}: Props) {
   const { height: screenH, width: screenW } = useAppDimensions();
-  const [expanded, setExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
   const [truncated, setTruncated] = useState(false);
   const [measureWidth, setMeasureWidth] = useState(0);
+
+  const isControlled = expandedProp !== undefined;
+  const expanded = isControlled ? expandedProp : internalExpanded;
+
+  const setExpanded = useCallback(
+    (next: boolean) => {
+      if (!isControlled) setInternalExpanded(next);
+      onExpandedChange?.(next);
+    },
+    [isControlled, onExpandedChange],
+  );
 
   const trimmed = bio.trim();
   const maxExpandedH = Math.round(screenH * 0.34);
@@ -48,34 +66,27 @@ export function BioPreview({ bio, className }: Props) {
         style={[styles.root, { maxWidth: screenW * 0.92 }]}
         onLayout={(e) => setMeasureWidth(e.nativeEvent.layout.width)}
       >
-        <ScrollView
-          style={{ maxHeight: maxExpandedH }}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          nestedScrollEnabled
-        >
-          <CalloutText className="text-white/90">{trimmed}</CalloutText>
-        </ScrollView>
-
         <Pressable
           onPress={() => setExpanded(false)}
-          hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel="Bio einklappen"
-          style={styles.moreBtn}
         >
-          <CaptionText className="text-fg-3 font-semibold">weniger</CaptionText>
+          <ScrollView
+            style={{ maxHeight: maxExpandedH }}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            nestedScrollEnabled
+          >
+            <CalloutText className="text-white/90">{trimmed}</CalloutText>
+          </ScrollView>
+          <CaptionText className="text-fg-3 font-semibold mt-1">weniger</CaptionText>
         </Pressable>
       </View>
     );
   }
 
-  return (
-    <View
-      className={className}
-      style={[styles.root, { maxWidth: screenW * 0.92 }]}
-      onLayout={(e) => setMeasureWidth(e.nativeEvent.layout.width)}
-    >
+  const preview = (
+    <>
       {measureWidth > 0 ? (
         <View pointerEvents="none" style={styles.measureWrap}>
           <CalloutText
@@ -93,16 +104,29 @@ export function BioPreview({ bio, className }: Props) {
       </CalloutText>
 
       {showMore ? (
+        <CaptionText className="text-fg-3 font-semibold mt-1">mehr</CaptionText>
+      ) : null}
+    </>
+  );
+
+  return (
+    <View
+      className={className}
+      style={[styles.root, { maxWidth: screenW * 0.92 }]}
+      onLayout={(e) => setMeasureWidth(e.nativeEvent.layout.width)}
+    >
+      {showMore ? (
         <Pressable
           onPress={() => setExpanded(true)}
-          hitSlop={10}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Bio vollständig anzeigen"
-          style={styles.moreBtn}
         >
-          <CaptionText className="text-fg-3 font-semibold">mehr</CaptionText>
+          {preview}
         </Pressable>
-      ) : null}
+      ) : (
+        preview
+      )}
     </View>
   );
 }
@@ -119,8 +143,4 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   measureText: {},
-  moreBtn: {
-    marginTop: 4,
-    alignSelf: 'flex-start',
-  },
 });

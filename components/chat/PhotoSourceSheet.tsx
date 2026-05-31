@@ -3,6 +3,7 @@ import { BottomSheet, BottomSheetPanel } from '@/components/ui/BottomSheet';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import { MetaText, TitleText } from '@/components/ui/Typography';
 import { FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import { CHAT_PHOTO_SHEET } from '@/lib/marketingCopy';
 
 type Props = {
   visible: boolean;
@@ -48,26 +49,24 @@ export function PhotoSourceSheet({ visible, onClose, onCamera, onGallery }: Prop
   return (
     <BottomSheet visible={visible} onClose={onClose} animationType="slide">
       <BottomSheetPanel maxHeightRatio={0.34}>
-        <TitleText className="text-center mb-1">Foto senden</TitleText>
+        <TitleText className="text-center mb-1">{CHAT_PHOTO_SHEET.title}</TitleText>
         <MetaText className="text-center text-fg-3 mb-4 normal-case">
-          Wird einmal angezeigt · danach gelöscht
+          {CHAT_PHOTO_SHEET.hint}
         </MetaText>
 
         <OptionRow
           icon="camera"
-          label="Foto machen"
-          hint="Kamera öffnen"
+          label={CHAT_PHOTO_SHEET.camera}
           onPress={onCamera}
         />
         <OptionRow
           icon="images"
-          label="Aus Galerie"
-          hint="Bestehendes Bild wählen"
+          label={CHAT_PHOTO_SHEET.gallery}
           onPress={onGallery}
         />
 
         <Pressable onPress={onClose} style={styles.cancel} accessibilityRole="button">
-          <Text style={styles.cancelText}>Abbrechen</Text>
+          <Text style={styles.cancelText}>{CHAT_PHOTO_SHEET.cancel}</Text>
         </Pressable>
       </BottomSheetPanel>
     </BottomSheet>

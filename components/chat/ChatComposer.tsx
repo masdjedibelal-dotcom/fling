@@ -15,8 +15,10 @@ import { Audio } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import { PhotoSourceSheet } from '@/components/chat/PhotoSourceSheet';
+import { CHAT_INPUT_PLACEHOLDER } from '@/lib/marketingCopy';
 import { ViewOnceCaptureModal } from '@/components/chat/ViewOnceCaptureModal';
 import { ViewOncePhotoPreview } from '@/components/chat/ViewOncePhotoPreview';
+import { VoiceRecordingWaveform } from '@/components/chat/VoiceRecordingWaveform';
 import { FLING_COLORS, FLING_BUTTON_GRADIENT, FLING_TOUCH, FLING_TYPE } from '@/lib/designTokens';
 import { MAX_MESSAGE_LENGTH, MESSAGE_LIMIT_HINT } from '@/lib/constants';
 import { triggerHaptic } from '@/lib/haptics';
@@ -55,6 +57,8 @@ export function ChatComposer({
   const recordingRef = useRef<Audio.Recording | null>(null);
   const recordStartedAt = useRef(0);
   const [recording, setRecording] = useState(false);
+  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
+  const [meterLevel, setMeterLevel] = useState(0.35);
   const [busy, setBusy] = useState(false);
   const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -72,12 +76,16 @@ export function ChatComposer({
     Math.min(INPUT_MAX_H + INPUT_V_PAD * 2, inputContentH + INPUT_V_PAD * 2),
   );
 
-  const bottomPad =
-    Platform.OS === 'web' && keyboardVisible
-      ? Math.max(keyboardInsetBottom, 0)
-      : keyboardVisible
-        ? 0
-        : insets.bottom;
+  /** Eine Quelle: Tastaturhöhe bzw. Safe-Area — kein KeyboardAvoidingView dazu. */
+  const bottomPad = (() => {
+    if (Platform.OS === 'android') {
+      return insets.bottom;
+    }
+    if (keyboardVisible && keyboardInsetBottom > 0) {
+      return keyboardInsetBottom;
+    }
+    return insets.bottom;
+  })();
 
   const openPhotoSheet = () => {
     inputRef.current?.blur();
@@ -119,6 +127,8 @@ export function ChatComposer({
 
   const startRecording = async () => {
     try {
+      inputRef.current?.blur();
+      triggerHaptic('medium');
       const perm = await Audio.requestPermissionsAsync();
       if (!perm.granted) {
         Alert.alert('Mikrofon', 'Bitte Mikrofon-Zugriff erlauben.');
@@ -128,11 +138,22 @@ export function ChatComposer({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
-      const { recording: rec } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
+      const preset = Audio.RecordingOptionsPresets.HIGH_QUALITY;
+      const { recording: rec } = await Audio.Recording.createAsync({
+        ...preset,
+        isMeteringEnabled: true,
+      });
+      rec.setOnRecordingStatusUpdate((status) => {
+        if (!status.isRecording || status.metering == null) return;
+        const level = Math.min(1, Math.max(0.12, (status.metering + 50) / 50));
+        setMeterLevel(level);
+      });
+      await rec.setProgressUpdateInterval(80);
       recordingRef.current = rec;
-      recordStartedAt.current = Date.now();
+      const started = Date.now();
+      recordStartedAt.current = started;
+      setRecordingStartedAt(started);
+      setMeterLevel(0.35);
       setRecording(true);
     } catch {
       Alert.alert('Aufnahme', 'Sprachnotiz konnte nicht gestartet werden.');
@@ -142,7 +163,10 @@ export function ChatComposer({
   const stopRecording = async () => {
     const rec = recordingRef.current;
     if (!rec) return;
+    triggerHaptic('light');
     setRecording(false);
+    setRecordingStartedAt(null);
+    setMeterLevel(0.35);
     recordingRef.current = null;
     try {
       await rec.stopAndUnloadAsync();
@@ -198,29 +222,43 @@ export function ChatComposer({
           borderTopColor: FLING_COLORS.line,
           backgroundColor: FLING_COLORS.bg,
           paddingBottom: bottomPad,
-          paddingTop: 8,
+          paddingTop: recording ? 0 : 8,
           paddingHorizontal: 10,
         }}
       >
+        <VoiceRecordingWaveform
+          active={recording}
+          meterLevel={meterLevel}
+          startedAt={recordingStartedAt ?? undefined}
+        />
+
         <View className="flex-row items-center gap-2" style={{ minHeight: BAR_H }}>
           <Pressable
             onPress={openPhotoSheet}
-            disabled={busy}
-            style={styles.iconSlot}
+            disabled={busy || recording}
+            style={[styles.iconSlot, recording && styles.dimmed]}
             accessibilityLabel="Foto senden"
           >
             <FlingIcon name="camera" size={22} color={FLING_COLORS.fg} />
           </Pressable>
 
-          <View style={[styles.field, { height: fieldH, maxHeight: INPUT_MAX_H + INPUT_V_PAD * 2 }]}>
+          <View
+            style={[
+              styles.field,
+              { height: fieldH, maxHeight: INPUT_MAX_H + INPUT_V_PAD * 2 },
+              recording && styles.fieldRecording,
+            ]}
+          >
             <TextInput
               ref={inputRef}
               value={text}
               onChangeText={(t) => onChangeText(t.slice(0, MAX_MESSAGE_LENGTH))}
-              placeholder="Nachricht"
+              placeholder={
+                recording ? 'Aufnahme läuft…' : CHAT_INPUT_PLACEHOLDER
+              }
               placeholderTextColor="rgba(255,255,255,0.38)"
               multiline
-              editable
+              editable={!recording}
               autoCorrect
               spellCheck
               blurOnSubmit={false}
@@ -265,12 +303,14 @@ export function ChatComposer({
               disabled={busy && !recording}
               style={[
                 styles.actionBtn,
-                { backgroundColor: recording ? FLING_COLORS.accent2 : FLING_COLORS.accent },
+                recording ? styles.stopBtn : styles.micBtn,
               ]}
-              accessibilityLabel={recording ? 'Aufnahme beenden' : 'Sprachnotiz'}
+              accessibilityLabel={recording ? 'Aufnahme stoppen' : 'Sprachnotiz'}
             >
               {busy && !recording ? (
                 <ActivityIndicator color="#fff" size="small" />
+              ) : recording ? (
+                <FlingIcon name="stop" size={18} color="#fff" />
               ) : (
                 <FlingIcon name="mic" size={20} color="#fff" />
               )}
@@ -338,6 +378,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     flexShrink: 0,
+  },
+  micBtn: {
+    backgroundColor: FLING_COLORS.accent,
+  },
+  stopBtn: {
+    backgroundColor: FLING_COLORS.accent2,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  dimmed: {
+    opacity: 0.35,
+  },
+  fieldRecording: {
+    opacity: 0.45,
   },
   counter: {
     marginTop: 6,

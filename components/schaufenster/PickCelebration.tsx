@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import { PICK_CELEBRATION } from '@/lib/marketingCopy';
 
 type Props = {
   visible: boolean;
@@ -43,20 +44,20 @@ export function PickCelebration({
     wash.value = 1;
 
     textOpacity.value = withDelay(
-      120,
-      withTiming(1, { duration: 380, easing: Easing.out(Easing.quad) }),
+      90,
+      withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) }),
     );
     textScale.value = withDelay(
-      120,
+      90,
       withSequence(
-        withTiming(1.03, { duration: 280, easing: Easing.out(Easing.back(1.3)) }),
-        withTiming(1, { duration: 160 }),
+        withTiming(1.03, { duration: 220, easing: Easing.out(Easing.back(1.3)) }),
+        withTiming(1, { duration: 130 }),
       ),
     );
 
     const t = setTimeout(() => {
       finishedRef.current();
-    }, 2200);
+    }, 1750);
 
     return () => clearTimeout(t);
   }, [visible, wash, textOpacity, textScale]);
@@ -86,8 +87,8 @@ export function PickCelebration({
             textWrapStyle,
           ]}
         >
-          <Text style={styles.line1}>Jetzt 24h dein Abenteuer.</Text>
-          <Text style={styles.line2}>Dein Pick.</Text>
+          <Text style={styles.line1}>{PICK_CELEBRATION.line1}</Text>
+          <Text style={styles.line2}>{PICK_CELEBRATION.line2}</Text>
           {partnerName ? (
             <Text style={styles.line3}>{partnerName}</Text>
           ) : null}

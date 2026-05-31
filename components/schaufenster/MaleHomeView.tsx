@@ -2,7 +2,13 @@ import { View, Text, Pressable, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { CaptionText, MetaText, TitleText } from '@/components/ui/Typography';
-import { FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import { accentRgba, FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import {
+  MALE_CANNOT_WRITE_FIRST,
+  MALE_VISIBILITY_BODY,
+  MALE_VISIBILITY_TITLE,
+  PICK_TAB_MATCHED_MALE,
+} from '@/lib/marketingCopy';
 import { ProfileFigureWait } from '@/components/graphics';
 import { useAuthStore } from '@/stores/authStore';
 import { DEMO_STATS } from '@/lib/demo';
@@ -21,13 +27,13 @@ export function MaleHomeView({ match }: { match: Match | null }) {
         <Pressable
           onPress={() => router.push(`/chat/${match.id}`)}
           className="mt-4 p-4 rounded-xl border border-accent/30"
-          style={{ backgroundColor: 'rgba(225,21,57,0.1)' }}
+          style={{ backgroundColor: accentRgba(0.1) }}
         >
           <Text
             className="text-accent font-semibold"
             style={{ fontSize: FLING_TYPE.subhead }}
           >
-            Du wurdest ausgewählt · Chat öffnen ›
+            {PICK_TAB_MATCHED_MALE}
           </Text>
         </Pressable>
       ) : (
@@ -36,9 +42,9 @@ export function MaleHomeView({ match }: { match: Match | null }) {
         </View>
       )}
 
-      <TitleText className="text-center mt-4 mb-1">So siehst du aus</TitleText>
-      <CaptionText className="text-center text-fg-3 mb-5">
-        Diskret sichtbar — nur für Frauen in deinem Radius
+      <TitleText className="text-center mt-4 mb-2">{MALE_VISIBILITY_TITLE}</TitleText>
+      <CaptionText className="text-center text-fg-3 mb-5 leading-6 px-2">
+        {MALE_VISIBILITY_BODY}
       </CaptionText>
 
       <View className="items-center mb-5">
@@ -47,12 +53,6 @@ export function MaleHomeView({ match }: { match: Match | null }) {
           style={{ borderRadius: 12, backgroundColor: FLING_COLORS.card }}
         >
           <Image source={{ uri: photo }} className="w-full h-full" contentFit="cover" />
-          <View
-            className="absolute inset-0"
-            style={{
-              backgroundColor: 'transparent',
-            }}
-          />
           <View
             className="absolute inset-0"
             style={{
@@ -67,27 +67,34 @@ export function MaleHomeView({ match }: { match: Match | null }) {
         </View>
       </View>
 
-      <MetaText className="text-center mb-6 normal-case text-fg-4">
+      <MetaText className="text-center mb-4 normal-case text-fg-4">
         Verfügbarkeit: {availabilityLabel} · {profile?.search_radius_km ?? 5} km
       </MetaText>
 
+      <CaptionText className="text-center text-fg-3 mb-6 leading-6 px-2">
+        {MALE_CANNOT_WRITE_FIRST}
+      </CaptionText>
+
       <View className="gap-2">
         {[
-          `Sichtbar für ${DEMO_STATS.male_views} Frauen`,
-          `Radius ${profile?.search_radius_km ?? 5} km`,
-          'Verifiziert',
-        ].map((line) => (
+          { label: 'Status', value: 'Aktiv' },
+          { label: 'Sichtbarkeit', value: 'Sichtbar' },
+          { label: 'Pick', value: match ? 'Offen' : 'Noch kein Pick' },
+        ].map(({ label, value }) => (
           <View
-            key={line}
-            className="py-3 px-4 rounded-xl border border-line"
+            key={label}
+            className="py-3 px-4 rounded-xl border border-line flex-row justify-between items-center"
             style={{ backgroundColor: FLING_COLORS.card }}
           >
-            <CaptionText className="text-fg-2 text-center font-semibold">
-              {line}
-            </CaptionText>
+            <CaptionText className="text-fg-3 font-semibold">{label}</CaptionText>
+            <CaptionText className="text-fg-2 font-semibold">{value}</CaptionText>
           </View>
         ))}
       </View>
+
+      <MetaText className="text-center mt-6 normal-case text-fg-4">
+        Sichtbar für {DEMO_STATS.male_views} Frauen · {profile?.search_radius_km ?? 5} km
+      </MetaText>
     </ScrollView>
   );
 }

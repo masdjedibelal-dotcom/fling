@@ -10,7 +10,7 @@ import Animated, {
 import type { SchaufensterProfile } from '@/lib/types';
 import { getProfileThumbnailUri } from '@/lib/profileMedia';
 import { onlineStatus, tileDistanceLabel } from '@/lib/profileStatus';
-import { FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import { accentRgba, FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { Text } from 'react-native';
 
@@ -82,7 +82,7 @@ export function ProfileTile({
         pointerEvents="none"
         style={[
           StyleSheet.absoluteFillObject,
-          { backgroundColor: 'rgba(225,21,57,0.14)' },
+          { backgroundColor: accentRgba(0.14) },
           overlayStyle,
         ]}
       />

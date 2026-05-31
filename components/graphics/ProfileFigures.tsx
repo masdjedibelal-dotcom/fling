@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, G, Path } from 'react-native-svg';
-import { FLING_COLORS } from '@/lib/designTokens';
+import { accentRgba, FLING_COLORS } from '@/lib/designTokens';
 
 const STROKE = FLING_COLORS.accent;
 const STROKE_SOFT = FLING_COLORS.accent2;
@@ -157,7 +157,7 @@ export function ProfileFigureWait({ size = 200 }: Props) {
         cy={118}
         r={82}
         fill="none"
-        stroke="rgba(225,21,57,0.16)"
+        stroke={accentRgba(0.16)}
         strokeWidth={1}
       />
       <Circle
@@ -165,7 +165,7 @@ export function ProfileFigureWait({ size = 200 }: Props) {
         cy={118}
         r={58}
         fill="none"
-        stroke="rgba(225,21,57,0.1)"
+        stroke={accentRgba(0.1)}
         strokeWidth={1}
       />
       <Path

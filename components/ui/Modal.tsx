@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Modal as RNModal, View, Pressable } from 'react-native';
 import { TitleText, BodyLarge } from './Typography';
 import { Button } from './Button';
-import { FLING_RADIUS, FLING_COLORS } from '@/lib/designTokens';
+import { accentRgba, FLING_RADIUS, FLING_COLORS } from '@/lib/designTokens';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -37,7 +37,7 @@ export function ConfirmModal({
         >
           <View
             className="w-14 h-14 rounded-full items-center justify-center mb-4 border border-accent/30"
-            style={{ backgroundColor: 'rgba(225,21,57,0.14)' }}
+            style={{ backgroundColor: accentRgba(0.14) }}
           >
             {icon ?? <TitleText className="text-accent">!</TitleText>}
           </View>

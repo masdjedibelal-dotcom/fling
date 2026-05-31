@@ -1,7 +1,7 @@
 import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import type { LocationMode } from '@/lib/types';
 import { MAX_CITY_LENGTH, MAX_JOB_LENGTH } from '@/lib/constants';
-import { FLING_INPUT_TEXT, FLING_TYPE } from '@/lib/designTokens';
+import { FLING_COLORS, FLING_INPUT_TEXT, FLING_TYPE } from '@/lib/designTokens';
 
 function InfoCard({
   label,
@@ -167,7 +167,7 @@ export function ProfileInfoSection({
           className="mt-2 py-2.5 rounded-md border border-line bg-white/5 flex-row items-center justify-center gap-2"
         >
           {detectingLocation ? (
-            <ActivityIndicator size="small" color="#E11539" />
+            <ActivityIndicator size="small" color={FLING_COLORS.accent} />
           ) : (
             <Text
               className="text-fg-2 font-semibold"

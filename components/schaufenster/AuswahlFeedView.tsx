@@ -4,6 +4,7 @@ import { AuswahlHeader } from './AuswahlHeader';
 import { AuswahlProfileFeed } from './AuswahlProfileFeed';
 import { RadiusSheet } from './RadiusSheet';
 import { useAppStore } from '@/stores/appStore';
+import { FLING_COLORS } from '@/lib/designTokens';
 import type { SchaufensterProfile } from '@/lib/types';
 
 export function AuswahlFeedView({
@@ -49,7 +50,7 @@ export function AuswahlFeedView({
     <View className="flex-1">
       {waitingForProfile ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#E11539" />
+          <ActivityIndicator color={FLING_COLORS.accent} />
         </View>
       ) : (
         <AuswahlProfileFeed

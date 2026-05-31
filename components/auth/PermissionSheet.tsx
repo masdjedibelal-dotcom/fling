@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { BottomSheet, BottomSheetPanel } from '@/components/ui/BottomSheet';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import type { FlingIconName } from '@/components/icons/FlingIcon';
-import { FLING_COLORS } from '@/lib/designTokens';
+import { accentRgba, FLING_COLORS } from '@/lib/designTokens';
 
 interface PermissionSheetProps {
   visible: boolean;
@@ -32,7 +32,7 @@ export function PermissionSheet({
       <BottomSheetPanel withHandle={false} className="items-center pt-6">
         <View
           className="w-[72px] h-[72px] rounded-[20px] items-center justify-center mb-4 border border-accent/30"
-          style={{ backgroundColor: 'rgba(225,21,57,0.12)' }}
+          style={{ backgroundColor: accentRgba(0.12) }}
         >
           <FlingIcon name={icon} size={32} color={FLING_COLORS.accent} />
         </View>

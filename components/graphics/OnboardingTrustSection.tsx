@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { BodyLarge } from '@/components/ui/Typography';
+import { TRUST_COPY } from '@/lib/marketingCopy';
 import { DiscretionMark } from './DiscretionMark';
 
 export function OnboardingTrustSection() {
@@ -9,7 +10,7 @@ export function OnboardingTrustSection() {
         <DiscretionMark size={64} />
       </View>
       <BodyLarge className="text-center text-fg-3 leading-7 px-1">
-        Diskretion — Schutz ohne Drama. Keine Spuren nach 24 Stunden.
+        {TRUST_COPY}
       </BodyLarge>
     </View>
   );
