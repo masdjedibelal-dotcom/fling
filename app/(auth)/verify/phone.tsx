@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { View, TextInput, Pressable, Text, Alert } from 'react-native';
+import { View, TextInput, Pressable, Text, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
+import { FlingScrollView } from '@/components/ui/FlingScrollView';
 import { Button } from '@/components/ui/Button';
 import { HeroText, BodyText, BodyLarge, MetaText } from '@/components/ui/Typography';
 import { VerificationProgress } from '@/components/auth/VerificationProgress';
@@ -166,7 +167,14 @@ export default function PhoneVerifyScreen() {
           </BodyLarge>
         </View>
 
-        <View className="flex-1 justify-center px-1">
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+        <FlingScrollView
+          className="flex-1"
+          contentContainerClassName="flex-grow justify-center px-1"
+        >
           <View className="flex-row items-center bg-card border border-line rounded-md px-4 py-3.5">
             <Text
               className="text-white font-mono mr-2"
@@ -184,7 +192,8 @@ export default function PhoneVerifyScreen() {
               style={{ fontSize: FLING_TYPE.body }}
             />
           </View>
-        </View>
+        </FlingScrollView>
+        </KeyboardAvoidingView>
 
         <View className="pb-6 gap-2">
           <Button label="Code senden" loading={loading} onPress={sendOtp} />
@@ -204,7 +213,14 @@ export default function PhoneVerifyScreen() {
         </BodyLarge>
       </View>
 
-      <View className="flex-1 justify-center gap-5">
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+      <FlingScrollView
+        className="flex-1"
+        contentContainerClassName="flex-grow justify-center gap-5"
+      >
         <OtpInput value={otp} onChange={setOtp} />
         <Pressable
           disabled={resendSeconds > 0}
@@ -220,7 +236,8 @@ export default function PhoneVerifyScreen() {
             </Text>
           </MetaText>
         </Pressable>
-      </View>
+      </FlingScrollView>
+      </KeyboardAvoidingView>
 
       <View className="pb-6 gap-2">
         <Button

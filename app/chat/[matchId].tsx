@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Keyboard,
   Platform,
-  ScrollView,
   type ScrollView as ScrollViewType,
 } from 'react-native';
+import { FlingScrollView } from '@/components/ui/FlingScrollView';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
@@ -21,6 +21,8 @@ import { MAX_MESSAGE_LENGTH } from '@/lib/constants';
 import {
   chatPartnerName,
   formatChatPartnerMeta,
+  getPickPartnerPhotoUri,
+  getProfileAvatarUri,
   profilePseudonym,
 } from '@/lib/profileDisplay';
 import { useDiscreetScreen } from '@/hooks/useDiscreetScreen';
@@ -74,14 +76,12 @@ export default function ChatScreen() {
   }
 
   const partnerProfile = isFemale ? match?.male_profile : match?.female_profile;
-  const partnerPhoto =
-    partnerProfile?.photos[partnerProfile.primary_photo_idx ?? 0] ??
-    partnerProfile?.photos[0] ??
-    'https://i.pravatar.cc/200?img=32';
-  const userPhoto =
-    profile?.photos[profile.primary_photo_idx ?? 0] ??
-    profile?.photos[0] ??
-    'https://i.pravatar.cc/200?img=5';
+  const partnerPhoto = getPickPartnerPhotoUri(partnerProfile);
+  const userPhoto = getProfileAvatarUri(
+    profile?.photos,
+    profile?.primary_photo_idx,
+    'https://i.pravatar.cc/200?img=5',
+  );
 
   const partnerName = isFemale
     ? chatPartnerName(
@@ -206,7 +206,7 @@ export default function ChatScreen() {
       />
 
       <Animated.View className="flex-1" style={bodyStyle}>
-        <ScrollView
+        <FlingScrollView
           ref={scrollRef}
           className="flex-1"
           contentContainerClassName="flex-grow justify-end"
@@ -226,7 +226,7 @@ export default function ChatScreen() {
               await markViewed(id);
             }}
           />
-        </ScrollView>
+        </FlingScrollView>
         {composer}
       </Animated.View>
 

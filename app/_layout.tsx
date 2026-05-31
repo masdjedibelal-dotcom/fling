@@ -26,6 +26,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AppGuards } from '@/components/app/AppGuards';
 import { MobilePreviewFrame } from '@/components/app/MobilePreviewFrame';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { FLING_COLORS } from '@/lib/designTokens';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -47,7 +48,9 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView
+      style={{ flex: 1, backgroundColor: FLING_COLORS.bg }}
+    >
       <SafeAreaProvider>
       <MobilePreviewFrame>
         <AppGuards>

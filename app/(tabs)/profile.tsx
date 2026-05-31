@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Pressable, ScrollView, Alert, Text, Linking } from 'react-native';
+import { View, Pressable, Alert, Text, Linking } from 'react-native';
+import { FlingScrollView } from '@/components/ui/FlingScrollView';
 import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { BodyText, BodyLarge } from '@/components/ui/Typography';
@@ -213,7 +214,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen edges={['top']} className="flex-1">
-      <ScrollView className="flex-1 px-5 pt-3" contentContainerClassName="pb-12">
+      <FlingScrollView className="flex-1 px-5 pt-3" contentContainerClassName="pb-12">
         <ProfileHero
           photoUri={mainPhoto}
           displayName={ownProfileName(draft.display_name, draft.pseudonym)}
@@ -299,7 +300,7 @@ export default function ProfileScreen() {
             </Text>
           </Pressable>
         )}
-      </ScrollView>
+      </FlingScrollView>
 
       {editDraft ? (
         <ProfileEditModal

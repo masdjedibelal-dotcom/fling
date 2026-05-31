@@ -1,52 +1,64 @@
 import { useState } from 'react';
-import { View, Pressable, Text } from 'react-native';
-import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
+import { View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { BackButton } from '@/components/ui/BackButton';
 import { ScreenTitle, BodyLarge, MetaText } from '@/components/ui/Typography';
 import { PermissionSheet } from '@/components/auth/PermissionSheet';
+import { ProfilePhotoSlotPreview } from '@/components/profile/ProfilePhotoSlotPreview';
 import { useAuthStore } from '@/stores/authStore';
 import { updateUserProfile } from '@/lib/api';
 import { MAX_PHOTOS } from '@/lib/constants';
-import {
-  getProfileMediaUri,
-  isProfileVideo,
-  MAX_PROFILE_VIDEO_SEC,
-  toProfileVideoStorage,
-} from '@/lib/profileMedia';
+import { pickProfileMediaFromGallery } from '@/lib/pickProfileMedia';
+import { MAX_PROFILE_VIDEO_SEC, toProfileVideoStorage } from '@/lib/profileMedia';
+
+const SLOT_W = 100;
+const SLOT_H = 120;
+
+function normalizeSlots(photos: string[]): string[] {
+  return Array.from({ length: MAX_PHOTOS }, (_, i) => photos[i] ?? '');
+}
 
 export default function PhotosScreen() {
   const userId = useAuthStore((s) => s.userId);
   const profile = useAuthStore((s) => s.profile);
   const setProfile = useAuthStore((s) => s.setProfile);
-  const [photos, setPhotos] = useState<string[]>(profile?.photos ?? []);
+  const [photos, setPhotos] = useState<string[]>(() =>
+    normalizeSlots(profile?.photos ?? []),
+  );
   const [permOpen, setPermOpen] = useState(false);
+  const [pendingSlot, setPendingSlot] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const addMedia = async (slot: number) => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      quality: 0.85,
-      videoMaxDuration: MAX_PROFILE_VIDEO_SEC,
-    });
-    if (result.canceled || !result.assets[0]) return;
-    const asset = result.assets[0];
-    const uri =
-      asset.type === 'video'
-        ? toProfileVideoStorage(asset.uri)
-        : asset.uri;
-    const next = [...photos];
+  const slots = normalizeSlots(photos);
+  const filledCount = slots.filter(Boolean).length;
+
+  const applyPickedMedia = (slot: number, uri: string) => {
+    const next = normalizeSlots(photos);
     next[slot] = uri;
-    setPhotos(next.filter(Boolean).slice(0, MAX_PHOTOS));
+    setPhotos(next);
+  };
+
+  const openGalleryForSlot = async (slot: number) => {
+    const picked = await pickProfileMediaFromGallery({ allowVideo: true });
+    if (!picked) return;
+    const stored = picked.isVideo
+      ? toProfileVideoStorage(picked.uri)
+      : picked.uri;
+    applyPickedMedia(slot, stored);
+  };
+
+  const handleSlotPress = (slot: number) => {
+    if (filledCount >= MAX_PHOTOS && !slots[slot]) return;
+    setPendingSlot(slot);
+    setPermOpen(true);
   };
 
   const save = async () => {
     if (!userId || !profile) return;
     setSaving(true);
-    const cleaned = photos.filter(Boolean).slice(0, MAX_PHOTOS);
+    const cleaned = slots.filter(Boolean).slice(0, MAX_PHOTOS);
     await updateUserProfile(userId, {
       photos: cleaned,
       primary_photo_idx: 0,
@@ -55,9 +67,6 @@ export default function PhotosScreen() {
     setSaving(false);
     router.back();
   };
-
-  const slots = Array.from({ length: MAX_PHOTOS }, (_, i) => photos[i]);
-  const filledCount = photos.filter(Boolean).length;
 
   return (
     <Screen className="px-4 pt-2">
@@ -73,27 +82,22 @@ export default function PhotosScreen() {
       <View className="flex-row flex-wrap gap-3 justify-center mb-8">
         {slots.map((uri, i) => (
           <Pressable
-            key={i}
-            onPress={() => {
-              if (filledCount >= MAX_PHOTOS && !uri) return;
-              void addMedia(i);
+            key={`slot-${i}-${uri || 'empty'}`}
+            onPress={() => handleSlotPress(i)}
+            style={{
+              width: SLOT_W,
+              height: SLOT_H,
+              borderRadius: 10,
+              overflow: 'hidden',
+              borderWidth: i === 0 ? 2 : 1,
+              borderColor: i === 0 ? '#C41E3A' : 'rgba(255,255,255,0.12)',
+              backgroundColor: '#1A1214',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
-            className={`w-[100px] h-[120px] rounded-md overflow-hidden border ${
-              i === 0 ? 'border-accent' : 'border-line'
-            } bg-card items-center justify-center`}
           >
             {uri ? (
-              isProfileVideo(uri) ? (
-                <View className="w-full h-full bg-bg2 items-center justify-center">
-                  <Text className="text-fg-2 text-xs font-semibold">▶ Video</Text>
-                </View>
-              ) : (
-                <Image
-                  source={{ uri: getProfileMediaUri(uri) }}
-                  className="w-full h-full"
-                  contentFit="cover"
-                />
-              )
+              <ProfilePhotoSlotPreview uri={uri} width={SLOT_W} height={SLOT_H} />
             ) : (
               <MetaText className="text-fg-4 text-2xl normal-case">+</MetaText>
             )}
@@ -112,15 +116,17 @@ export default function PhotosScreen() {
         visible={permOpen}
         icon="images"
         title="Medien auswählen"
-        description="Fotos oder kurze Videos (max. 3 Sekunden) für dein Profil."
-        primaryLabel="Aus Mediathek wählen"
+        description="Wähle Fotos oder kurze Videos (max. 3 Sekunden) aus deiner Galerie für dein Profil."
+        primaryLabel="Galerie öffnen"
         secondaryLabel="Abbrechen"
         onPrimary={() => {
           setPermOpen(false);
-          const emptySlot = slots.findIndex((p) => !p);
-          void addMedia(emptySlot >= 0 ? emptySlot : 0);
+          if (pendingSlot != null) void openGalleryForSlot(pendingSlot);
         }}
-        onSecondary={() => setPermOpen(false)}
+        onSecondary={() => {
+          setPermOpen(false);
+          setPendingSlot(null);
+        }}
       />
     </Screen>
   );

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, TextInput, Pressable, ScrollView } from 'react-native';
+import { View, TextInput, Pressable } from 'react-native';
+import { FlingScrollView } from '@/components/ui/FlingScrollView';
 import { router } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
@@ -60,7 +61,7 @@ export default function EditProfileScreen() {
         <ScreenTitle className="flex-1">Profil bearbeiten</ScreenTitle>
       </View>
 
-      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
+      <FlingScrollView className="flex-1">
         <SectionLabel>Bio</SectionLabel>
         <TextInput
           value={bio}
@@ -116,7 +117,7 @@ export default function EditProfileScreen() {
         </View>
 
         <Button label="Speichern" loading={saving} onPress={save} />
-      </ScrollView>
+      </FlingScrollView>
     </Screen>
   );
 }

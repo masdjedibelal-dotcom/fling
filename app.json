@@ -3,20 +3,20 @@
     "name": "Fling",
     "slug": "fling",
     "description": "Such dir dein Abenteuer.",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "fling",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover",
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#120A0C"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.flingapp.app",
-      "buildNumber": "6",
+      "buildNumber": "8",
       "infoPlist": {
         "NSCameraUsageDescription": "Fling benötigt die Kamera für Ausweis-Scan und Live-Selfie.",
         "NSPhotoLibraryUsageDescription": "Fling benötigt Zugriff auf deine Fotos für Profilbilder.",
@@ -27,7 +27,11 @@
     },
     "android": {
       "package": "com.flingapp.app",
-      "versionCode": 6,
+      "versionCode": 8,
+      "permissions": [
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO"
+      ],
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#120A0C",
@@ -40,8 +44,9 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#120A0C",
-          "image": "./assets/splash.png",
-          "resizeMode": "cover"
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "imageWidth": 280
         }
       ],
       "expo-router",

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Pressable, Text, Linking, ScrollView } from 'react-native';
+import { View, Pressable, Text, Linking } from 'react-native';
+import { FlingScrollView } from '@/components/ui/FlingScrollView';
 import { router } from 'expo-router';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import { Screen } from '@/components/ui/Screen';
@@ -53,7 +54,7 @@ export default function AgbScreen() {
 
   return (
     <Screen className="flex-1">
-      <ScrollView className="flex-1 px-5 pt-2" contentContainerClassName="pb-6">
+      <FlingScrollView className="flex-1 px-5 pt-2" contentContainerClassName="pb-6">
         <View className="flex-row items-center gap-2.5 mb-4">
           <BackButton />
           <StepLabel>Bedingungen</StepLabel>
@@ -126,7 +127,7 @@ export default function AgbScreen() {
             </Text>
           </CheckboxRow>
         </View>
-      </ScrollView>
+      </FlingScrollView>
 
       <View className="px-5 pb-6 pt-2">
         <Button

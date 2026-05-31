@@ -18,7 +18,7 @@ import {
   PICK_TAB_EMPTY_FEMALE,
   PICK_TAB_EMPTY_MALE,
 } from '@/lib/marketingCopy';
-import { Image } from 'expo-image';
+import { AvatarImage } from '@/components/ui/AvatarImage';
 import { ProfileFigureTwo, ProfileFigureWait } from '@/components/graphics';
 
 export default function PickScreen() {
@@ -70,13 +70,11 @@ export default function PickScreen() {
           onPress={() => router.push(`/chat/${match.id}`)}
           className="items-center w-full"
         >
-          <View className="w-32 h-32 rounded-full overflow-hidden border-2 border-accent mb-4 bg-card">
-            <Image
-              key={`pick-${match.id}-${match.male_id}-${partnerPhoto}`}
-              source={{ uri: partnerPhoto }}
-              className="w-full h-full"
-              contentFit="cover"
-              recyclingKey={`pick-${match.male_id}-${partnerPhoto}`}
+          <View className="mb-4 rounded-full border-2 border-accent">
+            <AvatarImage
+              uri={partnerPhoto}
+              size={128}
+              recyclingKey={`pick-${match.id}-${match.male_id}-${partnerPhoto}`}
             />
           </View>
           <TitleText className="mb-2 text-center">{afterCopy.title}</TitleText>

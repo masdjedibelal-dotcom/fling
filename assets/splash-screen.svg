@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1284" height="2778" viewBox="0 0 1284 2778">
   <rect width="1284" height="2778" fill="#120A0C"/>
-  <text x="642" y="1420" text-anchor="middle" font-family="Georgia, serif" font-weight="400" font-style="italic" font-size="268" letter-spacing="-8" fill="#FFFFFF">fling</text>
-  <rect x="462" y="1460" width="360" height="10" rx="2" fill="#E11539"/>
+  <!-- Generiert via npm run icons aus fling-wordmark-dark.svg -->
 </svg>
