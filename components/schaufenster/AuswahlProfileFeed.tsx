@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshControl, View, FlatList, type ListRenderItem } from 'react-native';
+import type { ReactNode } from 'react';
+import { RefreshControl, View, type ListRenderItem } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
 import { SafeTopChrome } from '@/components/ui/SafeTopChrome';
 import { ProfileFullscreenPage } from '@/components/schaufenster/ProfileFullscreenPage';
 import { FLING_COLORS } from '@/lib/designTokens';
@@ -13,7 +15,7 @@ type Props = {
   showPick?: boolean;
   scrollEnabled?: boolean;
   /** Fixiert über dem Feed (z. B. Zurück) */
-  fixedTopOverlay?: React.ReactNode;
+  fixedTopOverlay?: ReactNode;
   /** Feed-Tab: AuswahlHeader schwebt über dem Foto */
   hasFeedHeader?: boolean;
   onRefresh?: () => void;
@@ -35,6 +37,7 @@ export function AuswahlProfileFeed({
   onInitialScrollDone,
 }: Props) {
   const [pageHeight, setPageHeight] = useState(0);
+  const [pickTouchActive, setPickTouchActive] = useState(false);
   const listRef = useRef<FlatList<SchaufensterProfile>>(null);
   const didScrollToInitial = useRef(false);
 
@@ -76,6 +79,7 @@ export function AuswahlProfileFeed({
         userId={userId}
         showPick={showPick}
         hasFeedHeader={hasFeedHeader}
+        onPickTouchActive={setPickTouchActive}
       />
     ),
     [pageHeight, userId, showPick, hasFeedHeader],
@@ -102,7 +106,7 @@ export function AuswahlProfileFeed({
           snapToAlignment="start"
           disableIntervalMomentum
           getItemLayout={getItemLayout}
-          scrollEnabled={scrollEnabled}
+          scrollEnabled={scrollEnabled && !pickTouchActive}
           refreshControl={
             onRefresh ? (
               <RefreshControl

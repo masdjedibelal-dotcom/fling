@@ -45,6 +45,9 @@ export function BioPreview({
     [isControlled, onExpandedChange],
   );
 
+  const expand = useCallback(() => setExpanded(true), [setExpanded]);
+  const collapse = useCallback(() => setExpanded(false), [setExpanded]);
+
   const trimmed = bio.trim();
   const maxExpandedH = Math.round(screenH * 0.34);
   const showMore = truncated || trimmed.length > CHAR_MORE_HINT;
@@ -67,7 +70,7 @@ export function BioPreview({
         onLayout={(e) => setMeasureWidth(e.nativeEvent.layout.width)}
       >
         <Pressable
-          onPress={() => setExpanded(false)}
+          onPress={collapse}
           accessibilityRole="button"
           accessibilityLabel="Bio einklappen"
         >
@@ -79,14 +82,25 @@ export function BioPreview({
           >
             <CalloutText className="text-white/90">{trimmed}</CalloutText>
           </ScrollView>
-          <CaptionText className="text-fg-3 font-semibold mt-1">weniger</CaptionText>
+          <Pressable
+            onPress={collapse}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Bio einklappen"
+          >
+            <CaptionText className="text-fg-3 font-semibold mt-1">weniger</CaptionText>
+          </Pressable>
         </Pressable>
       </View>
     );
   }
 
-  const preview = (
-    <>
+  return (
+    <View
+      className={className}
+      style={[styles.root, { maxWidth: screenW * 0.92 }]}
+      onLayout={(e) => setMeasureWidth(e.nativeEvent.layout.width)}
+    >
       {measureWidth > 0 ? (
         <View pointerEvents="none" style={styles.measureWrap}>
           <CalloutText
@@ -99,34 +113,34 @@ export function BioPreview({
         </View>
       ) : null}
 
-      <CalloutText className="text-white/90" numberOfLines={PREVIEW_LINES}>
-        {trimmed}
-      </CalloutText>
-
-      {showMore ? (
-        <CaptionText className="text-fg-3 font-semibold mt-1">mehr</CaptionText>
-      ) : null}
-    </>
-  );
-
-  return (
-    <View
-      className={className}
-      style={[styles.root, { maxWidth: screenW * 0.92 }]}
-      onLayout={(e) => setMeasureWidth(e.nativeEvent.layout.width)}
-    >
       {showMore ? (
         <Pressable
-          onPress={() => setExpanded(true)}
+          onPress={expand}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Bio vollständig anzeigen"
         >
-          {preview}
+          <CalloutText className="text-white/90" numberOfLines={PREVIEW_LINES}>
+            {trimmed}
+          </CalloutText>
         </Pressable>
       ) : (
-        preview
+        <CalloutText className="text-white/90" numberOfLines={PREVIEW_LINES}>
+          {trimmed}
+        </CalloutText>
       )}
+
+      {showMore ? (
+        <Pressable
+          onPress={expand}
+          hitSlop={{ top: 8, bottom: 12, left: 12, right: 24 }}
+          accessibilityRole="button"
+          accessibilityLabel="Bio vollständig anzeigen"
+          style={styles.moreBtn}
+        >
+          <CaptionText className="text-fg-3 font-semibold mt-1">mehr</CaptionText>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -143,4 +157,7 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   measureText: {},
+  moreBtn: {
+    alignSelf: 'flex-start',
+  },
 });

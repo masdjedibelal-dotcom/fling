@@ -27,6 +27,7 @@ import { onlineStatus } from '@/lib/profileStatus';
 import { profilePseudonym } from '@/lib/profileDisplay';
 import type { SchaufensterProfile } from '@/lib/types';
 import { FLING_TYPE } from '@/lib/designTokens';
+import { getPickFabInsets } from '@/lib/pickFabLayout';
 import { getChromeHeaderHeight } from '@/lib/safeAreaLayout';
 import { router } from 'expo-router';
 
@@ -64,6 +65,7 @@ export function ProfileFullscreenPage({
   showPick = true,
   topOverlay,
   hasFeedHeader = false,
+  onPickTouchActive,
 }: {
   profile: SchaufensterProfile;
   pageHeight: number;
@@ -71,6 +73,7 @@ export function ProfileFullscreenPage({
   showPick?: boolean;
   topOverlay?: ReactNode;
   hasFeedHeader?: boolean;
+  onPickTouchActive?: (active: boolean) => void;
 }) {
   const insets = useSafeAreaInsets();
   const { width } = useAppDimensions();
@@ -89,7 +92,12 @@ export function ProfileFullscreenPage({
   const { dotColor } = onlineStatus(profile);
   const photo = profile.photos[photoIdx] ?? profile.photos[0];
   const count = profile.photos.length;
-  const bottomInset = Math.max(insets.bottom, 12) + 8;
+  const {
+    bottom: bottomInset,
+    reserveBottom: pickReserveBottom,
+    reserveRight: pickReserveRight,
+    photoTapBottom,
+  } = getPickFabInsets(insets.bottom);
   const chromeTop = getChromeHeaderHeight(insets.top);
   const hasTopChrome = hasFeedHeader || Boolean(topOverlay);
   const gestureTop = hasTopChrome ? chromeTop : 0;
@@ -208,12 +216,13 @@ export function ProfileFullscreenPage({
       {count > 1 ? (
         <GestureDetector gesture={pan}>
           <View
+            pointerEvents="box-none"
             style={{
               position: 'absolute',
               top: gestureTop,
               left: 0,
-              right: 0,
-              bottom: 0,
+              right: pickReserveRight,
+              bottom: photoTapBottom,
             }}
           />
         </GestureDetector>
@@ -262,8 +271,8 @@ export function ProfileFullscreenPage({
         style={{
           bottom: bottomInset,
           paddingRight: showPick && userId ? 88 : 16,
-          zIndex: bioExpanded ? 40 : undefined,
-          elevation: bioExpanded ? 40 : undefined,
+          zIndex: 45,
+          elevation: 45,
         }}
         pointerEvents="box-none"
       >
@@ -315,7 +324,7 @@ export function ProfileFullscreenPage({
               position: 'absolute',
               top: gestureTop,
               left: 0,
-              bottom: 0,
+              bottom: photoTapBottom,
               width: width * 0.28,
               zIndex: 30,
               elevation: 30,
@@ -330,7 +339,7 @@ export function ProfileFullscreenPage({
               position: 'absolute',
               top: gestureTop,
               right: 0,
-              bottom: 0,
+              bottom: photoTapBottom,
               width: width * 0.28,
               zIndex: 30,
               elevation: 30,
@@ -347,6 +356,7 @@ export function ProfileFullscreenPage({
             bottomInset={bottomInset}
             onTap={openPickFlow}
             onHoldComplete={openCelebrationOrReplace}
+            onTouchActive={onPickTouchActive}
           />
           <PickConfirmModal
             visible={confirmOpen}

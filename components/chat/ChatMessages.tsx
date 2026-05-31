@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, Platform, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
@@ -137,78 +137,102 @@ function VoiceNotePlayer({
   );
 }
 
+function isViewOnceImage(msg: Message): boolean {
+  if (msg.message_type !== 'image' || !msg.media_url) return false;
+  return msg.view_once !== false;
+}
+
+function isPartnerMessage(
+  msg: Message,
+  viewerId: string,
+  viewerIsFemale: boolean,
+): boolean {
+  if (msg.sender_id) return msg.sender_id !== viewerId;
+  return msg.is_female !== viewerIsFemale;
+}
+
 function ViewOnceBubble({
   msg,
   isPartner,
+  opened,
   hiddenHistory,
   onOpen,
 }: {
   msg: Message;
   isPartner: boolean;
+  opened: boolean;
   hiddenHistory?: boolean;
   onOpen: () => void;
 }) {
-  const opened = Boolean(msg.viewed_at);
-  /** Empfangenes Einmal-Foto: nach dem Öffnen nicht erneut. Eigene Sendung: jederzeit. */
-  const consumed = msg.view_once && isPartner && opened;
-  const canOpen = !hiddenHistory && Boolean(msg.media_url) && !consumed;
+  /** Empfangenes Einmal-Foto: nach Öffnen nicht erneut, kein Bild mehr. */
+  const consumed = isPartner && opened;
+  const canOpen = !hiddenHistory && !consumed;
 
   return (
     <Pressable
       onPress={canOpen ? onOpen : undefined}
       disabled={!canOpen}
-      className={`px-3.5 py-2.5 ${
+      accessibilityRole="button"
+      accessibilityLabel={
+        consumed ? 'Einmal-Foto bereits geöffnet' : 'Einmal-Foto öffnen'
+      }
+      className={`px-3.5 py-2.5 min-w-[148px] ${
         isPartner ? 'bg-accent' : 'bg-card border border-line'
       }`}
       style={{
         borderRadius: FLING_RADIUS.bubble,
         borderBottomLeftRadius: isPartner ? FLING_RADIUS.bubbleTail : FLING_RADIUS.bubble,
         borderBottomRightRadius: isPartner ? FLING_RADIUS.bubble : FLING_RADIUS.bubbleTail,
-        opacity: consumed ? 0.5 : 1,
+        opacity: consumed ? 0.55 : 1,
         backgroundColor: consumed
           ? isPartner
-            ? 'rgba(196, 30, 58, 0.45)'
+            ? 'rgba(255,255,255,0.12)'
             : 'rgba(255,255,255,0.06)'
           : undefined,
       }}
     >
-      <HiddenHistoryShell hidden={hiddenHistory}>
-        <View className="flex-row items-center gap-2.5">
+      <View className="flex-row items-center gap-2.5">
+        {!consumed ? (
           <View
             className="w-9 h-9 rounded-full items-center justify-center"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
           >
             <FlingIcon name="camera" size={18} color="#fff" />
           </View>
-          <View>
-            <Text
-              className="text-white font-semibold"
-              style={{ fontSize: FLING_TYPE.subhead }}
-            >
-              Foto
-            </Text>
-            <Text
-              className="text-white/60 mt-0.5"
-              style={{ fontSize: FLING_TYPE.caption2 }}
-            >
-              {hiddenHistory
-                ? 'Verlauf unsichtbar'
-                : consumed
-                  ? 'Geöffnet'
-                  : isPartner
-                    ? 'Tippen zum Öffnen'
-                    : 'Tippen zum Ansehen'}
-            </Text>
+        ) : (
+          <View
+            className="w-9 h-9 rounded-full items-center justify-center border border-white/20"
+            style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
+          >
+            <FlingIcon name="check" size={16} color="rgba(255,255,255,0.5)" />
           </View>
+        )}
+        <View>
+          <Text
+            className={`font-semibold ${consumed ? 'text-white/45' : 'text-white'}`}
+            style={{ fontSize: FLING_TYPE.subhead }}
+          >
+            {consumed ? 'Geöffnet' : 'Einmal-Foto'}
+          </Text>
+          <Text
+            className="mt-0.5"
+            style={{
+              fontSize: FLING_TYPE.caption2,
+              color: consumed ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.6)',
+            }}
+          >
+            {hiddenHistory
+              ? 'Verlauf unsichtbar'
+              : consumed
+                ? 'Nicht mehr verfügbar'
+                : isPartner
+                  ? 'Tippen zum Öffnen'
+                  : 'Tippen zum Ansehen'}
+          </Text>
         </View>
-      </HiddenHistoryShell>
+      </View>
     </Pressable>
   );
-}
-
-function isPartnerMessage(msg: Message, viewerId: string): boolean {
-  if (msg.sender_id) return msg.sender_id !== viewerId;
-  return false;
 }
 
 function Bubble({
@@ -217,6 +241,8 @@ function Bubble({
   partnerPhotoUri,
   userPhotoUri,
   viewerId,
+  viewerIsFemale,
+  isMessageOpened,
   onOpenPhoto,
 }: {
   msg: Message;
@@ -224,18 +250,22 @@ function Bubble({
   partnerPhotoUri: string;
   userPhotoUri: string;
   viewerId: string;
+  viewerIsFemale: boolean;
+  isMessageOpened: (msg: Message) => boolean;
   onOpenPhoto: (msg: Message, isPartner: boolean) => void;
 }) {
-  const isPartner = isPartnerMessage(msg, viewerId);
+  const isPartner = isPartnerMessage(msg, viewerId, viewerIsFemale);
   const type = msg.message_type ?? 'text';
+  const opened = isMessageOpened(msg);
 
   let content: React.ReactNode;
 
-  if (type === 'image' && msg.view_once) {
+  if (isViewOnceImage(msg)) {
     content = (
       <ViewOnceBubble
         msg={msg}
         isPartner={isPartner}
+        opened={opened}
         hiddenHistory={hiddenHistory}
         onOpen={() => onOpenPhoto(msg, isPartner)}
       />
@@ -330,6 +360,7 @@ export function ChatMessages({
   partnerPhotoUri,
   userPhotoUri,
   viewerId,
+  viewerIsFemale,
   onMarkViewed,
 }: {
   blurred: Message[];
@@ -337,19 +368,42 @@ export function ChatMessages({
   partnerPhotoUri: string;
   userPhotoUri: string;
   viewerId: string;
+  viewerIsFemale: boolean;
   onMarkViewed: (messageId: string) => Promise<void>;
 }) {
   const [photoPreview, setPhotoPreview] = useState<{
     id: string;
     uri: string;
   } | null>(null);
+  const [openedLocally, setOpenedLocally] = useState<Set<string>>(() => new Set());
+
+  const isMessageOpened = useCallback(
+    (msg: Message) => Boolean(msg.viewed_at) || openedLocally.has(msg.id),
+    [openedLocally],
+  );
+
+  const markPartnerViewOnceOpened = useCallback(
+    (msg: Message, isPartner: boolean) => {
+      if (!isViewOnceImage(msg) || !isPartner || isMessageOpened(msg)) return;
+      setOpenedLocally((prev) => {
+        const next = new Set(prev);
+        next.add(msg.id);
+        return next;
+      });
+      void onMarkViewed(msg.id);
+    },
+    [isMessageOpened, onMarkViewed],
+  );
 
   const openPhoto = (msg: Message, isPartner: boolean) => {
     if (!msg.media_url) return;
-    if (msg.view_once && isPartner && msg.viewed_at) return;
 
-    if (msg.view_once && isPartner && !msg.viewed_at) {
-      void onMarkViewed(msg.id);
+    if (isViewOnceImage(msg) && isPartner && isMessageOpened(msg)) {
+      return;
+    }
+
+    if (isViewOnceImage(msg) && isPartner) {
+      markPartnerViewOnceOpened(msg, isPartner);
     }
 
     setPhotoPreview({
@@ -373,6 +427,8 @@ export function ChatMessages({
             partnerPhotoUri={partnerPhotoUri}
             userPhotoUri={userPhotoUri}
             viewerId={viewerId}
+            viewerIsFemale={viewerIsFemale}
+            isMessageOpened={isMessageOpened}
             onOpenPhoto={openPhoto}
           />
         ))}
@@ -397,6 +453,8 @@ export function ChatMessages({
             partnerPhotoUri={partnerPhotoUri}
             userPhotoUri={userPhotoUri}
             viewerId={viewerId}
+            viewerIsFemale={viewerIsFemale}
+            isMessageOpened={isMessageOpened}
             onOpenPhoto={openPhoto}
           />
         ))}

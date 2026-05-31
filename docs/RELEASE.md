@@ -18,6 +18,7 @@ Gleiche Werte in `package.json`, `codemagic.yaml` (`EXPO_PUBLIC_APP_VERSION`) un
 
 ### 1. Code & Qualität
 
+- [ ] `npm run icons` (Splash, App-Icon, Android aus SVG neu generieren)
 - [ ] `npm run lint` ohne Fehler
 - [ ] App lokal auf Gerät/Simulator durchgetestet (Welcome, Onboarding, Auswahl, Pick, Chat)
 - [ ] Änderungen auf `main` gepusht (Codemagic triggert bei Push auf `main`)

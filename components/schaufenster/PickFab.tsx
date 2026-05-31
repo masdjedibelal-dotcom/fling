@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -34,6 +35,8 @@ type Props = {
   onTap: () => void;
   onHoldComplete: () => void;
   bottomInset?: number;
+  /** Feed-Scroll während Hold/Tap pausieren */
+  onTouchActive?: (active: boolean) => void;
 };
 
 function stageHaptic() {
@@ -77,6 +80,7 @@ export function PickFab({
   onTap,
   onHoldComplete,
   bottomInset = 16,
+  onTouchActive,
 }: Props) {
   const progress = useSharedValue(0);
   const maxScaleSv = useSharedValue(28);
@@ -130,6 +134,7 @@ export function PickFab({
 
   const startHold = () => {
     if (disabled) return;
+    onTouchActive?.(true);
     pressedAt.current = Date.now();
     holdTriggered.current = false;
     hapticTimers.current.forEach(clearTimeout);
@@ -146,6 +151,7 @@ export function PickFab({
   };
 
   const endHold = () => {
+    onTouchActive?.(false);
     if (disabled) return;
     hapticTimers.current.forEach(clearTimeout);
     const heldMs = Date.now() - pressedAt.current;
@@ -222,13 +228,15 @@ export function PickFab({
         pointerEvents="box-none"
         style={[styles.anchor, { right: FAB_RIGHT, bottom: bottomInset }]}
       >
-        <Pressable
+        <TouchableOpacity
           disabled={disabled}
+          activeOpacity={1}
           onPressIn={startHold}
           onPressOut={endHold}
           accessibilityRole="button"
           accessibilityLabel="Pick — tippen zum Bestätigen, gedrückt halten"
           style={styles.hit}
+          hitSlop={{ top: 12, right: 12, bottom: 16, left: 12 }}
         >
           <Animated.View
             style={[
@@ -244,7 +252,7 @@ export function PickFab({
               disabled ? styles.btnDisabled : null,
             ]}
           />
-        </Pressable>
+        </TouchableOpacity>
         <Animated.View style={[styles.iconLayer, iconStyle]} pointerEvents="none">
           <FlingIcon name="pick" size={26} color="#fff" />
         </Animated.View>
@@ -258,8 +266,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: SIZE,
     height: SIZE,
-    zIndex: 50,
-    elevation: 50,
+    zIndex: 200,
+    elevation: 200,
     overflow: 'visible',
   },
   hit: {

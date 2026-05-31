@@ -15,19 +15,22 @@ import { Audio } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import { PhotoSourceSheet } from '@/components/chat/PhotoSourceSheet';
-import { CHAT_INPUT_PLACEHOLDER } from '@/lib/marketingCopy';
 import { ViewOnceCaptureModal } from '@/components/chat/ViewOnceCaptureModal';
 import { ViewOncePhotoPreview } from '@/components/chat/ViewOncePhotoPreview';
 import { VoiceRecordingWaveform } from '@/components/chat/VoiceRecordingWaveform';
-import { FLING_COLORS, FLING_BUTTON_GRADIENT, FLING_TOUCH, FLING_TYPE } from '@/lib/designTokens';
+import { FLING_COLORS, FLING_BUTTON_GRADIENT, FLING_TYPE } from '@/lib/designTokens';
 import { MAX_MESSAGE_LENGTH, MESSAGE_LIMIT_HINT } from '@/lib/constants';
 import { triggerHaptic } from '@/lib/haptics';
 
-const BAR_H = FLING_TOUCH.bar;
+/** Kompakter als Standard-Tab-Bar — klebt an der Tastatur */
+const BTN_SIZE = 36;
 const INPUT_FONT = FLING_TYPE.body;
 const INPUT_LINE_H = 22;
-const INPUT_MAX_H = 88;
-const INPUT_V_PAD = (BAR_H - INPUT_LINE_H) / 2;
+const INPUT_MAX_LINES = 5;
+const INPUT_MAX_H = INPUT_LINE_H * INPUT_MAX_LINES;
+const INPUT_V_PAD = 8;
+const ICON_SIZE = 20;
+const ACTION_ICON_SIZE = 18;
 
 type Props = {
   text: string;
@@ -70,13 +73,13 @@ export function ChatComposer({
   }, [text]);
 
   const hasText = text.trim().length > 0;
+  const multiline = inputContentH > INPUT_LINE_H + 2;
 
   const fieldH = Math.max(
-    BAR_H,
+    BTN_SIZE,
     Math.min(INPUT_MAX_H + INPUT_V_PAD * 2, inputContentH + INPUT_V_PAD * 2),
   );
 
-  /** Eine Quelle: Tastaturhöhe bzw. Safe-Area — kein KeyboardAvoidingView dazu. */
   const bottomPad = (() => {
     if (Platform.OS === 'android') {
       return insets.bottom;
@@ -222,8 +225,8 @@ export function ChatComposer({
           borderTopColor: FLING_COLORS.line,
           backgroundColor: FLING_COLORS.bg,
           paddingBottom: bottomPad,
-          paddingTop: recording ? 0 : 8,
-          paddingHorizontal: 10,
+          paddingTop: recording ? 0 : keyboardVisible ? 6 : 8,
+          paddingHorizontal: keyboardVisible ? 8 : 10,
         }}
       >
         <VoiceRecordingWaveform
@@ -232,20 +235,23 @@ export function ChatComposer({
           startedAt={recordingStartedAt ?? undefined}
         />
 
-        <View className="flex-row items-center gap-2" style={{ minHeight: BAR_H }}>
+        <View
+          className="flex-row gap-1.5"
+          style={{ alignItems: 'flex-end', minHeight: BTN_SIZE }}
+        >
           <Pressable
             onPress={openPhotoSheet}
             disabled={busy || recording}
             style={[styles.iconSlot, recording && styles.dimmed]}
             accessibilityLabel="Foto senden"
           >
-            <FlingIcon name="camera" size={22} color={FLING_COLORS.fg} />
+            <FlingIcon name="camera" size={ICON_SIZE} color={FLING_COLORS.fg} />
           </Pressable>
 
           <View
             style={[
               styles.field,
-              { height: fieldH, maxHeight: INPUT_MAX_H + INPUT_V_PAD * 2 },
+              { height: fieldH },
               recording && styles.fieldRecording,
             ]}
           >
@@ -253,26 +259,28 @@ export function ChatComposer({
               ref={inputRef}
               value={text}
               onChangeText={(t) => onChangeText(t.slice(0, MAX_MESSAGE_LENGTH))}
-              placeholder={
-                recording ? 'Aufnahme läuft…' : CHAT_INPUT_PLACEHOLDER
-              }
+              placeholder={recording ? 'Aufnahme läuft…' : ''}
               placeholderTextColor="rgba(255,255,255,0.38)"
               multiline
               editable={!recording}
               autoCorrect
               spellCheck
               blurOnSubmit={false}
-              scrollEnabled={inputContentH >= INPUT_MAX_H}
+              scrollEnabled={inputContentH >= INPUT_MAX_H - 1}
               nativeID="fling-chat-input"
-              style={styles.input}
-              textAlignVertical="center"
+              style={[
+                styles.input,
+                multiline ? styles.inputMultiline : styles.inputSingle,
+              ]}
               onContentSizeChange={(e) => {
                 const h = Math.ceil(e.nativeEvent.contentSize.height);
                 if (Platform.OS === 'web' && !text.trim()) {
                   setInputContentH(INPUT_LINE_H);
                   return;
                 }
-                setInputContentH(Math.min(INPUT_MAX_H, Math.max(INPUT_LINE_H, h)));
+                setInputContentH(
+                  Math.min(INPUT_MAX_H, Math.max(INPUT_LINE_H, h)),
+                );
               }}
               showSoftInputOnFocus={Platform.OS !== 'web'}
               onFocus={onInputFocus}
@@ -295,7 +303,7 @@ export function ChatComposer({
                 locations={[0, 0.55, 1]}
                 style={StyleSheet.absoluteFillObject}
               />
-              <FlingIcon name="send" size={20} color="#fff" />
+              <FlingIcon name="send" size={ACTION_ICON_SIZE} color="#fff" />
             </Pressable>
           ) : (
             <Pressable
@@ -310,9 +318,9 @@ export function ChatComposer({
               {busy && !recording ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : recording ? (
-                <FlingIcon name="stop" size={18} color="#fff" />
+                <FlingIcon name="stop" size={ACTION_ICON_SIZE} color="#fff" />
               ) : (
-                <FlingIcon name="mic" size={20} color="#fff" />
+                <FlingIcon name="mic" size={ACTION_ICON_SIZE} color="#fff" />
               )}
             </Pressable>
           )}
@@ -337,18 +345,19 @@ export function ChatComposer({
 
 const styles = StyleSheet.create({
   iconSlot: {
-    width: BAR_H,
-    height: BAR_H,
+    width: BTN_SIZE,
+    height: BTN_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   field: {
     flex: 1,
-    borderRadius: 22,
+    borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 14,
-    justifyContent: 'center',
-    minHeight: BAR_H,
+    paddingHorizontal: 12,
+    overflow: 'hidden',
+    minHeight: BTN_SIZE,
   },
   input: {
     flex: 1,
@@ -357,8 +366,6 @@ const styles = StyleSheet.create({
     fontSize: INPUT_FONT,
     lineHeight: INPUT_LINE_H,
     color: '#FFFFFF',
-    paddingTop: INPUT_V_PAD,
-    paddingBottom: INPUT_V_PAD,
     margin: 0,
     maxHeight: INPUT_MAX_H,
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
@@ -370,10 +377,20 @@ const styles = StyleSheet.create({
         }
       : {}),
   },
+  inputSingle: {
+    paddingTop: (BTN_SIZE - INPUT_LINE_H) / 2,
+    paddingBottom: (BTN_SIZE - INPUT_LINE_H) / 2,
+    textAlignVertical: 'center',
+  },
+  inputMultiline: {
+    paddingTop: INPUT_V_PAD,
+    paddingBottom: INPUT_V_PAD,
+    textAlignVertical: 'top',
+  },
   actionBtn: {
-    width: BAR_H,
-    height: BAR_H,
-    borderRadius: BAR_H / 2,
+    width: BTN_SIZE,
+    height: BTN_SIZE,
+    borderRadius: BTN_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -394,7 +411,7 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   counter: {
-    marginTop: 6,
+    marginTop: 4,
     textAlign: 'center',
     fontSize: FLING_TYPE.caption2,
     color: 'rgba(255,255,255,0.32)',
