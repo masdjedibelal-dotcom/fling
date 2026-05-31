@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -38,7 +37,6 @@ type Props = {
 };
 
 const HEADER_BTN = FLING_TOUCH.min;
-const COMPACT_AVATAR = 32;
 /** Tastaturhöhe ab der der Header vollständig kompakt ist */
 const COLLAPSE_RANGE = 100;
 
@@ -122,15 +120,12 @@ export function ChatHeader({
             accessibilityLabel="Partnerprofil"
             hitSlop={8}
           >
-            <View
-              style={[styles.compactAvatarRing, { borderColor: timerColor }]}
-            >
-              <Image
-                source={{ uri: partnerPhoto }}
-                style={styles.compactAvatar}
-                contentFit="cover"
-              />
-            </View>
+            <TimerRing
+              photoUri={partnerPhoto}
+              progress={progress}
+              color={timerColor}
+              variant="compact"
+            />
           </Pressable>
         </Animated.View>
 
@@ -217,7 +212,12 @@ export function ChatHeader({
         pointerEvents={compactActive ? 'none' : 'auto'}
       >
         <Pressable onPress={onOpenProfile} accessibilityLabel="Partnerprofil">
-          <TimerRing photoUri={partnerPhoto} progress={progress} color={timerColor} />
+          <TimerRing
+            photoUri={partnerPhoto}
+            progress={progress}
+            color={timerColor}
+            variant="large"
+          />
         </Pressable>
         <ChatPartnerName className="mt-2">{partnerName}</ChatPartnerName>
         <Text
@@ -260,20 +260,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 5,
-  },
-  compactAvatarRing: {
-    width: COMPACT_AVATAR + 4,
-    height: COMPACT_AVATAR + 4,
-    borderRadius: (COMPACT_AVATAR + 4) / 2,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: FLING_COLORS.bg,
-  },
-  compactAvatar: {
-    width: COMPACT_AVATAR,
-    height: COMPACT_AVATAR,
-    borderRadius: COMPACT_AVATAR / 2,
   },
   actions: {
     zIndex: 31,

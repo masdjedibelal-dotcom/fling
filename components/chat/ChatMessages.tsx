@@ -3,6 +3,7 @@ import { View, Text, Platform, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
+import { AvatarImage } from '@/components/ui/AvatarImage';
 import { Audio } from 'expo-av';
 import type { Message } from '@/lib/types';
 import { FlingIcon } from '@/components/icons/FlingIcon';
@@ -14,6 +15,31 @@ const mediaBlurWeb = {
   opacity: 0.55,
   userSelect: 'none',
 } as object;
+
+const VIEW_ONCE_W = 200;
+const VIEW_ONCE_H = 260;
+
+/** Dauerhafter Blur über Medien (Einmal-Foto in der Liste — nie scharf). */
+function PermanentBlurShell({ children }: { children: React.ReactNode }) {
+  return (
+    <View className="relative overflow-hidden">
+      <View
+        pointerEvents="none"
+        style={Platform.OS === 'web' ? mediaBlurWeb : undefined}
+      >
+        {children}
+      </View>
+      {Platform.OS !== 'web' ? (
+        <BlurView
+          pointerEvents="none"
+          intensity={72}
+          tint="dark"
+          style={StyleSheet.absoluteFillObject}
+        />
+      ) : null}
+    </View>
+  );
+}
 
 function HiddenHistoryShell({
   hidden,
@@ -50,14 +76,12 @@ const AVATAR = 26;
 
 function MessageAvatar({ uri }: { uri: string }) {
   return (
-    <View
-      className="rounded-full overflow-hidden bg-card border border-line"
-      style={{ width: AVATAR, height: AVATAR, marginBottom: 2 }}
-    >
-      <Image
-        source={{ uri }}
-        style={{ width: AVATAR, height: AVATAR }}
-        contentFit="cover"
+    <View style={{ marginBottom: 2 }}>
+      <AvatarImage
+        uri={uri}
+        size={AVATAR}
+        recyclingKey={`msg-avatar-${uri}`}
+        style={{ borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.12)' }}
       />
     </View>
   );
@@ -164,9 +188,10 @@ function ViewOnceBubble({
   hiddenHistory?: boolean;
   onOpen: () => void;
 }) {
-  /** Einmal-Foto: nach dem ersten Öffnen nicht erneut (Sender & Empfänger). */
+  /** Einmal-Foto: in der Liste immer verschwommen; Vollbild nur einmal. */
   const consumed = opened;
   const canOpen = !hiddenHistory && !consumed;
+  const uri = msg.media_url ?? '';
 
   return (
     <Pressable
@@ -176,49 +201,48 @@ function ViewOnceBubble({
       accessibilityLabel={
         consumed ? 'Einmal-Foto bereits geöffnet' : 'Einmal-Foto öffnen'
       }
-      className={`px-3.5 py-2.5 min-w-[148px] ${
-        isPartner ? 'bg-accent' : 'bg-card border border-line'
-      }`}
+      className="overflow-hidden max-w-[200px]"
       style={{
         borderRadius: FLING_RADIUS.bubble,
         borderBottomLeftRadius: isPartner ? FLING_RADIUS.bubbleTail : FLING_RADIUS.bubble,
         borderBottomRightRadius: isPartner ? FLING_RADIUS.bubble : FLING_RADIUS.bubbleTail,
-        opacity: consumed ? 0.55 : 1,
-        backgroundColor: consumed
-          ? isPartner
-            ? 'rgba(255,255,255,0.12)'
-            : 'rgba(255,255,255,0.06)'
-          : undefined,
+        opacity: consumed ? 0.92 : 1,
       }}
     >
-      <View className="flex-row items-center gap-2.5">
-        {!consumed ? (
+      <View style={{ width: VIEW_ONCE_W, height: VIEW_ONCE_H }}>
+        <PermanentBlurShell>
+          <Image
+            source={{ uri }}
+            style={{ width: VIEW_ONCE_W, height: VIEW_ONCE_H }}
+            contentFit="cover"
+          />
+        </PermanentBlurShell>
+
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFillObject, styles.viewOnceOverlay]}
+        >
           <View
-            className="w-9 h-9 rounded-full items-center justify-center"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+            className="w-10 h-10 rounded-full items-center justify-center mb-2"
+            style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
           >
-            <FlingIcon name="camera" size={18} color="#fff" />
+            {consumed ? (
+              <FlingIcon name="check" size={18} color="rgba(255,255,255,0.75)" />
+            ) : (
+              <FlingIcon name="camera" size={20} color="#fff" />
+            )}
           </View>
-        ) : (
-          <View
-            className="w-9 h-9 rounded-full items-center justify-center border border-white/20"
-            style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
-          >
-            <FlingIcon name="check" size={16} color="rgba(255,255,255,0.5)" />
-          </View>
-        )}
-        <View>
           <Text
-            className={`font-semibold ${consumed ? 'text-white/45' : 'text-white'}`}
+            className="font-semibold text-white text-center"
             style={{ fontSize: FLING_TYPE.subhead }}
           >
             {consumed ? 'Geöffnet' : 'Einmal-Foto'}
           </Text>
           <Text
-            className="mt-0.5"
+            className="text-center mt-1 px-3"
             style={{
               fontSize: FLING_TYPE.caption2,
-              color: consumed ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.6)',
+              color: 'rgba(255,255,255,0.75)',
             }}
           >
             {hiddenHistory
@@ -471,3 +495,11 @@ export function ChatMessages({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  viewOnceOverlay: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.28)',
+  },
+});

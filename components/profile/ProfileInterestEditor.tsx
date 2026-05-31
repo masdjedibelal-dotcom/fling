@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, TextInput } from 'react-native';
+import { View, Text, Pressable, TextInput } from 'react-native';
+import { FlingScrollView } from '@/components/ui/FlingScrollView';
 import { SectionLabel, TitleText, MetaText } from '@/components/ui/Typography';
 import { BOTTOM_SHEET_MAX_RATIO } from '@/components/ui/BottomSheet';
 import { BottomSheet, BottomSheetPanel } from '@/components/ui/BottomSheet';
@@ -93,7 +94,7 @@ export function ProfileInterestEditor({
               </Text>
             </Pressable>
           </View>
-          <ScrollView className="max-h-64">
+          <FlingScrollView className="max-h-64">
             <View className="flex-row flex-wrap gap-2 pb-6">
               {available.map((tag) => (
                 <Pressable
@@ -110,7 +111,7 @@ export function ProfileInterestEditor({
                 </Pressable>
               ))}
             </View>
-          </ScrollView>
+          </FlingScrollView>
         </BottomSheetPanel>
       </BottomSheet>
     </View>

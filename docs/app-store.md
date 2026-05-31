@@ -2,7 +2,7 @@
 
 Zentrale Claims: `lib/marketingCopy.ts` (`STORE_SUBLINE`, `APP_CLAIMS`).
 
-## Version 1.0.2
+## Version 1.0.4
 
 ### Untertitel (max. 30 Zeichen)
 
@@ -31,6 +31,20 @@ Frauen wählen bewusst. Männer sind sichtbar, können aber nicht zuerst anschre
 Nur die letzten Nachrichten bleiben im Chat sichtbar. Fotos sind standardmäßig nur einmal sichtbar.
 
 Fling ist für den Moment — nicht für irgendwann.
+
+### Was ist neu (1.0.4)
+
+- Splash & App-Icon: neue Wortmarke (ersetzt altes F-Logo)
+- Tastatur: Tipp außerhalb der Eingabe schließt sie — in Onboarding, Profil und Chat
+- Auswahl-Startseite: einheitlicher Hintergrund oben (Dynamic Island / Statusleiste)
+
+### Was ist neu (1.0.3)
+
+- Chat: flüssigere Tastatur-Animation, kompakter Header bei Eingabe
+- Einmal-Fotos: nur einmal öffnen (auch für dich als Sender)
+- Sprachnotiz: Aufnahme-Wave ohne störenden Hintergrund, Eingabefeld ausgeblendet
+- Pick: Partnerbild bleibt nach „Beim aktuellen Pick bleiben“ sichtbar
+- Pick-Tab und Profil-Anzeige stabiler
 
 ### Was ist neu (1.0.2)
 

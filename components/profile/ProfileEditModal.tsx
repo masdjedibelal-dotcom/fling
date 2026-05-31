@@ -3,8 +3,8 @@ import {
   Text,
   TextInput,
   Pressable,
-  ScrollView,
 } from 'react-native';
+import { FlingScrollView } from '@/components/ui/FlingScrollView';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SectionLabel, TitleText, MetaText } from '@/components/ui/Typography';
 import {
@@ -85,9 +85,8 @@ export function ProfileEditModal({
       <BottomSheetPanel maxHeightRatio={BOTTOM_SHEET_MAX_RATIO} footer={footer}>
         <TitleText className="text-center mb-4">Profil bearbeiten</TitleText>
 
-        <ScrollView
+        <FlingScrollView
           style={{ maxHeight: scrollMaxHeight }}
-          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator
           nestedScrollEnabled
           contentContainerStyle={{ paddingBottom: 12 }}
@@ -156,7 +155,7 @@ export function ProfileEditModal({
           />
 
           <ProfileBioField bio={draft.bio} onChange={(bio) => onChange({ bio })} />
-        </ScrollView>
+        </FlingScrollView>
       </BottomSheetPanel>
     </BottomSheet>
   );

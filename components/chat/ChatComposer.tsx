@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,11 @@ import { ViewOnceCaptureModal } from '@/components/chat/ViewOnceCaptureModal';
 import { ViewOncePhotoPreview } from '@/components/chat/ViewOncePhotoPreview';
 import { VoiceRecordingWaveform } from '@/components/chat/VoiceRecordingWaveform';
 import { FLING_COLORS, FLING_BUTTON_GRADIENT, FLING_TYPE } from '@/lib/designTokens';
-import { MAX_MESSAGE_LENGTH, MESSAGE_LIMIT_HINT } from '@/lib/constants';
+import {
+  MAX_MESSAGE_LENGTH,
+  MAX_VOICE_NOTE_MS,
+  MESSAGE_LIMIT_HINT,
+} from '@/lib/constants';
 import { triggerHaptic } from '@/lib/haptics';
 
 /** Kompakter als Standard-Tab-Bar — klebt an der Tastatur */
@@ -78,6 +82,8 @@ export function ChatComposer({
   const inputRef = useRef<TextInput>(null);
   const recordingRef = useRef<Audio.Recording | null>(null);
   const recordStartedAt = useRef(0);
+  const stoppingRef = useRef(false);
+  const stopRecordingRef = useRef<() => void>(() => {});
   const [recording, setRecording] = useState(false);
   const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
   const [meterLevel, setMeterLevel] = useState(0.35);
@@ -142,9 +148,41 @@ export function ChatComposer({
     }
   };
 
+  const stopRecording = useCallback(async () => {
+    const rec = recordingRef.current;
+    if (!rec || stoppingRef.current) return;
+    stoppingRef.current = true;
+    triggerHaptic('light');
+    setRecording(false);
+    setRecordingStartedAt(null);
+    setMeterLevel(0.35);
+    recordingRef.current = null;
+    try {
+      await rec.stopAndUnloadAsync();
+      const uri = rec.getURI();
+      const rawMs = Math.max(0, Date.now() - recordStartedAt.current);
+      const durationMs = Math.min(MAX_VOICE_NOTE_MS, rawMs);
+      if (uri && durationMs > 400) {
+        setBusy(true);
+        await onSendVoice(uri, durationMs);
+      }
+    } catch {
+      Alert.alert('Aufnahme', 'Sprachnotiz konnte nicht gesendet werden.');
+    } finally {
+      setBusy(false);
+      stoppingRef.current = false;
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+    }
+  }, [onSendVoice]);
+
+  stopRecordingRef.current = () => {
+    void stopRecording();
+  };
+
   const startRecording = async () => {
     try {
       inputRef.current?.blur();
+      stoppingRef.current = false;
       triggerHaptic('medium');
       const perm = await Audio.requestPermissionsAsync();
       if (!perm.granted) {
@@ -161,9 +199,16 @@ export function ChatComposer({
         isMeteringEnabled: true,
       });
       rec.setOnRecordingStatusUpdate((status) => {
-        if (!status.isRecording || status.metering == null) return;
-        const level = Math.min(1, Math.max(0.12, (status.metering + 50) / 50));
-        setMeterLevel(level);
+        if (!status.isRecording) return;
+        if (status.metering != null) {
+          const level = Math.min(1, Math.max(0.12, (status.metering + 50) / 50));
+          setMeterLevel(level);
+        }
+        const elapsed =
+          status.durationMillis ?? Math.max(0, Date.now() - recordStartedAt.current);
+        if (elapsed >= MAX_VOICE_NOTE_MS) {
+          stopRecordingRef.current();
+        }
       });
       await rec.setProgressUpdateInterval(80);
       recordingRef.current = rec;
@@ -174,30 +219,6 @@ export function ChatComposer({
       setRecording(true);
     } catch {
       Alert.alert('Aufnahme', 'Sprachnotiz konnte nicht gestartet werden.');
-    }
-  };
-
-  const stopRecording = async () => {
-    const rec = recordingRef.current;
-    if (!rec) return;
-    triggerHaptic('light');
-    setRecording(false);
-    setRecordingStartedAt(null);
-    setMeterLevel(0.35);
-    recordingRef.current = null;
-    try {
-      await rec.stopAndUnloadAsync();
-      const uri = rec.getURI();
-      const durationMs = Math.max(0, Date.now() - recordStartedAt.current);
-      if (uri && durationMs > 400) {
-        setBusy(true);
-        await onSendVoice(uri, durationMs);
-      }
-    } catch {
-      Alert.alert('Aufnahme', 'Sprachnotiz konnte nicht gesendet werden.');
-    } finally {
-      setBusy(false);
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
     }
   };
 
@@ -266,6 +287,7 @@ export function ChatComposer({
               active
               meterLevel={meterLevel}
               startedAt={recordingStartedAt ?? undefined}
+              maxDurationMs={MAX_VOICE_NOTE_MS}
             />
           ) : (
             <View style={[styles.field, { height: fieldH }]}>

@@ -1,5 +1,6 @@
-import { View } from 'react-native';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
 import { Screen } from '@/components/ui/Screen';
+import { FlingScrollView } from '@/components/ui/FlingScrollView';
 import { BackButton } from '@/components/ui/BackButton';
 import { HeroText, BodyLarge, StepLabel } from '@/components/ui/Typography';
 import { FLING_SPACE } from '@/lib/designTokens';
@@ -33,7 +34,19 @@ export function AuthLayout({ step, title, subtitle, children, footer, onBack }: 
       ) : (
         <View style={{ height: FLING_SPACE.md }} />
       )}
-      <View className="flex-1">{children}</View>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 6 : 0}
+      >
+        <FlingScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </FlingScrollView>
+      </KeyboardAvoidingView>
       {footer ? <View style={{ marginTop: FLING_SPACE.lg }}>{footer}</View> : null}
     </Screen>
   );

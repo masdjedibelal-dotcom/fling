@@ -4,6 +4,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { PatternBackground } from '@/components/ui/PatternBackground';
 import { FLING_COLORS } from '@/lib/designTokens';
 import { SAFE_TOP_CONTENT_GAP } from '@/lib/safeAreaLayout';
 
@@ -43,17 +44,33 @@ export function SafeTopChrome({
   return (
     <View style={style} pointerEvents="box-none">
       {extendColor != null && insets.top > 0 ? (
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: insets.top,
-            backgroundColor: extendColor,
-          }}
-        />
+        extendBackground === true ? (
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: insets.top,
+              overflow: 'hidden',
+            }}
+          >
+            <PatternBackground />
+          </View>
+        ) : (
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: insets.top,
+              backgroundColor: extendColor,
+            }}
+          />
+        )
       ) : null}
 
       <SafeAreaView

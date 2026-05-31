@@ -28,9 +28,15 @@ type Props = {
   /** 0–1, aus Mikrofon-Metering */
   meterLevel?: number;
   startedAt?: number;
+  maxDurationMs?: number;
 };
 
-export function VoiceRecordingWaveform({ active, meterLevel = 0.35, startedAt }: Props) {
+export function VoiceRecordingWaveform({
+  active,
+  meterLevel = 0.35,
+  startedAt,
+  maxDurationMs,
+}: Props) {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [bars, setBars] = useState(() => Array(BAR_COUNT).fill(0.2));
   const pulse = useSharedValue(1);
@@ -103,7 +109,23 @@ export function VoiceRecordingWaveform({ active, meterLevel = 0.35, startedAt }:
           ))}
         </View>
       </View>
-      <Text style={styles.timer}>{formatElapsed(elapsedMs)}</Text>
+      <Text
+        style={[
+          styles.timer,
+          maxDurationMs != null &&
+            elapsedMs >= maxDurationMs - 400 &&
+            styles.timerAtLimit,
+        ]}
+      >
+        {formatElapsed(
+          maxDurationMs != null
+            ? Math.min(elapsedMs, maxDurationMs)
+            : elapsedMs,
+        )}
+        {maxDurationMs != null
+          ? ` / ${formatElapsed(maxDurationMs)}`
+          : ''}
+      </Text>
     </Animated.View>
   );
 }
@@ -136,8 +158,11 @@ const styles = StyleSheet.create({
     fontFamily: 'JetBrainsMono_500Medium',
     letterSpacing: 0.5,
     flexShrink: 0,
-    minWidth: 36,
+    minWidth: 52,
     textAlign: 'right',
+  },
+  timerAtLimit: {
+    color: FLING_COLORS.accent,
   },
   waveRow: {
     flexDirection: 'row',

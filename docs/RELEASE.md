@@ -4,9 +4,9 @@
 
 | Feld | Wert |
 |------|------|
-| Marketing-Version | **1.0.2** |
-| iOS Build (`CFBundleVersion`) | **6** |
-| Android `versionCode` | **6** |
+| Marketing-Version | **1.0.4** |
+| iOS Build (`CFBundleVersion`) | **8** |
+| Android `versionCode` | **8** |
 | Bundle ID | `com.flingapp.app` |
 
 Vor jedem Upload in `app.json` erhöhen: `expo.version`, `expo.ios.buildNumber`, `expo.android.versionCode`.  
@@ -14,13 +14,19 @@ Gleiche Werte in `package.json`, `codemagic.yaml` (`EXPO_PUBLIC_APP_VERSION`) un
 
 ---
 
-## Checkliste vor Upload
+## Checkliste vor Upload (1.0.4 · Build 8)
 
 ### 1. Code & Qualität
 
-- [ ] `npm run icons` (Splash, App-Icon, Android aus SVG neu generieren)
+- [ ] `npm run icons` (Wortmarke → Splash/App-Icon/Android; Quelle: `fling-wordmark-dark.svg`)
+- [ ] Splash sichtbar korrekt: erfordert **neuen Native-Build** (`expo prebuild --clean` in CI), nicht nur Expo Go Reload
 - [ ] `npm run lint` ohne Fehler
-- [ ] App lokal auf Gerät/Simulator durchgetestet (Welcome, Onboarding, Auswahl, Pick, Chat)
+- [ ] App lokal auf Gerät/Simulator durchgetestet:
+  - [ ] Splash: neue Wortmarke (kein altes F-Logo)
+  - [ ] Auswahl: Hintergrund oben (Dynamic Island) wie restlicher Screen
+  - [ ] Onboarding: Geburtsdatum — Tipp außerhalb schließt Tastatur, „Weiter“ sichtbar
+  - [ ] Chat: Tastatur ein/aus, Einmal-Fotos, Sprachnotiz
+  - [ ] Pick-Tab: Partnerbild nach „Beim aktuellen Pick bleiben“
 - [ ] Änderungen auf `main` gepusht (Codemagic triggert bei Push auf `main`)
 
 ### 2. Codemagic
@@ -34,16 +40,14 @@ Gleiche Werte in `package.json`, `codemagic.yaml` (`EXPO_PUBLIC_APP_VERSION`) un
 
 Copy-Vorlagen: `lib/marketingCopy.ts` · `docs/app-store.md`
 
-- [ ] **Untertitel** (max. 30 Zeichen): `Such dir dein Abenteuer.`
-- [ ] **Beschreibung**: USP-Text aus `docs/app-store.md`
-- [ ] **Was ist neu** (1.0.2): z. B. neue App-Texte, Chat-Verbesserungen, Marke/Logo
+- [ ] **Was ist neu** (1.0.4): Text aus `docs/app-store.md` eintragen
 - [ ] Screenshots aktuell (falls UI geändert)
-- [ ] TestFlight: Build 6 nach Verarbeitung an **Internal Testers** verteilen
+- [ ] TestFlight: Build 8 nach Verarbeitung an **Internal Testers** verteilen
 
 ### 4. Nach dem Build
 
 - [ ] TestFlight-Build installieren und Smoke-Test
-- [ ] Bei Erfolg: optional Build-Nummer in `app.json` für den *nächsten* Upload schon auf **7** vorbereiten (oder CI mit `APP_STORE_APPLE_ID` automatisch)
+- [ ] Bei Erfolg: für den *nächsten* Upload Build **9** in `app.json` vorbereiten (oder CI mit `APP_STORE_APPLE_ID` automatisch)
 
 ---
 
@@ -58,4 +62,4 @@ Copy-Vorlagen: `lib/marketingCopy.ts` · `docs/app-store.md`
 - **Mit** `APP_STORE_APPLE_ID`: `latest + 1`, mindestens Wert aus `app.json`
 - **Ohne** Apple-ID: fester Wert aus `app.json` / `MIN_BUILD` in `scripts/ios-resolve-build-number.sh`
 
-Build **6** muss größer sein als der letzte hochgeladene Build auf TestFlight (aktuell vorbereitet für Upload nach Build 5).
+Build **8** muss größer sein als der letzte hochgeladene Build auf TestFlight (vorherige Vorbereitung: Build 7).

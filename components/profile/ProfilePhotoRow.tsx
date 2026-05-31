@@ -1,10 +1,12 @@
-import { ScrollView, View, Text, Pressable } from 'react-native';
-import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
+import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import { MAX_PHOTOS } from '@/lib/constants';
+import { pickProfileMediaFromGallery } from '@/lib/pickProfileMedia';
+import { ProfilePhotoSlotPreview } from '@/components/profile/ProfilePhotoSlotPreview';
+import { toProfileVideoStorage } from '@/lib/profileMedia';
 
-const TILE = 72;
+const TILE_W = 72;
+const TILE_H = 84;
 const GAP = 8;
 
 export function ProfilePhotoRow({
@@ -16,12 +18,12 @@ export function ProfilePhotoRow({
 }) {
   const addPhoto = async () => {
     if (photos.length >= MAX_PHOTOS) return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-    });
-    if (result.canceled || !result.assets[0]) return;
-    onChange([...photos, result.assets[0].uri]);
+    const picked = await pickProfileMediaFromGallery({ allowVideo: true });
+    if (!picked) return;
+    const uri = picked.isVideo
+      ? toProfileVideoStorage(picked.uri)
+      : picked.uri;
+    onChange([...photos, uri]);
   };
 
   const removePhoto = (index: number) => {
@@ -43,29 +45,30 @@ export function ProfilePhotoRow({
         return (
           <Pressable
             key={`${i}-${uri || 'add'}`}
-            onPress={isEmpty ? addPhoto : undefined}
-            style={{ width: TILE, height: TILE * 1.15 }}
-            className={`rounded-md overflow-hidden bg-card border ${
-              isPrimary ? 'border-accent' : 'border-line'
-            }`}
+            onPress={isEmpty ? () => void addPhoto() : undefined}
+            style={[
+              styles.tile,
+              isPrimary ? styles.tilePrimary : styles.tileDefault,
+            ]}
           >
             {uri ? (
               <>
-                <Image source={{ uri }} className="w-full h-full" contentFit="cover" />
+                <ProfilePhotoSlotPreview uri={uri} width={TILE_W} height={TILE_H} />
                 <Pressable
                   onPress={() => removePhoto(i)}
-                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 items-center justify-center"
+                  style={styles.removeBtn}
+                  hitSlop={6}
                 >
                   <FlingIcon name="close" size={12} color="#fff" />
                 </Pressable>
                 {isPrimary ? (
-                  <View className="absolute bottom-1 left-1 bg-accent/90 px-1.5 py-0.5 rounded">
-                    <Text className="text-white text-[8px] font-bold">1</Text>
+                  <View style={styles.primaryBadge}>
+                    <Text style={styles.primaryBadgeText}>1</Text>
                   </View>
                 ) : null}
               </>
             ) : (
-              <View className="flex-1 items-center justify-center">
+              <View style={styles.addInner}>
                 <FlingIcon name="plus" size={22} color="rgba(255,255,255,0.35)" />
               </View>
             )}
@@ -75,3 +78,51 @@ export function ProfilePhotoRow({
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  tile: {
+    width: TILE_W,
+    height: TILE_H,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#1A1214',
+  },
+  tilePrimary: {
+    borderWidth: 2,
+    borderColor: '#C41E3A',
+  },
+  tileDefault: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  addInner: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeBtn: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryBadge: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(196, 30, 58, 0.9)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  primaryBadgeText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+});
