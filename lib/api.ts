@@ -215,11 +215,26 @@ export async function fetchActiveMatch(userId: string): Promise<Match | null> {
   });
   if (error || !data) return getDemoMatch();
   let match = normalizeMatch(data as Match);
-  if (match && !match.male_profile?.display_name) {
-    const hydrated = normalizeMatch(
-      (await supabase.rpc('get_active_match', { user_id: userId })).data as Match,
-    );
-    if (hydrated?.male_profile) match = hydrated;
+  if (
+    match?.male_id &&
+    (!match.male_profile?.photos?.length ||
+      !match.male_profile.display_name?.trim() ||
+      match.male_profile.display_name === 'Profil')
+  ) {
+    const full = await fetchSchaufensterProfile(match.male_id);
+    if (full) {
+      match = {
+        ...match,
+        male_profile: toMatchPartnerProfile({
+          ...full,
+          display_name:
+            match.male_profile?.display_name &&
+            match.male_profile.display_name !== 'Profil'
+              ? match.male_profile.display_name
+              : full.display_name,
+        }),
+      };
+    }
   }
   return match;
 }
@@ -254,7 +269,7 @@ async function createMatchViaDemo(
     return { match: null, error: 'Du hast bereits einen aktiven Pick.' };
   }
 
-  const male = getDemoProfile(maleId);
+  const male = getDemoMaleMatchProfile(maleId);
   if (!male) return { match: null, error: 'Profil nicht gefunden' };
   const match = await createDemoMatch(femaleId, male);
   return { match, error: null };

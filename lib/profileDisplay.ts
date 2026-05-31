@@ -1,5 +1,8 @@
 import { formatDistance } from '@/lib/profileStatus';
+import { getProfileMediaUri, getProfileThumbnailUri } from '@/lib/profileMedia';
 import type { SchaufensterProfile } from '@/lib/types';
+
+const PICK_PHOTO_FALLBACK = 'https://i.pravatar.cc/400?img=32';
 
 /** Öffentliches Pseudonym */
 export function profilePseudonym(
@@ -40,4 +43,35 @@ export function formatChatPartnerMeta(
       ? options.city?.trim() || '—'
       : formatDistance(profile.distance_km);
   return `${age} · ${job} · ${place}`;
+}
+
+/** Pick-Tab / Chat — Foto (erstes Bild, kein Video-Thumbnail-Fehler) */
+export function getPickPartnerPhotoUri(profile?: SchaufensterProfile): string {
+  if (!profile?.photos?.length) return PICK_PHOTO_FALLBACK;
+  const thumb = getProfileThumbnailUri(profile.photos);
+  if (thumb) return thumb;
+  const idx = Math.min(
+    profile.primary_photo_idx ?? 0,
+    profile.photos.length - 1,
+  );
+  const raw = profile.photos[idx] ?? profile.photos[0];
+  return raw ? getProfileMediaUri(raw) : PICK_PHOTO_FALLBACK;
+}
+
+/** Nach Pick: echter Name, sonst Pseudonym */
+export function getPickPartnerName(
+  profile: SchaufensterProfile | undefined,
+  options: { viewerIsFemale: boolean; femaleDisplayName?: string | null },
+): string {
+  if (!profile) return '—';
+  if (options.viewerIsFemale) {
+    return chatPartnerName(
+      profile.display_name,
+      profilePseudonym(profile.pseudonym, 'Pick'),
+    );
+  }
+  return chatPartnerName(
+    options.femaleDisplayName ?? profile.display_name,
+    profilePseudonym(profile.pseudonym, 'Anna'),
+  );
 }

@@ -549,17 +549,23 @@ export async function getDemoMatch(): Promise<Match | null> {
     await AsyncStorage.removeItem(MESSAGES_KEY);
     return null;
   }
-  if (!match.female_profile || !match.male_profile) {
-    const maleSeed =
-      DEMO_MALES.find((m) => m.id === match.male_id) ?? DEMO_MALES[0];
-    const male = toMatchPartnerProfile(
-      match.male_profile ?? maleSeed,
-    );
+  const maleSeed =
+    DEMO_MALES.find((m) => m.id === match.male_id) ?? DEMO_MALES[0];
+  const maleNeedsHydrate =
+    !match.male_profile ||
+    !match.male_profile.photos?.length ||
+    match.male_profile.display_name === 'Profil' ||
+    !match.male_profile.display_name?.trim();
+  const femaleNeedsHydrate = !match.female_profile;
+
+  if (maleNeedsHydrate || femaleNeedsHydrate) {
+    const male = toMatchPartnerProfile(match.male_profile ?? maleSeed);
     match = {
       ...match,
-      male_profile: male,
+      male_profile: maleNeedsHydrate ? male : match.male_profile,
       female_profile:
-        match.female_profile ?? toMatchPartnerProfile(getDemoFemalePartnerProfile()),
+        match.female_profile ??
+        toMatchPartnerProfile(getDemoFemalePartnerProfile()),
       female_city: match.female_city ?? 'München',
       female_display_name: match.female_display_name ?? 'Anna',
     };

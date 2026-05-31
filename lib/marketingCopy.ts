@@ -154,7 +154,8 @@ export const CHAT_INTRO =
 export const CHAT_PRIVACY_HINT =
   'Nur die letzten Nachrichten bleiben sichtbar.\nFotos sind standardmäßig nur einmal sichtbar.';
 
-export const CHAT_INPUT_PLACEHOLDER = 'Mach einen Vorschlag…';
+/** Chat-Eingabe bleibt leer — kein Placeholder in der UI */
+export const CHAT_INPUT_PLACEHOLDER = '';
 
 export const CHAT_PHOTO_ONCE_HINT =
   'Dieses Foto kann nur einmal geöffnet werden.';
