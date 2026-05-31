@@ -10,6 +10,12 @@ import {
   formatChatPartnerMeta,
   profilePseudonym,
 } from '@/lib/profileDisplay';
+import {
+  PICK_AFTER_FEMALE,
+  PICK_AFTER_MALE,
+  PICK_TAB_EMPTY_FEMALE,
+  PICK_TAB_EMPTY_MALE,
+} from '@/lib/marketingCopy';
 import { Image } from 'expo-image';
 import { ProfileFigureTwo, ProfileFigureWait } from '@/components/graphics';
 
@@ -52,6 +58,7 @@ export default function PickScreen() {
           gender === 'female' ? undefined : { city: match.female_city },
         )
       : '—';
+    const afterCopy = gender === 'female' ? PICK_AFTER_FEMALE : PICK_AFTER_MALE;
 
     return (
       <Screen className="px-5 pt-4 items-center justify-center">
@@ -66,9 +73,12 @@ export default function PickScreen() {
               contentFit="cover"
             />
           </View>
-          <TitleText className="mb-1">Dein Pick</TitleText>
+          <TitleText className="mb-2 text-center">{afterCopy.title}</TitleText>
           <BodyText className="text-center mb-1">{partnerPseudonym}</BodyText>
-          <MetaText className="text-center text-fg-3 mb-6">{metaLine}</MetaText>
+          <MetaText className="text-center text-fg-3 mb-2">{metaLine}</MetaText>
+          <BodyLarge className="text-center text-fg-3 mb-6 leading-7 max-w-[300px]">
+            {afterCopy.body}
+          </BodyLarge>
           <Button label="Chat öffnen" onPress={() => router.push(`/chat/${match.id}`)} />
         </Pressable>
       </Screen>
@@ -82,13 +92,15 @@ export default function PickScreen() {
           <ProfileFigureTwo size={150} />
         </View>
         <TitleText className="text-center mb-3 leading-tight">
-          Jetzt einen{'\n'}Mann picken
+          {PICK_TAB_EMPTY_FEMALE.title}
         </TitleText>
         <BodyLarge className="text-center text-fg-3 max-w-[280px] mb-6 leading-7">
-          Du hast aktuell keinen Pick. Schau in der Auswahl, wer aktiv ist — tippe oder halte
-          den Pick-Button unten rechts.
+          {PICK_TAB_EMPTY_FEMALE.body}
         </BodyLarge>
-        <Button label="Zum Schaufenster" onPress={() => router.push('/(tabs)')} />
+        <Button
+          label={PICK_TAB_EMPTY_FEMALE.cta}
+          onPress={() => router.push('/(tabs)')}
+        />
       </Screen>
     );
   }
@@ -99,11 +111,10 @@ export default function PickScreen() {
         <ProfileFigureWait size={140} />
       </View>
       <TitleText className="text-center mb-3 leading-tight">
-        Noch kein{'\n'}Pick
+        {PICK_TAB_EMPTY_MALE.title}
       </TitleText>
       <BodyLarge className="text-center text-fg-3 max-w-[280px] mb-8 leading-7">
-        Bald wird eine Frau dich aussuchen. Halt dein Profil scharf und deine Verfügbarkeit
-        aktuell.
+        {PICK_TAB_EMPTY_MALE.body}
       </BodyLarge>
       <MetaText className="text-center text-fg-4">
         Sichtbar für {DEMO_STATS.male_views} Frauen · {profile?.search_radius_km ?? 5} km

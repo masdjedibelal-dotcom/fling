@@ -9,6 +9,7 @@ import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
+import { Fraunces_400Regular_Italic } from '@expo-google-fonts/fraunces';
 import {
   Unbounded_700Bold,
   Unbounded_800ExtraBold,
@@ -30,6 +31,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded] = useFonts({
+    Fraunces_400Regular_Italic,
     Unbounded_700Bold,
     Unbounded_800ExtraBold,
     Inter_500Medium,

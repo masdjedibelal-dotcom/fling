@@ -2,8 +2,8 @@
   "expo": {
     "name": "Fling",
     "slug": "fling",
-    "description": "Dein Abenteuer. Deine Entscheidung.",
-    "version": "1.0.1",
+    "description": "Such dir dein Abenteuer.",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "fling",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.flingapp.app",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
         "NSCameraUsageDescription": "Fling benötigt die Kamera für Ausweis-Scan und Live-Selfie.",
         "NSPhotoLibraryUsageDescription": "Fling benötigt Zugriff auf deine Fotos für Profilbilder.",
@@ -27,6 +27,7 @@
     },
     "android": {
       "package": "com.flingapp.app",
+      "versionCode": 6,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#120A0C",

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { HeroText, BodyLarge, MetaText } from '@/components/ui/Typography';
 import { router } from 'expo-router';
 import { clearDemoMatch } from '@/lib/demo';
-import { EXPIRED_BODY } from '@/lib/marketingCopy';
+import { EXPIRED_BODY, EXPIRED_TITLE } from '@/lib/marketingCopy';
 import { ExpiredDissolveGraphic } from '@/components/graphics';
 
 export default function ChatExpiredScreen() {
@@ -13,11 +13,8 @@ export default function ChatExpiredScreen() {
       <View className="items-center justify-center mb-4" style={{ width: 280, height: 200 }}>
         <ExpiredDissolveGraphic size={280} />
       </View>
-      <HeroText className="text-center mb-3">Die 24 Stunden sind um</HeroText>
-      <BodyLarge className="text-center mb-3 max-w-[300px] leading-7">{EXPIRED_BODY}</BodyLarge>
-      <MetaText className="text-center mb-10 normal-case">
-        Der Chat ist weg — diskret, wie versprochen.
-      </MetaText>
+      <HeroText className="text-center mb-3">{EXPIRED_TITLE}</HeroText>
+      <BodyLarge className="text-center mb-10 max-w-[300px] leading-7">{EXPIRED_BODY}</BodyLarge>
       <Button
         label="Zurück zur Auswahl"
         onPress={async () => {

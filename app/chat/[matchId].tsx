@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Keyboard,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
   View,
   type ScrollView as ScrollViewType,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen } from '@/components/ui/Screen';
 import { ConfirmModal } from '@/components/ui/Modal';
 import { Toast } from '@/components/ui/Toast';
@@ -31,7 +29,6 @@ import { FLING_COLORS } from '@/lib/designTokens';
 
 export default function ChatScreen() {
   useDiscreetScreen();
-  const insets = useSafeAreaInsets();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const userId = useAuthStore((s) => s.userId) ?? 'demo';
   const gender = useAuthStore((s) => s.gender);
@@ -98,8 +95,6 @@ export default function ChatScreen() {
     : '—';
 
   const reportedId = isFemale ? match?.male_id : match?.female_id;
-
-  const keyboardOffset = insets.top + 156;
 
   const dismissKeyboard = () => Keyboard.dismiss();
 
@@ -203,57 +198,29 @@ export default function ChatScreen() {
         onBlock={() => void onBlock()}
       />
 
-      {Platform.OS === 'web' ? (
-        <View className="flex-1">
-          <ScrollView
-            ref={scrollRef}
-            className="flex-1"
-            contentContainerClassName="flex-grow justify-end"
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="always"
-          >
-            <ChatMessages
-              blurred={blurred}
-              visible={visible}
-              partnerPhotoUri={partnerPhoto}
-              userPhotoUri={userPhoto}
-              viewerIsFemale={isFemale}
-              onMarkViewed={async (id) => {
-                await markViewed(id);
-              }}
-            />
-          </ScrollView>
-          {composer}
-        </View>
-      ) : (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <View className="flex-1">
+        <ScrollView
+          ref={scrollRef}
           className="flex-1"
-          keyboardVerticalOffset={keyboardOffset}
+          contentContainerClassName="flex-grow justify-end"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps={Platform.OS === 'web' ? 'always' : 'handled'}
+          keyboardDismissMode={Platform.OS === 'web' ? 'none' : 'on-drag'}
+          onScrollBeginDrag={Platform.OS === 'web' ? undefined : dismissKeyboard}
         >
-          <ScrollView
-            ref={scrollRef}
-            className="flex-1"
-            contentContainerClassName="flex-grow justify-end"
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="never"
-            keyboardDismissMode="on-drag"
-            onScrollBeginDrag={dismissKeyboard}
-          >
             <ChatMessages
               blurred={blurred}
               visible={visible}
               partnerPhotoUri={partnerPhoto}
               userPhotoUri={userPhoto}
-              viewerIsFemale={isFemale}
+              viewerId={userId}
               onMarkViewed={async (id) => {
                 await markViewed(id);
               }}
             />
-          </ScrollView>
-          {composer}
-        </KeyboardAvoidingView>
-      )}
+        </ScrollView>
+        {composer}
+      </View>
 
       <ConfirmModal
         visible={cancelOpen}

@@ -4,7 +4,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { HeroText, BodyLarge, StepLabel, SectionLabel } from '@/components/ui/Typography';
 import { FlingIcon } from '@/components/icons/FlingIcon';
-import { FLING_COLORS, FLING_RADIUS } from '@/lib/designTokens';
+import { accentRgba, FLING_COLORS, FLING_RADIUS } from '@/lib/designTokens';
 import { REJECTION_COPY } from '@/lib/types';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -20,7 +20,7 @@ export default function RejectedScreen() {
       <View className="flex-1 items-center justify-center gap-5 px-2">
         <View
           className="w-16 h-16 rounded-full items-center justify-center border border-accent/30"
-          style={{ backgroundColor: 'rgba(225,21,57,0.12)' }}
+          style={{ backgroundColor: accentRgba(0.12) }}
         >
           <FlingIcon name="warn" size={28} color={FLING_COLORS.accent} />
         </View>

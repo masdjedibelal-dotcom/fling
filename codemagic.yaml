@@ -28,8 +28,9 @@ workflows:
         BUNDLE_ID: com.flingapp.app
         XCODE_WORKSPACE: Fling.xcworkspace
         XCODE_SCHEME: Fling
+        # App Store Connect → App → Allgemein → Apple-ID (numerisch)
         APP_STORE_APPLE_ID: 0
-        EXPO_PUBLIC_APP_VERSION: 1.0.1
+        EXPO_PUBLIC_APP_VERSION: 1.0.2
       node: v20
       # Apple verlangt iOS-26-SDK (Xcode 26+) für App-Store-Uploads.
       xcode: latest

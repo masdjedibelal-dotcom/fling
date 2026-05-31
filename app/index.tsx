@@ -4,6 +4,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Redirect } from 'expo-router';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { fetchUserProfile } from '@/lib/auth';
+import { FLING_COLORS } from '@/lib/designTokens';
 import { getPostAuthRoute, useAuthStore } from '@/stores/authStore';
 import { isDemoMode, ensureDemoSession } from '@/lib/demoMode';
 
@@ -41,7 +42,7 @@ export default function Index() {
   if (!hydrated) {
     return (
       <Screen className="items-center justify-center">
-        <ActivityIndicator color="#E11539" />
+        <ActivityIndicator color={FLING_COLORS.accent} />
       </Screen>
     );
   }

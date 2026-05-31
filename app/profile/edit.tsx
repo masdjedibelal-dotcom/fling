@@ -9,6 +9,11 @@ import { useAuthStore } from '@/stores/authStore';
 import { updateUserProfile } from '@/lib/api';
 import { INTEREST_TAGS, MAX_BIO_LENGTH, MAX_JOB_LENGTH } from '@/lib/constants';
 import { FLING_RADIUS, FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import {
+  BIO_PLACEHOLDER_FEMALE,
+  BIO_PLACEHOLDER_MALE,
+  PROFILE_PICK_ONLY_HINT,
+} from '@/lib/marketingCopy';
 
 const fieldStyle = {
   fontSize: FLING_TYPE.body,
@@ -20,7 +25,10 @@ const fieldStyle = {
 
 export default function EditProfileScreen() {
   const userId = useAuthStore((s) => s.userId);
+  const gender = useAuthStore((s) => s.gender);
   const profile = useAuthStore((s) => s.profile);
+  const bioPlaceholder =
+    gender === 'female' ? BIO_PLACEHOLDER_FEMALE : BIO_PLACEHOLDER_MALE;
   const setProfile = useAuthStore((s) => s.setProfile);
 
   const [bio, setBio] = useState(profile?.bio ?? '');
@@ -62,7 +70,7 @@ export default function EditProfileScreen() {
           className="border border-line text-white min-h-[100px] px-4 py-3 mb-1"
           style={fieldStyle}
           placeholderTextColor="rgba(255,255,255,0.38)"
-          placeholder="Kurz über dich — was zählt beim Pick?"
+          placeholder={bioPlaceholder}
         />
         <MetaText className="mb-6 normal-case">
           {bio.length} / {MAX_BIO_LENGTH}
@@ -81,7 +89,7 @@ export default function EditProfileScreen() {
           {job.length} / {MAX_JOB_LENGTH}
         </MetaText>
         <MetaText className="text-fg-4 mb-6 normal-case">
-          Nur im Pick-Chat sichtbar
+          {PROFILE_PICK_ONLY_HINT}
         </MetaText>
 
         <SectionLabel>Interessen</SectionLabel>

@@ -10,7 +10,7 @@ import {
   formatBirthDateISO,
 } from '@/lib/validation';
 import { useAuthStore } from '@/stores/authStore';
-import { FLING_RADIUS, FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
+import { accentRgba, FLING_RADIUS, FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
 
 export default function AgeGateScreen() {
   const setBirthDate = useAuthStore((s) => s.setBirthDate);
@@ -94,7 +94,7 @@ export default function AgeGateScreen() {
         className="mt-8 p-4 border border-accent/25"
         style={{
           borderRadius: FLING_RADIUS.md,
-          backgroundColor: 'rgba(225,21,57,0.08)',
+          backgroundColor: accentRgba(0.08),
         }}
       >
         <BodyText className="text-fg-2 leading-6">
