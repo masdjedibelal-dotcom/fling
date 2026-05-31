@@ -164,8 +164,8 @@ function ViewOnceBubble({
   hiddenHistory?: boolean;
   onOpen: () => void;
 }) {
-  /** Empfangenes Einmal-Foto: nach Öffnen nicht erneut, kein Bild mehr. */
-  const consumed = isPartner && opened;
+  /** Einmal-Foto: nach dem ersten Öffnen nicht erneut (Sender & Empfänger). */
+  const consumed = opened;
   const canOpen = !hiddenHistory && !consumed;
 
   return (
@@ -382,15 +382,18 @@ export function ChatMessages({
     [openedLocally],
   );
 
-  const markPartnerViewOnceOpened = useCallback(
+  const markViewOnceOpened = useCallback(
     (msg: Message, isPartner: boolean) => {
-      if (!isViewOnceImage(msg) || !isPartner || isMessageOpened(msg)) return;
+      if (!isViewOnceImage(msg) || isMessageOpened(msg)) return;
       setOpenedLocally((prev) => {
         const next = new Set(prev);
         next.add(msg.id);
         return next;
       });
-      void onMarkViewed(msg.id);
+      // Server: nur Empfänger markiert viewed_at (sonst wäre es für den Partner schon „verbraucht“)
+      if (isPartner) {
+        void onMarkViewed(msg.id);
+      }
     },
     [isMessageOpened, onMarkViewed],
   );
@@ -398,12 +401,12 @@ export function ChatMessages({
   const openPhoto = (msg: Message, isPartner: boolean) => {
     if (!msg.media_url) return;
 
-    if (isViewOnceImage(msg) && isPartner && isMessageOpened(msg)) {
+    if (isViewOnceImage(msg) && isMessageOpened(msg)) {
       return;
     }
 
-    if (isViewOnceImage(msg) && isPartner) {
-      markPartnerViewOnceOpened(msg, isPartner);
+    if (isViewOnceImage(msg)) {
+      markViewOnceOpened(msg, isPartner);
     }
 
     setPhotoPreview({

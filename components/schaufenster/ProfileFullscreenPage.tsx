@@ -84,7 +84,7 @@ export function ProfileFullscreenPage({
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const { match: activeMatch, reload: reloadActiveMatch } = useMatch(
+  const { match: activeMatch, loading: matchLoading, reload: reloadActiveMatch } = useMatch(
     showPick && userId ? userId : null,
   );
   const photoFade = useSharedValue(1);
@@ -160,6 +160,7 @@ export function ProfileFullscreenPage({
         error.includes('aktiver Pick') ||
         error.includes('Bereits ein aktiver Pick')
       ) {
+        await reloadActiveMatch();
         setReplaceOpen(true);
         return;
       }
@@ -173,7 +174,13 @@ export function ProfileFullscreenPage({
 
   const currentPickName = profilePseudonym(activeMatch?.male_profile?.pseudonym);
 
+  const handleReplaceCancel = () => {
+    setReplaceOpen(false);
+    void reloadActiveMatch();
+  };
+
   const openPickFlow = () => {
+    if (matchLoading) return;
     if (activeMatch) {
       if (activeMatch.male_id === profile.id) {
         router.replace(`/chat/${activeMatch.id}`);
@@ -186,6 +193,7 @@ export function ProfileFullscreenPage({
   };
 
   const openCelebrationOrReplace = () => {
+    if (matchLoading) return;
     if (activeMatch) {
       if (activeMatch.male_id === profile.id) {
         router.replace(`/chat/${activeMatch.id}`);
@@ -352,7 +360,7 @@ export function ProfileFullscreenPage({
       {showPick && userId ? (
         <>
           <PickFab
-            disabled={picking || celebrationOpen}
+            disabled={picking || celebrationOpen || matchLoading}
             bottomInset={bottomInset}
             onTap={openPickFlow}
             onHoldComplete={openCelebrationOrReplace}
@@ -369,7 +377,7 @@ export function ProfileFullscreenPage({
             currentPartnerName={currentPickName}
             newPartnerName={pseudonym}
             onConfirm={() => void executePick(true)}
-            onCancel={() => setReplaceOpen(false)}
+            onCancel={handleReplaceCancel}
           />
           <PickCelebration
             visible={celebrationOpen}

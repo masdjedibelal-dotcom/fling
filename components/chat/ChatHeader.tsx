@@ -1,5 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  type SharedValue,
+  useAnimatedReaction,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 import { FlingIcon } from '@/components/icons/FlingIcon';
 import { BackButton } from '@/components/ui/BackButton';
 import { ChatPartnerName } from '@/components/ui/Typography';
@@ -20,6 +29,7 @@ type Props = {
   remainingHours: number;
   remainingMinutes: number;
   isFemale: boolean;
+  keyboardHeight: SharedValue<number>;
   onBack: () => void;
   onOpenProfile: () => void;
   onEndPick: () => void;
@@ -28,6 +38,9 @@ type Props = {
 };
 
 const HEADER_BTN = FLING_TOUCH.min;
+const COMPACT_AVATAR = 32;
+/** Tastaturhöhe ab der der Header vollständig kompakt ist */
+const COLLAPSE_RANGE = 100;
 
 export function ChatHeader({
   partnerPhoto,
@@ -38,6 +51,7 @@ export function ChatHeader({
   remainingHours,
   remainingMinutes,
   isFemale,
+  keyboardHeight,
   onBack,
   onOpenProfile,
   onEndPick,
@@ -45,11 +59,49 @@ export function ChatHeader({
   onBlock,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [compactActive, setCompactActive] = useState(false);
 
   const closeMenu = () => setMenuOpen(false);
 
+  useAnimatedReaction(
+    () => keyboardHeight.value > 28,
+    (compact, prev) => {
+      if (prev === null || compact !== prev) {
+        runOnJS(setCompactActive)(compact);
+        if (compact) runOnJS(closeMenu)();
+      }
+    },
+    [keyboardHeight],
+  );
+
+  useEffect(() => {
+    if (compactActive) setMenuOpen(false);
+  }, [compactActive]);
+
+  const centerStyle = useAnimatedStyle(() => {
+    const h = keyboardHeight.value;
+    return {
+      opacity: interpolate(h, [0, COLLAPSE_RANGE * 0.65], [1, 0], Extrapolation.CLAMP),
+      maxHeight: interpolate(h, [0, COLLAPSE_RANGE], [240, 0], Extrapolation.CLAMP),
+      marginTop: interpolate(h, [0, COLLAPSE_RANGE], [4, 0], Extrapolation.CLAMP),
+      overflow: 'hidden' as const,
+    };
+  });
+
+  const compactAvatarStyle = useAnimatedStyle(() => {
+    const h = keyboardHeight.value;
+    return {
+      opacity: interpolate(h, [8, COLLAPSE_RANGE * 0.55], [0, 1], Extrapolation.CLAMP),
+      transform: [
+        {
+          scale: interpolate(h, [8, COLLAPSE_RANGE * 0.55], [0.82, 1], Extrapolation.CLAMP),
+        },
+      ],
+    };
+  });
+
   return (
-    <View className="pb-1" style={styles.root}>
+    <View style={styles.root}>
       {menuOpen ? (
         <Pressable
           style={styles.menuBackdrop}
@@ -58,8 +110,29 @@ export function ChatHeader({
         />
       ) : null}
 
-      <View style={styles.topRow} className="flex-row items-center justify-between px-4 pt-1">
+      <View style={styles.topRow} className="flex-row items-center justify-between px-4 pt-1 pb-1">
         <BackButton onPress={onBack} />
+
+        <Animated.View
+          style={[styles.compactAvatarWrap, compactAvatarStyle]}
+          pointerEvents={compactActive ? 'auto' : 'none'}
+        >
+          <Pressable
+            onPress={onOpenProfile}
+            accessibilityLabel="Partnerprofil"
+            hitSlop={8}
+          >
+            <View
+              style={[styles.compactAvatarRing, { borderColor: timerColor }]}
+            >
+              <Image
+                source={{ uri: partnerPhoto }}
+                style={styles.compactAvatar}
+                contentFit="cover"
+              />
+            </View>
+          </Pressable>
+        </Animated.View>
 
         <View className="flex-row items-center gap-2" style={styles.actions}>
           <View style={styles.menuAnchor}>
@@ -138,7 +211,11 @@ export function ChatHeader({
         </View>
       </View>
 
-      <View className="items-center px-6 pt-1 pb-2" style={styles.centerBlock}>
+      <Animated.View
+        className="items-center px-6 pb-2"
+        style={[styles.centerBlock, centerStyle]}
+        pointerEvents={compactActive ? 'none' : 'auto'}
+      >
         <Pressable onPress={onOpenProfile} accessibilityLabel="Partnerprofil">
           <TimerRing photoUri={partnerPhoto} progress={progress} color={timerColor} />
         </Pressable>
@@ -155,7 +232,7 @@ export function ChatHeader({
         >
           {formatChatTimerRemaining(remainingHours, remainingMinutes)}
         </Text>
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -172,6 +249,31 @@ const styles = StyleSheet.create({
   topRow: {
     zIndex: 30,
     elevation: 30,
+    position: 'relative',
+  },
+  compactAvatarWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 5,
+  },
+  compactAvatarRing: {
+    width: COMPACT_AVATAR + 4,
+    height: COMPACT_AVATAR + 4,
+    borderRadius: (COMPACT_AVATAR + 4) / 2,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: FLING_COLORS.bg,
+  },
+  compactAvatar: {
+    width: COMPACT_AVATAR,
+    height: COMPACT_AVATAR,
+    borderRadius: COMPACT_AVATAR / 2,
   },
   actions: {
     zIndex: 31,

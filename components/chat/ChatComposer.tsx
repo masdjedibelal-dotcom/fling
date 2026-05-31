@@ -9,6 +9,12 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  type SharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
@@ -39,6 +45,7 @@ type Props = {
   onSendImage: (uri: string) => Promise<void>;
   onSendVoice: (uri: string, durationMs: number) => Promise<void>;
   keyboardVisible: boolean;
+  keyboardHeight?: SharedValue<number>;
   keyboardInsetBottom?: number;
   onInputFocus?: () => void;
   onInputBlur?: () => void;
@@ -51,11 +58,23 @@ export function ChatComposer({
   onSendImage,
   onSendVoice,
   keyboardVisible,
+  keyboardHeight,
   keyboardInsetBottom = 0,
   onInputFocus,
   onInputBlur,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const safeBottom = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
+
+  const animatedBarStyle = useAnimatedStyle(() => {
+    if (!keyboardHeight) {
+      return { paddingBottom: keyboardVisible ? 0 : safeBottom };
+    }
+    const h = keyboardHeight.value;
+    return {
+      paddingBottom: interpolate(h, [0, 28], [safeBottom, 0], Extrapolation.CLAMP),
+    };
+  }, [keyboardHeight, keyboardVisible, safeBottom]);
   const inputRef = useRef<TextInput>(null);
   const recordingRef = useRef<Audio.Recording | null>(null);
   const recordStartedAt = useRef(0);
@@ -80,15 +99,10 @@ export function ChatComposer({
     Math.min(INPUT_MAX_H + INPUT_V_PAD * 2, inputContentH + INPUT_V_PAD * 2),
   );
 
-  const bottomPad = (() => {
-    if (Platform.OS === 'android') {
-      return insets.bottom;
-    }
-    if (keyboardVisible && keyboardInsetBottom > 0) {
-      return keyboardInsetBottom;
-    }
-    return insets.bottom;
-  })();
+  /** Tastatur-Lift sitzt am Chat-Container — hier nur Safe Area unten (animiert) */
+  const bottomPad = keyboardHeight ? 0 : keyboardVisible
+    ? 0
+    : safeBottom;
 
   const openPhotoSheet = () => {
     inputRef.current?.blur();
@@ -219,25 +233,24 @@ export function ChatComposer({
         }}
       />
 
-      <View
-        style={{
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: FLING_COLORS.line,
-          backgroundColor: FLING_COLORS.bg,
-          paddingBottom: bottomPad,
-          paddingTop: recording ? 0 : keyboardVisible ? 6 : 8,
-          paddingHorizontal: keyboardVisible ? 8 : 10,
-        }}
+      <Animated.View
+        style={[
+          {
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: FLING_COLORS.line,
+            backgroundColor: FLING_COLORS.bg,
+            paddingTop: 8,
+            paddingHorizontal: 10,
+          },
+          keyboardHeight ? animatedBarStyle : { paddingBottom: bottomPad },
+        ]}
       >
-        <VoiceRecordingWaveform
-          active={recording}
-          meterLevel={meterLevel}
-          startedAt={recordingStartedAt ?? undefined}
-        />
-
         <View
           className="flex-row gap-1.5"
-          style={{ alignItems: 'flex-end', minHeight: BTN_SIZE }}
+          style={{
+            alignItems: recording ? 'center' : 'flex-end',
+            minHeight: BTN_SIZE,
+          }}
         >
           <Pressable
             onPress={openPhotoSheet}
@@ -248,45 +261,46 @@ export function ChatComposer({
             <FlingIcon name="camera" size={ICON_SIZE} color={FLING_COLORS.fg} />
           </Pressable>
 
-          <View
-            style={[
-              styles.field,
-              { height: fieldH },
-              recording && styles.fieldRecording,
-            ]}
-          >
-            <TextInput
-              ref={inputRef}
-              value={text}
-              onChangeText={(t) => onChangeText(t.slice(0, MAX_MESSAGE_LENGTH))}
-              placeholder={recording ? 'Aufnahme läuft…' : ''}
-              placeholderTextColor="rgba(255,255,255,0.38)"
-              multiline
-              editable={!recording}
-              autoCorrect
-              spellCheck
-              blurOnSubmit={false}
-              scrollEnabled={inputContentH >= INPUT_MAX_H - 1}
-              nativeID="fling-chat-input"
-              style={[
-                styles.input,
-                multiline ? styles.inputMultiline : styles.inputSingle,
-              ]}
-              onContentSizeChange={(e) => {
-                const h = Math.ceil(e.nativeEvent.contentSize.height);
-                if (Platform.OS === 'web' && !text.trim()) {
-                  setInputContentH(INPUT_LINE_H);
-                  return;
-                }
-                setInputContentH(
-                  Math.min(INPUT_MAX_H, Math.max(INPUT_LINE_H, h)),
-                );
-              }}
-              showSoftInputOnFocus={Platform.OS !== 'web'}
-              onFocus={onInputFocus}
-              onBlur={onInputBlur}
+          {recording ? (
+            <VoiceRecordingWaveform
+              active
+              meterLevel={meterLevel}
+              startedAt={recordingStartedAt ?? undefined}
             />
-          </View>
+          ) : (
+            <View style={[styles.field, { height: fieldH }]}>
+              <TextInput
+                ref={inputRef}
+                value={text}
+                onChangeText={(t) => onChangeText(t.slice(0, MAX_MESSAGE_LENGTH))}
+                placeholder=""
+                placeholderTextColor="rgba(255,255,255,0.38)"
+                multiline
+                autoCorrect
+                spellCheck
+                blurOnSubmit={false}
+                scrollEnabled={inputContentH >= INPUT_MAX_H - 1}
+                nativeID="fling-chat-input"
+                style={[
+                  styles.input,
+                  multiline ? styles.inputMultiline : styles.inputSingle,
+                ]}
+                onContentSizeChange={(e) => {
+                  const h = Math.ceil(e.nativeEvent.contentSize.height);
+                  if (Platform.OS === 'web' && !text.trim()) {
+                    setInputContentH(INPUT_LINE_H);
+                    return;
+                  }
+                  setInputContentH(
+                    Math.min(INPUT_MAX_H, Math.max(INPUT_LINE_H, h)),
+                  );
+                }}
+                showSoftInputOnFocus={Platform.OS !== 'web'}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+              />
+            </View>
+          )}
 
           {hasText ? (
             <Pressable
@@ -326,7 +340,9 @@ export function ChatComposer({
           )}
         </View>
 
-        {text.length >= MAX_MESSAGE_LENGTH * 0.85 || text.length >= MAX_MESSAGE_LENGTH ? (
+        {!recording &&
+        (text.length >= MAX_MESSAGE_LENGTH * 0.85 ||
+          text.length >= MAX_MESSAGE_LENGTH) ? (
           <Text
             style={[
               styles.counter,
@@ -338,7 +354,7 @@ export function ChatComposer({
               : `${text.length}/${MAX_MESSAGE_LENGTH}`}
           </Text>
         ) : null}
-      </View>
+      </Animated.View>
     </>
   );
 }
@@ -406,9 +422,6 @@ const styles = StyleSheet.create({
   },
   dimmed: {
     opacity: 0.35,
-  },
-  fieldRecording: {
-    opacity: 0.45,
   },
   counter: {
     marginTop: 4,

@@ -14,7 +14,7 @@ import { FLING_COLORS, FLING_TYPE } from '@/lib/designTokens';
 const BAR_COUNT = 40;
 const BAR_W = 3;
 const BAR_GAP = 3;
-const WAVE_H = 56;
+const WAVE_H = 32;
 
 function formatElapsed(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
@@ -82,71 +82,66 @@ export function VoiceRecordingWaveform({ active, meterLevel = 0.35, startedAt }:
 
   return (
     <Animated.View
-      entering={FadeIn.duration(180)}
-      exiting={FadeOut.duration(140)}
+      entering={FadeIn.duration(160)}
+      exiting={FadeOut.duration(120)}
       style={styles.wrap}
     >
-      <View style={styles.header}>
-        <Animated.View style={[styles.recDot, dotStyle]} />
-        <Text style={styles.label}>Sprachnotiz</Text>
-        <Text style={styles.timer}>{formatElapsed(elapsedMs)}</Text>
+      <Animated.View style={[styles.recDot, dotStyle]} />
+      <View style={styles.waveTrack}>
+        <View style={[styles.waveRow, { width: barStripWidth }]}>
+          {bars.map((h, i) => (
+            <View
+              key={i}
+              style={[
+                styles.bar,
+                {
+                  height: Math.max(4, h * WAVE_H),
+                  opacity: 0.45 + h * 0.55,
+                },
+              ]}
+            />
+          ))}
+        </View>
       </View>
-
-      <View style={[styles.waveRow, { width: barStripWidth }]}>
-        {bars.map((h, i) => (
-          <View
-            key={i}
-            style={[
-              styles.bar,
-              {
-                height: Math.max(6, h * WAVE_H),
-                opacity: 0.45 + h * 0.55,
-              },
-            ]}
-          />
-        ))}
-      </View>
+      <Text style={styles.timer}>{formatElapsed(elapsedMs)}</Text>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: FLING_COLORS.line,
-    backgroundColor: 'rgba(196, 30, 58, 0.12)',
-  },
-  header: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
     gap: 8,
+    minHeight: 36,
+    backgroundColor: 'transparent',
   },
   recDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: FLING_COLORS.accent,
+    flexShrink: 0,
   },
-  label: {
+  waveTrack: {
     flex: 1,
-    color: 'rgba(255,255,255,0.88)',
-    fontSize: FLING_TYPE.subhead,
-    fontFamily: 'Inter_600SemiBold',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
   timer: {
     color: FLING_COLORS.gold,
     fontSize: FLING_TYPE.caption,
     fontFamily: 'JetBrainsMono_500Medium',
     letterSpacing: 0.5,
+    flexShrink: 0,
+    minWidth: 36,
+    textAlign: 'right',
   },
   waveRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'center',
     height: WAVE_H,
     gap: BAR_GAP,
   },
