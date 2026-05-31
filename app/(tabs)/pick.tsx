@@ -1,5 +1,6 @@
+import { useCallback } from 'react';
 import { View, Pressable } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 import { BodyText, BodyLarge, MetaText, TitleText } from '@/components/ui/Typography';
@@ -24,7 +25,13 @@ export default function PickScreen() {
   const gender = useAuthStore((s) => s.gender);
   const userId = useAuthStore((s) => s.userId);
   const profile = useAuthStore((s) => s.profile);
-  const { match, loading, isExpired } = useMatch(userId);
+  const { match, loading, reload, isExpired } = useMatch(userId);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (userId) void reload();
+    }, [userId, reload]),
+  );
 
   if (loading) {
     return (
@@ -65,10 +72,11 @@ export default function PickScreen() {
         >
           <View className="w-32 h-32 rounded-full overflow-hidden border-2 border-accent mb-4 bg-card">
             <Image
+              key={`pick-${match.id}-${match.male_id}-${partnerPhoto}`}
               source={{ uri: partnerPhoto }}
               className="w-full h-full"
               contentFit="cover"
-              recyclingKey={partnerProfile?.id ?? match.id}
+              recyclingKey={`pick-${match.male_id}-${partnerPhoto}`}
             />
           </View>
           <TitleText className="mb-2 text-center">{afterCopy.title}</TitleText>

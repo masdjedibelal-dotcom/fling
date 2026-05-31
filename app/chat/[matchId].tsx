@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Keyboard,
   Platform,
   ScrollView,
-  View,
   type ScrollView as ScrollViewType,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Screen } from '@/components/ui/Screen';
 import { ConfirmModal } from '@/components/ui/Modal';
@@ -24,7 +24,10 @@ import {
   profilePseudonym,
 } from '@/lib/profileDisplay';
 import { useDiscreetScreen } from '@/hooks/useDiscreetScreen';
-import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
+import {
+  useChatKeyboard,
+  useChatKeyboardWebFocusHandlers,
+} from '@/hooks/useChatKeyboard';
 import { FLING_COLORS } from '@/lib/designTokens';
 
 export default function ChatScreen() {
@@ -44,23 +47,26 @@ export default function ChatScreen() {
   );
 
   const [text, setText] = useState('');
-  const {
-    keyboardVisible,
-    keyboardInsetBottom,
-    onInputFocus,
-    onInputBlur,
-  } = useKeyboardVisible();
-  const [cancelOpen, setCancelOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
   const scrollRef = useRef<ScrollViewType>(null);
   const lastMsgId = visible[visible.length - 1]?.id;
 
+  const scrollToEnd = useCallback((animated = false) => {
+    scrollRef.current?.scrollToEnd({ animated });
+  }, []);
+
+  const { keyboardHeight, bodyStyle, webHeight, keyboardOpen } = useChatKeyboard(
+    () => scrollToEnd(false),
+  );
+
+  const webFocus = useChatKeyboardWebFocusHandlers(webHeight);
+
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
   useEffect(() => {
     if (!lastMsgId) return;
-    requestAnimationFrame(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    });
-  }, [lastMsgId]);
+    requestAnimationFrame(() => scrollToEnd(true));
+  }, [lastMsgId, scrollToEnd]);
 
   if (isExpired) {
     router.replace('/chat/expired');
@@ -162,10 +168,10 @@ export default function ChatScreen() {
       onSendText={() => void onSendText()}
       onSendImage={onSendImage}
       onSendVoice={onSendVoice}
-      keyboardVisible={keyboardVisible}
-      keyboardInsetBottom={keyboardInsetBottom}
-      onInputFocus={onInputFocus}
-      onInputBlur={onInputBlur}
+      keyboardVisible={keyboardOpen}
+      keyboardHeight={keyboardHeight}
+      onInputFocus={Platform.OS === 'web' ? webFocus.onInputFocus : undefined}
+      onInputBlur={Platform.OS === 'web' ? webFocus.onInputBlur : undefined}
     />
   );
 
@@ -174,6 +180,7 @@ export default function ChatScreen() {
       <Toast message={toast} onHidden={() => setToast(null)} />
 
       <ChatHeader
+        keyboardHeight={keyboardHeight}
         partnerPhoto={partnerPhoto}
         partnerName={partnerName}
         metaLine={metaLine}
@@ -198,7 +205,7 @@ export default function ChatScreen() {
         onBlock={() => void onBlock()}
       />
 
-      <View className="flex-1">
+      <Animated.View className="flex-1" style={bodyStyle}>
         <ScrollView
           ref={scrollRef}
           className="flex-1"
@@ -208,20 +215,20 @@ export default function ChatScreen() {
           keyboardDismissMode={Platform.OS === 'web' ? 'none' : 'on-drag'}
           onScrollBeginDrag={Platform.OS === 'web' ? undefined : dismissKeyboard}
         >
-            <ChatMessages
-              blurred={blurred}
-              visible={visible}
-              partnerPhotoUri={partnerPhoto}
-              userPhotoUri={userPhoto}
-              viewerId={userId}
-              viewerIsFemale={isFemale}
-              onMarkViewed={async (id) => {
-                await markViewed(id);
-              }}
-            />
+          <ChatMessages
+            blurred={blurred}
+            visible={visible}
+            partnerPhotoUri={partnerPhoto}
+            userPhotoUri={userPhoto}
+            viewerId={userId}
+            viewerIsFemale={isFemale}
+            onMarkViewed={async (id) => {
+              await markViewed(id);
+            }}
+          />
         </ScrollView>
         {composer}
-      </View>
+      </Animated.View>
 
       <ConfirmModal
         visible={cancelOpen}
