@@ -9,8 +9,8 @@
     "scheme": "fling",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
       "backgroundColor": "#120A0C"
     },
     "ios": {
@@ -36,6 +36,14 @@
       }
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#120A0C",
+          "image": "./assets/splash.png",
+          "resizeMode": "cover"
+        }
+      ],
       "expo-router",
       [
         "expo-camera",

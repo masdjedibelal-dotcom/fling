@@ -214,6 +214,7 @@ export default function ChatScreen() {
               partnerPhotoUri={partnerPhoto}
               userPhotoUri={userPhoto}
               viewerId={userId}
+              viewerIsFemale={isFemale}
               onMarkViewed={async (id) => {
                 await markViewed(id);
               }}

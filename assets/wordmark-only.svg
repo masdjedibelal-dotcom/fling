@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="320" viewBox="0 0 800 320">
+  <text x="400" y="200" text-anchor="middle" font-family="Georgia, serif" font-weight="400" font-style="italic" font-size="200" letter-spacing="-6" fill="#FFFFFF">fling</text>
+  <rect x="260" y="218" width="280" height="8" rx="2" fill="#E11539"/>
+</svg>
