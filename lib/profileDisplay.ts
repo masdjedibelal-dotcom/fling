@@ -45,17 +45,25 @@ export function formatChatPartnerMeta(
   return `${age} · ${job} · ${place}`;
 }
 
-/** Pick-Tab / Chat — Foto (erstes Bild, kein Video-Thumbnail-Fehler) */
-export function getPickPartnerPhotoUri(profile?: SchaufensterProfile): string {
-  if (!profile?.photos?.length) return PICK_PHOTO_FALLBACK;
-  const thumb = getProfileThumbnailUri(profile.photos);
+/** Avatar / Pick / Chat — erstes Bild (Videos überspringen), nie `video:` als Image-URI */
+export function getProfileAvatarUri(
+  photos: string[] | undefined | null,
+  primaryPhotoIdx?: number | null,
+  fallback = PICK_PHOTO_FALLBACK,
+): string {
+  if (!photos?.length) return fallback;
+  const thumb = getProfileThumbnailUri(photos);
   if (thumb) return thumb;
-  const idx = Math.min(
-    profile.primary_photo_idx ?? 0,
-    profile.photos.length - 1,
-  );
-  const raw = profile.photos[idx] ?? profile.photos[0];
-  return raw ? getProfileMediaUri(raw) : PICK_PHOTO_FALLBACK;
+  const idx = Math.min(primaryPhotoIdx ?? 0, photos.length - 1);
+  const raw = photos[idx] ?? photos[0];
+  if (!raw?.trim()) return fallback;
+  if (raw.startsWith('video:')) return fallback;
+  return getProfileMediaUri(raw);
+}
+
+/** Pick-Tab / Chat-Partner */
+export function getPickPartnerPhotoUri(profile?: SchaufensterProfile): string {
+  return getProfileAvatarUri(profile?.photos, profile?.primary_photo_idx);
 }
 
 /** Nach Pick: echter Name, sonst Pseudonym */

@@ -42,3 +42,7 @@ export const AUSWAHL_MAX_PROFILES = 20;
 export const AUSWAHL_LAST_SEEN_MAX_MINUTES = 24 * 60;
 export const MATCH_DURATION_HOURS = 24;
 
+/** Sprachnotiz im Chat */
+export const MAX_VOICE_NOTE_SEC = 6;
+export const MAX_VOICE_NOTE_MS = MAX_VOICE_NOTE_SEC * 1000;
+

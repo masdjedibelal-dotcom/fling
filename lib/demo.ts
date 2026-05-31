@@ -7,6 +7,11 @@ import type {
   UserProfile,
 } from './types';
 import { toMatchPartnerProfile, toPublicSchaufensterProfile } from './schaufensterProfile';
+import {
+  demoVideoUri,
+  DEMO_VIDEO_BBB,
+  DEMO_VIDEO_FLOWER,
+} from './demoVideos';
 
 type DemoMaleRow = Omit<SchaufensterProfile, 'pseudonym'> & {
   display_name: string;
@@ -84,7 +89,7 @@ const DEMO_MALE_ROWS: DemoMaleRow[] = [
     display_name: 'Noah',
     age: 29,
     photos: [
-      'video:https://assets.mixkit.co/videos/preview/mixkit-man-portrait-looking-at-the-camera-3988-large.mp4',
+      demoVideoUri(DEMO_VIDEO_FLOWER),
       'https://i.pravatar.cc/600?img=22',
       'https://i.pravatar.cc/600?img=68',
     ],
@@ -177,7 +182,7 @@ const DEMO_MALE_ROWS: DemoMaleRow[] = [
       'https://i.pravatar.cc/600?img=61',
       'https://i.pravatar.cc/600?img=63',
       'https://i.pravatar.cc/600?img=64',
-      'video:https://assets.mixkit.co/videos/preview/mixkit-young-man-in-a-neon-lit-room-4255-large.mp4',
+      demoVideoUri(DEMO_VIDEO_BBB),
     ],
     primary_photo_idx: 0,
     job: 'Journalist',
@@ -222,7 +227,7 @@ const DEMO_MALE_ROWS: DemoMaleRow[] = [
     display_name: 'Rafael',
     age: 31,
     photos: [
-      'video:https://assets.mixkit.co/videos/preview/mixkit-man-under-multicolored-lights-1237-large.mp4',
+      demoVideoUri(DEMO_VIDEO_BBB),
       'https://i.pravatar.cc/600?img=52',
       'https://i.pravatar.cc/600?img=53',
     ],
@@ -276,7 +281,7 @@ const DEMO_MALE_ROWS: DemoMaleRow[] = [
     age: 26,
     photos: [
       'https://i.pravatar.cc/600?img=40',
-      'video:https://assets.mixkit.co/videos/preview/mixkit-man-portrait-looking-at-the-camera-3988-large.mp4',
+      demoVideoUri(DEMO_VIDEO_FLOWER),
       'https://i.pravatar.cc/600?img=41',
     ],
     primary_photo_idx: 0,
@@ -309,7 +314,7 @@ const DEMO_MALE_ROWS: DemoMaleRow[] = [
     display_name: 'Chris',
     age: 28,
     photos: [
-      'video:https://assets.mixkit.co/videos/preview/mixkit-young-man-in-a-neon-lit-room-4255-large.mp4',
+      demoVideoUri(DEMO_VIDEO_BBB),
       'https://i.pravatar.cc/600?img=55',
       'https://i.pravatar.cc/600?img=56',
     ],
