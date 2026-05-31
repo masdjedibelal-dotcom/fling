@@ -167,7 +167,7 @@ select public.seed_demo_male(
   'Noah', 'Noah_Lens', '1996-01-30', 'Fotograf',
   'Licht, Städte, ehrliche Gespräche. Schau dir mein Kurzvideo an.',
   array[
-    'video:https://assets.mixkit.co/videos/preview/mixkit-man-portrait-looking-at-the-camera-3988-large.mp4',
+    'video:https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     'https://i.pravatar.cc/600?img=22',
     'https://i.pravatar.cc/600?img=68',
     'https://i.pravatar.cc/600?img=69'
@@ -204,7 +204,7 @@ select public.seed_demo_male(
   'Elias', 'Elias_Brew', '1997-02-14', 'Barista',
   'Kaffee ist meine Sprache — kurzes Video zeigt, wer ich bin.',
   array[
-    'video:https://assets.mixkit.co/videos/preview/mixkit-young-man-in-a-neon-lit-room-4255-large.mp4',
+    'video:https://www.w3schools.com/html/mov_bbb.mp4',
     'https://i.pravatar.cc/600?img=47'
   ],
   array['Kaffee','Musik'], 'today', 'Neukölln', 52.508000, 13.432000, 45
@@ -252,7 +252,7 @@ select public.seed_demo_male(
   'Rafael', 'Rafael_Beat', '1994-04-04', 'DJ',
   'Beats nach Mitternacht — swipe zu meinem Clip.',
   array[
-    'video:https://assets.mixkit.co/videos/preview/mixkit-man-under-multicolored-lights-1237-large.mp4',
+    'video:https://www.w3schools.com/html/mov_bbb.mp4',
     'https://i.pravatar.cc/600?img=52',
     'https://i.pravatar.cc/600?img=53'
   ],
@@ -281,7 +281,7 @@ select public.seed_demo_male(
   'Form follows feeling — auch im Profil.',
   array[
     'https://i.pravatar.cc/600?img=40',
-    'video:https://assets.mixkit.co/videos/preview/mixkit-man-portrait-looking-at-the-camera-3988-large.mp4',
+    'video:https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     'https://i.pravatar.cc/600?img=41',
     'https://i.pravatar.cc/600?img=42'
   ],
@@ -301,7 +301,7 @@ select public.seed_demo_male(
   'Chris', 'Chris_Film', '1996-08-08', 'Filmproduzent',
   'Kurzclips statt langer Stories.',
   array[
-    'video:https://assets.mixkit.co/videos/preview/mixkit-young-man-in-a-neon-lit-room-4255-large.mp4',
+    'video:https://www.w3schools.com/html/mov_bbb.mp4',
     'https://i.pravatar.cc/600?img=55',
     'https://i.pravatar.cc/600?img=56'
   ],

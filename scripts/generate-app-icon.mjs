@@ -1,5 +1,5 @@
 /**
- * Generiert alle Marken-PNGs aus SVG (Wortmarke, kein altes F-Logo).
+ * Generiert alle Marken-PNGs aus fling-wordmark-dark.svg (Wortmarke, kein F-Tile).
  * Run: npm run icons
  */
 import { readFileSync, writeFileSync } from 'fs';
@@ -14,6 +14,7 @@ const assets = join(root, 'assets');
 const FLING_ACCENT = '#E11539';
 const FLING_BG = '#120A0C';
 const FLING_CARD = '#221418';
+const ICON_RADIUS = 224;
 
 function hexRgb(hex) {
   return {
@@ -30,6 +31,36 @@ function solidPng(width, height, hex) {
   }).png();
 }
 
+function roundedAppIconBg(size, radius, hex) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+  <rect width="${size}" height="${size}" rx="${radius}" fill="${hex}"/>
+</svg>`;
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+async function wordmarkPng(wordmarkSvg, width, height) {
+  return sharp(Buffer.from(wordmarkSvg))
+    .resize(width, height, {
+      fit: 'contain',
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png()
+    .toBuffer();
+}
+
+async function wordmarkOnBg(bgHex, outName, canvasW, canvasH, markScale = 0.72) {
+  const bg = await solidPng(canvasW, canvasH, bgHex).toBuffer();
+  const mark = await wordmarkPng(
+    wordmarkSvg,
+    Math.round(canvasW * markScale),
+    Math.round(canvasH * markScale),
+  );
+  writeFileSync(
+    join(assets, outName),
+    await sharp(bg).composite([{ input: mark, gravity: 'center' }]).png().toBuffer(),
+  );
+}
+
 let sharp;
 try {
   sharp = (await import('sharp')).default;
@@ -38,36 +69,33 @@ try {
   process.exit(0);
 }
 
-const iconAppSvg = readFileSync(join(assets, 'icon-app.svg'), 'utf8');
-const wordmarkSvg = readFileSync(join(assets, 'wordmark-only.svg'), 'utf8');
-const splashScreenSvg = readFileSync(join(assets, 'splash-screen.svg'), 'utf8');
-const wordmarkDarkSvg = readFileSync(join(assets, 'fling-wordmark-dark.svg'), 'utf8');
+const wordmarkSvg = readFileSync(join(assets, 'fling-wordmark-dark.svg'), 'utf8');
 
-const png1024 = await sharp(Buffer.from(iconAppSvg)).resize(1024, 1024).png().toBuffer();
-
-writeFileSync(join(assets, 'icon.png'), png1024);
-writeFileSync(join(assets, 'icon-master.svg'), iconAppSvg);
-
-// Splash: nur Wortmarke (transparent) — liegt auf backgroundColor in app.json
-const splashWordmark = await sharp(Buffer.from(wordmarkSvg))
-  .resize(640, 256, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-  .png()
-  .toBuffer();
+// Splash: transparente Wortmarke (Expo: contain + backgroundColor)
+const splashWordmark = await wordmarkPng(wordmarkSvg, 640, 256);
 writeFileSync(join(assets, 'splash-icon.png'), splashWordmark);
 
-// Vollbild-Splash (iOS/Android native nach prebuild)
-writeFileSync(
-  join(assets, 'splash.png'),
-  await sharp(Buffer.from(splashScreenSvg)).resize(1284, 2778).png().toBuffer(),
-);
+// Vollbild-Splash (Fallback / Stores) — gleiche Marke wie in der App
+await wordmarkOnBg(FLING_BG, 'splash.png', 1284, 2778, 0.42);
 
-// Android: Foreground = Wortmarke auf Transparent (Hintergrund separat)
+// App-Icon (iOS / Store)
 writeFileSync(
-  join(assets, 'android-icon-foreground.png'),
-  await sharp(Buffer.from(wordmarkSvg))
-    .resize(432, 432, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  join(assets, 'icon.png'),
+  await sharp(await roundedAppIconBg(1024, ICON_RADIUS, FLING_BG))
+    .composite([
+      {
+        input: await wordmarkPng(wordmarkSvg, 620, 248),
+        gravity: 'center',
+      },
+    ])
     .png()
     .toBuffer(),
+);
+
+// Android adaptive: Foreground = Wortmarke
+writeFileSync(
+  join(assets, 'android-icon-foreground.png'),
+  await wordmarkPng(wordmarkSvg, 432, 432),
 );
 
 writeFileSync(
@@ -77,35 +105,33 @@ writeFileSync(
 
 writeFileSync(
   join(assets, 'favicon.png'),
-  await sharp(Buffer.from(wordmarkSvg)).resize(48, 48, { fit: 'contain' }).png().toBuffer(),
+  await wordmarkPng(wordmarkSvg, 48, 48),
 );
 
-// Marketing-Raster: Wortmarke auf App-Hintergründen
-async function wordmarkOnBg(bgHex, outName, width = 720, height = 320) {
-  const bg = await solidPng(width, height, bgHex).toBuffer();
-  const mark = await sharp(Buffer.from(wordmarkDarkSvg))
-    .resize(Math.round(width * 0.72), Math.round(height * 0.55), {
-      fit: 'contain',
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
-    .png()
-    .toBuffer();
-  writeFileSync(
-    join(assets, outName),
-    await sharp(bg)
-      .composite([{ input: mark, gravity: 'center' }])
-      .png()
-      .toBuffer(),
-  );
-}
+await wordmarkOnBg(FLING_BG, 'fling-wordmark-on-dark.png', 720, 320);
+await wordmarkOnBg(FLING_CARD, 'fling-wordmark-on-bone.png', 720, 320);
 
-await wordmarkOnBg(FLING_BG, 'fling-wordmark-on-dark.png');
-await wordmarkOnBg(FLING_CARD, 'fling-wordmark-on-bone.png');
+// Referenz-SVGs an aktuelle Wortmarke anbinden (nur Doku / manuelle Vorschau)
+writeFileSync(
+  join(assets, 'icon-app.svg'),
+  `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="${ICON_RADIUS}" fill="${FLING_BG}"/>
+  <!-- Generiert via npm run icons aus fling-wordmark-dark.svg -->
+</svg>`,
+);
+writeFileSync(
+  join(assets, 'splash-screen.svg'),
+  `<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="2778" viewBox="0 0 1284 2778">
+  <rect width="1284" height="2778" fill="${FLING_BG}"/>
+  <!-- Generiert via npm run icons aus fling-wordmark-dark.svg -->
+</svg>`,
+);
+writeFileSync(join(assets, 'icon-master.svg'), readFileSync(join(assets, 'icon-app.svg'), 'utf8'));
 
 console.log(
   [
-    'Marken-Assets generiert:',
-    'icon.png, splash.png, splash-icon.png (Wortmarke)',
+    'Marken-Assets generiert (Quelle: fling-wordmark-dark.svg):',
+    'icon.png, splash.png, splash-icon.png',
     'android-icon-foreground/background.png, favicon.png',
     'fling-wordmark-on-dark.png, fling-wordmark-on-bone.png',
   ].join('\n  '),

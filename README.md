@@ -35,7 +35,7 @@ Vollständige Anleitung: **[supabase/README.md](./supabase/README.md)**
 
 ### iOS Build (Codemagic → TestFlight)
 
-**Aktuell:** Version **1.0.2**, Build **6**
+**Aktuell:** Version **1.0.4**, Build **8**
 
 Signing läuft wie beim letzten erfolgreichen Upload: `.p12` + Provisioning Profile in Codemagic, Pipeline nutzt `keychain add-certificates` + `use-profiles` (ohne `fetch-signing-files`).
 
@@ -47,7 +47,7 @@ Signing läuft wie beim letzten erfolgreichen Upload: `.p12` + Provisioning Prof
 
 Vor jedem Upload: `npm run icons` → `app.json` Version/Build erhöhen. Checkliste: **[docs/RELEASE.md](./docs/RELEASE.md)**.
 
-Marken-Assets: `assets/icon-app.svg` (App-Icon), `assets/splash-screen.svg` (Splash), `assets/wordmark-only.svg` (Android-Foreground). Generierung: `npm run icons`.
+Marken-Quelle: `assets/fling-wordmark-dark.svg`. PNGs (Splash, App-Icon, Android): `npm run icons`. Native Splash: `splash-icon.png` + `#120A0C` in `app.json` — nach Änderung **neuer iOS/Android-Build** (`expo prebuild --clean`).
 
 ## Struktur
 
