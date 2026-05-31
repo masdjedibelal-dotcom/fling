@@ -1,5 +1,5 @@
 /**
- * Generiert App-Icons aus icon-master.svg (Funken-Kerbe • dunkel).
+ * Generiert App-Icons aus icon-app.svg (Wortmarke auf Bone).
  * Run: node scripts/generate-app-icon.mjs
  */
 import { readFileSync, writeFileSync } from 'fs';
@@ -10,13 +10,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const assets = join(root, 'assets');
 
-const SVG = readFileSync(join(assets, 'icon-master.svg'), 'utf8');
+/** Sync mit lib/designTokens.ts */
+const FLING_ACCENT = '#E11539';
+const FLING_BG = '#120A0C';
+
+const SVG = readFileSync(join(assets, 'icon-app.svg'), 'utf8');
 
 let sharp;
 try {
   sharp = (await import('sharp')).default;
 } catch {
-  console.log('sharp nicht installiert — icon-master.svg ist aktuell.');
+  console.log('sharp nicht installiert — icon-app.svg ist aktuell.');
   console.log('Optional: npm i -D sharp && node scripts/generate-app-icon.mjs');
   process.exit(0);
 }
@@ -39,7 +43,12 @@ writeFileSync(
       width: 1024,
       height: 1024,
       channels: 4,
-      background: { r: 18, g: 10, b: 12, alpha: 1 },
+      background: {
+        r: parseInt(FLING_BG.slice(1, 3), 16),
+        g: parseInt(FLING_BG.slice(3, 5), 16),
+        b: parseInt(FLING_BG.slice(5, 7), 16),
+        alpha: 1,
+      },
     },
   })
     .png()

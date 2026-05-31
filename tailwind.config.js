@@ -1,4 +1,7 @@
 /** @type {import('tailwindcss').Config} */
+/** accent = lib/designTokens.ts FLING_ACCENT */
+const FLING_ACCENT = '#E11539';
+
 module.exports = {
   darkMode: 'class',
   content: ['./app/**/*.{js,jsx,ts,tsx}', './components/**/*.{js,jsx,ts,tsx}'],
@@ -11,7 +14,7 @@ module.exports = {
         surface: '#1c1114',
         card: '#221418',
         'card-2': '#2a181d',
-        accent: '#E11539',
+        accent: FLING_ACCENT,
         'accent-d': '#a30f29',
         'accent-2': '#ff5870',
         green: '#00e07a',
@@ -25,6 +28,7 @@ module.exports = {
         'line-2': 'rgba(255,255,255,0.14)',
       },
       fontFamily: {
+        serif: ['Fraunces_400Regular_Italic'],
         display: ['Unbounded_700Bold', 'Unbounded_800ExtraBold'],
         body: ['Inter_500Medium', 'Inter_600SemiBold'],
         mono: ['JetBrainsMono_400Regular', 'JetBrainsMono_500Medium'],

@@ -35,7 +35,7 @@ Vollständige Anleitung: **[supabase/README.md](./supabase/README.md)**
 
 ### iOS Build (Codemagic → TestFlight)
 
-**Aktuell:** Version **1.0.1**, Build **4**
+**Aktuell:** Version **1.0.2**, Build **6**
 
 Signing läuft wie beim letzten erfolgreichen Upload: `.p12` + Provisioning Profile in Codemagic, Pipeline nutzt `keychain add-certificates` + `use-profiles` (ohne `fetch-signing-files`).
 
@@ -45,7 +45,7 @@ Signing läuft wie beim letzten erfolgreichen Upload: `.p12` + Provisioning Prof
 4. Optional in `codemagic.yaml`: `APP_STORE_APPLE_ID` setzen
 5. Build starten → TestFlight
 
-Vor jedem Upload: `app.json` → `version` + `ios.buildNumber` erhöhen.
+Vor jedem Upload: `app.json` → `version` + `ios.buildNumber` erhöhen. Checkliste: **[docs/RELEASE.md](./docs/RELEASE.md)**.
 
 ## Struktur
 

@@ -1,6 +1,6 @@
 {
   "name": "fling",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -10,6 +10,7 @@
     "lint": "node scripts/remove-deprecated-sources.mjs && tsc --noEmit"
   },
   "dependencies": {
+    "@expo-google-fonts/fraunces": "^0.4.1",
     "@expo-google-fonts/inter": "^0.2.3",
     "@expo-google-fonts/jetbrains-mono": "^0.2.3",
     "@expo-google-fonts/unbounded": "^0.2.3",
