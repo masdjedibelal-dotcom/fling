@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Keyboard, Platform } from 'react-native';
+import { Dimensions, Keyboard, Platform } from 'react-native';
 
 /**
  * Tastatur sichtbar + unterer Inset (Web: visualViewport, Native: Keyboard-Events).
@@ -34,7 +34,9 @@ export function useKeyboardVisible() {
     const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const show = Keyboard.addListener(showEvt, (e) => {
       setKeyboardVisible(true);
-      setKeyboardInsetBottom(e.endCoordinates.height);
+      const windowH = Dimensions.get('window').height;
+      const inset = Math.max(0, windowH - e.endCoordinates.screenY);
+      setKeyboardInsetBottom(inset > 0 ? inset : e.endCoordinates.height);
     });
     const hide = Keyboard.addListener(hideEvt, () => {
       setKeyboardVisible(false);

@@ -127,6 +127,8 @@ export const FINE_LINE_ICONS = {
     { kind: 'path', d: 'M8.5 10.5 V12 A3.5 3.5 0 0 0 15.5 12 V10.5' },
     { kind: 'path', d: 'M12 15.5 V18.5 M9.5 18.5 H14.5' },
   ],
+  /** Aufnahme stoppen */
+  stop: [{ kind: 'path', d: 'M8 8 H16 V16 H8 Z', filled: true }],
   smile: [
     { kind: 'path', d: 'M12 3.8 A8.2 8.2 0 1 0 12 20.2 A8.2 8.2 0 1 0 12 3.8' },
     { kind: 'path', d: 'M8.5 13.5 C9.5 15 14.5 15 15.5 13.5' },

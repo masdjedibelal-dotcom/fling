@@ -1,4 +1,6 @@
-/** App-Icon „Funken-Kerbe • dunkel“ — Option 5, aligned with designTokens */
+import { FLING_ACCENT, FLING_COLORS } from '@/lib/designTokens';
+
+/** Legacy F-Tile (deprecated — Wortmarke ist Standard) */
 
 export const FLING_MARK_VIEWBOX = 80;
 export const FLING_MARK_TILE_RADIUS = 18;
@@ -13,9 +15,9 @@ export const FLING_MARK_SVG = `<?xml version="1.0" encoding="UTF-8"?>
     <linearGradient id="fling-bg" x1="40" y1="0" x2="40" y2="80" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#4a1824"/>
       <stop offset="42%" stop-color="#221418"/>
-      <stop offset="100%" stop-color="#120A0C"/>
+      <stop offset="100%" stop-color="${FLING_COLORS.bg}"/>
     </linearGradient>
   </defs>
   <rect width="80" height="80" rx="${FLING_MARK_TILE_RADIUS}" fill="url(#fling-bg)"/>
-  <path fill="#E11539" d="${FLING_MARK_F_PATH}"/>
+  <path fill="${FLING_ACCENT}" d="${FLING_MARK_F_PATH}"/>
 </svg>`;

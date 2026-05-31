@@ -1,4 +1,4 @@
-/** Fling Design System — Premium Hookup, Wein-Schwarz + Crimson */
+/** Fling Design System — Premium Hookup, Wein-Schwarz + Accent */
 export const FLING_ICON_SIZE = 24;
 
 /**
@@ -51,6 +51,24 @@ export const FLING_RADIUS = {
   pill: 999,
 } as const;
 
+/** Einzige Accent-Quelle — Wortmarke, Glows, Icons, Tailwind */
+export const FLING_ACCENT = '#E11539';
+
+function accentRgb(hex: string = FLING_ACCENT) {
+  const n = hex.replace('#', '');
+  return {
+    r: parseInt(n.slice(0, 2), 16),
+    g: parseInt(n.slice(2, 4), 16),
+    b: parseInt(n.slice(4, 6), 16),
+  };
+}
+
+/** Transparentes Accent — immer aus FLING_ACCENT abgeleitet */
+export function accentRgba(alpha: number, hex: string = FLING_ACCENT): string {
+  const { r, g, b } = accentRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export const FLING_COLORS = {
   bg: '#120A0C',
   bg2: '#1a0f12',
@@ -59,10 +77,10 @@ export const FLING_COLORS = {
   card2: '#2a181d',
   paper: '#FFFFFF',
   ink: '#120A0C',
-  accent: '#E11539',
+  accent: FLING_ACCENT,
   accentD: '#a30f29',
   accent2: '#ff5870',
-  accentGlow: 'rgba(225,21,57,0.45)',
+  accentGlow: accentRgba(0.45),
   fg: '#FFFFFF',
   fg2: 'rgba(255,255,255,0.72)',
   fg3: 'rgba(255,255,255,0.52)',
@@ -76,7 +94,7 @@ export const FLING_COLORS = {
   overlayFade: 'rgba(18,10,12,0.99)',
   overlayScrim: 'rgba(18,10,12,0.82)',
   tileScrim: 'rgba(40,8,20,0.45)',
-  tileGlow: 'rgba(225,21,57,0.12)',
+  tileGlow: accentRgba(0.12),
 } as const;
 
 export const FLING_BUTTON_GRADIENT = [
@@ -86,5 +104,7 @@ export const FLING_BUTTON_GRADIENT = [
 ] as const;
 
 export function formatChatTimerRemaining(hours: number, minutes: number): string {
-  return `${hours}h ${minutes}m verbleibend`;
+  if (hours < 1) return `Noch ${minutes} Min`;
+  if (hours === 1) return 'Noch 1 Stunde';
+  return `Noch ${hours} Std`;
 }
