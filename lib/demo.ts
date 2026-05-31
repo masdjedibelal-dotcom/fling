@@ -540,6 +540,26 @@ export async function setDemoMaleBusy(maleId: string) {
   await AsyncStorage.setItem(BUSY_MALES_KEY, JSON.stringify([maleId]));
 }
 
+/** Demo-Match: Partner-Profile immer an male_id koppeln (verhindert falsche Fotos nach Pick-Abbruch). */
+function hydrateDemoMatchPartners(match: Match): Match {
+  const maleSeed =
+    DEMO_MALES.find((m) => m.id === match.male_id) ?? DEMO_MALES[0];
+  const savedName = match.male_profile?.display_name?.trim();
+  return {
+    ...match,
+    male_profile: toMatchPartnerProfile({
+      ...maleSeed,
+      display_name:
+        savedName && savedName !== 'Profil' ? savedName : maleSeed.display_name,
+    }),
+    female_profile:
+      match.female_profile ??
+      toMatchPartnerProfile(getDemoFemalePartnerProfile()),
+    female_city: match.female_city ?? 'München',
+    female_display_name: match.female_display_name ?? 'Anna',
+  };
+}
+
 export async function getDemoMatch(): Promise<Match | null> {
   const raw = await AsyncStorage.getItem(MATCH_KEY);
   if (!raw) return null;
@@ -549,29 +569,16 @@ export async function getDemoMatch(): Promise<Match | null> {
     await AsyncStorage.removeItem(MESSAGES_KEY);
     return null;
   }
-  const maleSeed =
-    DEMO_MALES.find((m) => m.id === match.male_id) ?? DEMO_MALES[0];
-  const maleNeedsHydrate =
+  const hydrated = hydrateDemoMatchPartners(match);
+  const stale =
     !match.male_profile ||
+    match.male_profile.id !== match.male_id ||
     !match.male_profile.photos?.length ||
-    match.male_profile.display_name === 'Profil' ||
-    !match.male_profile.display_name?.trim();
-  const femaleNeedsHydrate = !match.female_profile;
-
-  if (maleNeedsHydrate || femaleNeedsHydrate) {
-    const male = toMatchPartnerProfile(match.male_profile ?? maleSeed);
-    match = {
-      ...match,
-      male_profile: maleNeedsHydrate ? male : match.male_profile,
-      female_profile:
-        match.female_profile ??
-        toMatchPartnerProfile(getDemoFemalePartnerProfile()),
-      female_city: match.female_city ?? 'München',
-      female_display_name: match.female_display_name ?? 'Anna',
-    };
-    await saveDemoMatch(match);
+    !match.female_profile;
+  if (stale) {
+    await saveDemoMatch(hydrated);
   }
-  return match;
+  return hydrated;
 }
 
 export async function saveDemoMatch(match: Match) {

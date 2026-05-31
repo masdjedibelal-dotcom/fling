@@ -218,6 +218,7 @@ export async function fetchActiveMatch(userId: string): Promise<Match | null> {
   if (
     match?.male_id &&
     (!match.male_profile?.photos?.length ||
+      match.male_profile.id !== match.male_id ||
       !match.male_profile.display_name?.trim() ||
       match.male_profile.display_name === 'Profil')
   ) {

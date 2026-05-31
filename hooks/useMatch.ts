@@ -7,24 +7,30 @@ import type { Match } from '@/lib/types';
 export function useMatch(userId: string | null) {
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
 
-  const load = useCallback(async () => {
-    if (!userId) {
-      setMatch(null);
+  const load = useCallback(
+    async (silent = false) => {
+      if (!userId) {
+        setMatch(null);
+        setLoading(false);
+        hasLoadedRef.current = false;
+        return;
+      }
+      if (!silent || !hasLoadedRef.current) setLoading(true);
+      const data = await fetchActiveMatch(userId);
+      setMatch(data);
       setLoading(false);
-      return;
-    }
-    setLoading(true);
-    const data = await fetchActiveMatch(userId);
-    setMatch(data);
-    setLoading(false);
-  }, [userId]);
+      hasLoadedRef.current = true;
+    },
+    [userId],
+  );
 
   const loadRef = useRef(load);
   loadRef.current = load;
 
   useEffect(() => {
-    load();
+    void load(false);
   }, [load]);
 
   useEffect(() => {
@@ -36,7 +42,7 @@ export function useMatch(userId: string | null) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'matches' },
         () => {
-          void loadRef.current();
+          void loadRef.current(true);
         },
       )
       .subscribe();
@@ -62,7 +68,7 @@ export function useMatch(userId: string | null) {
   return {
     match,
     loading,
-    reload: load,
+    reload: () => load(true),
     remainingMs,
     remainingHours,
     remainingMinutes,
