@@ -7,7 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "node scripts/remove-deprecated-sources.mjs && tsc --noEmit"
+    "lint": "node scripts/remove-deprecated-sources.mjs && tsc --noEmit",
+    "icons": "node scripts/generate-app-icon.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/fraunces": "^0.4.1",

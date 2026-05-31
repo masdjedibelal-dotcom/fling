@@ -45,7 +45,9 @@ Signing läuft wie beim letzten erfolgreichen Upload: `.p12` + Provisioning Prof
 4. Optional in `codemagic.yaml`: `APP_STORE_APPLE_ID` setzen
 5. Build starten → TestFlight
 
-Vor jedem Upload: `app.json` → `version` + `ios.buildNumber` erhöhen. Checkliste: **[docs/RELEASE.md](./docs/RELEASE.md)**.
+Vor jedem Upload: `npm run icons` → `app.json` Version/Build erhöhen. Checkliste: **[docs/RELEASE.md](./docs/RELEASE.md)**.
+
+Marken-Assets: `assets/icon-app.svg` (App-Icon), `assets/splash-screen.svg` (Splash), `assets/wordmark-only.svg` (Android-Foreground). Generierung: `npm run icons`.
 
 ## Struktur
 
